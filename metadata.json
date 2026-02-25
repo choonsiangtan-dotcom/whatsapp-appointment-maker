@@ -1,0 +1,5 @@
+{
+  "name": "WhatsApp Appointment Maker",
+  "description": "A high-fidelity appointment scheduling tool designed for WhatsApp workflows, featuring AI-powered contact extraction and automated reminder previews.",
+  "requestFramePermissions": []
+}
