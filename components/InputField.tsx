@@ -48,11 +48,11 @@ const InputField: React.FC<InputFieldProps> = ({
     <div className={`group relative ${className}`}>
       <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5 ml-1">{label}</label>
       <div className="relative flex items-center">
-        <div className="absolute left-3.5 text-primary transition-all duration-300 group-focus-within:scale-110">
+        <div className="absolute left-2.5 text-primary transition-all duration-300 group-focus-within:scale-110">
           {IconMap[icon] || <span className="material-symbols-outlined text-[24px]">{icon}</span>}
         </div>
         <input
-          className={`w-full bg-white/70 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl py-3.5 ${type === 'date' || type === 'time' ? 'pl-11 pr-2 text-xs' : 'pl-12 pr-4 text-slate-900'} dark:text-white focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all placeholder:text-slate-400/50 outline-none`}
+          className={`w-full bg-white/70 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl py-3.5 ${type === 'date' || type === 'time' ? 'pl-8 pr-1 text-[10px]' : 'pl-11 pr-4 text-slate-900'} dark:text-white focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all placeholder:text-slate-400/50 outline-none`}
           type={type || "text"}
           value={value}
           onChange={onChange}

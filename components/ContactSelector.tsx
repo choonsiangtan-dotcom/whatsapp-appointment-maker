@@ -43,7 +43,7 @@ const ContactSelector: React.FC<ContactSelectorProps> = ({
         <button onClick={onSeeAll} className="text-xs text-primary font-bold hover:underline">Add New</button>
       </div>
 
-      <div className="grid grid-cols-5 gap-2 pb-2 overflow-x-auto custom-scrollbar">
+      <div className="grid grid-cols-5 gap-1 py-4 px-1">
         {filteredContacts.length === 0 ? (
           <div className="col-span-5 py-4 text-center text-slate-400 text-xs italic">
             No contacts.

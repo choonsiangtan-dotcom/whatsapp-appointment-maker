@@ -5,6 +5,9 @@ import ContactSelector from './components/ContactSelector';
 import InputField from './components/InputField';
 import { INITIAL_CONTACTS } from './constants';
 import { AppointmentData, Contact } from './types';
+import { Capacitor } from '@capacitor/core';
+import { Contacts } from '@capacitor-community/contacts';
+import ContactPickerModal from './components/ContactPickerModal';
 
 const App: React.FC = () => {
   // Load contacts from localStorage or use initial
@@ -81,7 +84,7 @@ const App: React.FC = () => {
       time: timeStr,
       contact: selectedContact,
       selectedPhoneNumber: selectedContact.phoneNumbers[0] || '',
-      reminderEnabled: true,
+      reminderEnabled: false,
       leadTime: '30 mins'
     };
   });
@@ -102,6 +105,14 @@ const App: React.FC = () => {
     localStorage.setItem('contacts', JSON.stringify(contacts));
   }, [contacts]);
 
+  const [isManualAddOpen, setIsManualAddOpen] = useState(false);
+  const [manualContact, setManualContact] = useState({ name: '', phone: '' });
+
+  // Contact Picker State
+  const [isContactPickerOpen, setIsContactPickerOpen] = useState(false);
+  const [externalContacts, setExternalContacts] = useState<Contact[]>([]);
+  const [isFetchingContacts, setIsFetchingContacts] = useState(false);
+
   // Persist selected contact ID whenever it changes
   useEffect(() => {
     if (formData.contact.id !== 'default') {
@@ -114,7 +125,6 @@ const App: React.FC = () => {
     setFormData(prev => ({ ...prev, [key]: value }));
   };
 
-
   const blobToBase64 = (blob: Blob): Promise<string> => {
     return new Promise((resolve) => {
       const reader = new FileReader();
@@ -123,8 +133,142 @@ const App: React.FC = () => {
     });
   };
 
+  const handleManualAdd = () => {
+    if (!manualContact.name || !manualContact.phone) {
+      alert('Please enter both name and phone number.');
+      return;
+    }
+
+    const formattedNumber = manualContact.phone.replace(/\D/g, '');
+    if (formattedNumber.length < 7) {
+      alert('Please enter a valid phone number.');
+      return;
+    }
+
+    const newContact: Contact = {
+      id: crypto.randomUUID(),
+      name: manualContact.name,
+      avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(manualContact.name)}&background=random`,
+      status: 'Hey there! I am using WhatsApp.',
+      phoneNumbers: [formattedNumber],
+      lastUsed: Date.now()
+    };
+
+    setContacts(prev => {
+      let updated = [...prev];
+      const existingIndex = updated.findIndex(ex =>
+        ex.name === newContact.name ||
+        ex.phoneNumbers.some(n => newContact.phoneNumbers.includes(n))
+      );
+
+      if (existingIndex !== -1) {
+        updated[existingIndex] = {
+          ...updated[existingIndex],
+          phoneNumbers: Array.from(new Set([...updated[existingIndex].phoneNumbers, ...newContact.phoneNumbers])).sort(),
+          lastUsed: Date.now()
+        };
+      } else {
+        updated.unshift(newContact);
+      }
+      return updated.sort((a, b) => b.lastUsed - a.lastUsed).slice(0, 5);
+    });
+
+    setFormData(prev => ({
+      ...prev,
+      contact: newContact,
+      selectedPhoneNumber: formattedNumber
+    }));
+
+    setIsManualAddOpen(false);
+    setManualContact({ name: '', phone: '' });
+  };
+
+  const handleSelectExternalContact = (contact: Contact, phoneNumber: string) => {
+    setContacts(prev => {
+      let updated = [...prev];
+      const existingIndex = updated.findIndex(ex =>
+        ex.name === contact.name ||
+        ex.phoneNumbers.some(n => contact.phoneNumbers.includes(n))
+      );
+
+      if (existingIndex !== -1) {
+        updated[existingIndex] = {
+          ...updated[existingIndex],
+          phoneNumbers: Array.from(new Set([...updated[existingIndex].phoneNumbers, ...contact.phoneNumbers])).sort(),
+          lastUsed: Date.now()
+        };
+      } else {
+        updated.unshift({ ...contact, lastUsed: Date.now() });
+      }
+      return updated.sort((a, b) => b.lastUsed - a.lastUsed).slice(0, 5);
+    });
+
+    setFormData(prev => ({
+      ...prev,
+      contact: contact,
+      selectedPhoneNumber: phoneNumber
+    }));
+
+    setIsContactPickerOpen(false);
+  };
+
   const handleSeeAll = async () => {
-    if ('contacts' in navigator && 'ContactsManager' in window) {
+    // Check if we are running in a Capacitor Native App
+    if (Capacitor.isNativePlatform()) {
+      setIsContactPickerOpen(true);
+      setIsFetchingContacts(true);
+      try {
+        const permission = await Contacts.requestPermissions();
+
+        if (permission.contacts !== 'granted') {
+          alert('Permission to access contacts was denied.');
+          setIsContactPickerOpen(false);
+          setIsFetchingContacts(false);
+          return;
+        }
+
+        const result = await Contacts.getContacts({
+          projection: {
+            name: true,
+            phones: true,
+            image: true,
+            organization: true
+          }
+        });
+
+        if (result.contacts) {
+          const mappedContacts: Contact[] = result.contacts
+            .filter(nc => nc.phones && nc.phones.length > 0)
+            .map(nc => ({
+              id: nc.contactId || crypto.randomUUID(),
+              name: nc.name?.display || 'Unknown',
+              avatar: nc.image?.base64String
+                ? `data:image/jpeg;base64,${nc.image.base64String}`
+                : `https://ui-avatars.com/api/?name=${encodeURIComponent(nc.name?.display || 'U')}&background=random`,
+              status: nc.organization?.company || 'Hey there! I am using WhatsApp.',
+              phoneNumbers: Array.from(new Set(nc.phones!.map(p => p.number.replace(/\D/g, '')))).sort(),
+              lastUsed: Date.now()
+            }));
+
+          setExternalContacts(mappedContacts);
+        }
+      } catch (err) {
+        console.error('Error with native contacts:', err);
+        // Fallback to manual if native fails
+        setIsContactPickerOpen(false);
+        setIsManualAddOpen(true);
+      } finally {
+        setIsFetchingContacts(false);
+      }
+      return;
+    }
+
+    console.log('Not on native platform, checking browser support');
+
+    // Check if we can use the native browser picker (Fallback)
+    const isPickerSupported = 'contacts' in navigator && 'ContactsManager' in window;
+
+    if (isPickerSupported) {
       try {
         const props = ['name', 'icon', 'tel'];
         const opts = { multiple: true };
@@ -146,7 +290,7 @@ const App: React.FC = () => {
             const phoneNumbers = c.tel
               ? c.tel
                 .map((t: string) => t.replace(/\D/g, ''))
-                .filter((n: string) => n.length >= 7) // WhatsApp numbers usually >= 7 digits
+                .filter((n: string) => n.length >= 7)
               : [];
 
             return {
@@ -161,82 +305,22 @@ const App: React.FC = () => {
 
           const validContacts = newContactsRaw.filter(c => c.phoneNumbers.length > 0);
 
-          if (validContacts.length > 0) {
-            setContacts(prev => {
-              let updated = [...prev];
-              validContacts.forEach(newC => {
-                const existingIndex = updated.findIndex(ex =>
-                  ex.name === newC.name ||
-                  ex.phoneNumbers.some(n => newC.phoneNumbers.includes(n))
-                );
-
-                if (existingIndex !== -1) {
-                  updated[existingIndex] = {
-                    ...updated[existingIndex],
-                    avatar: newC.avatar.includes('ui-avatars') ? updated[existingIndex].avatar : newC.avatar,
-                    phoneNumbers: Array.from(new Set([...updated[existingIndex].phoneNumbers, ...newC.phoneNumbers])).sort(),
-                    lastUsed: Date.now()
-                  };
-                } else {
-                  updated.unshift(newC);
-                }
-              });
-
-              return updated.sort((a, b) => b.lastUsed - a.lastUsed).slice(0, 5);
-            });
-
-            const firstNew = validContacts[0];
-            setFormData(prev => ({
-              ...prev,
-              contact: firstNew,
-              selectedPhoneNumber: firstNew.phoneNumbers[0] || ''
-            }));
+          if (validContacts.length === 1) {
+            // If only one selected, add immediately
+            handleSelectExternalContact(validContacts[0], validContacts[0].phoneNumbers[0]);
+          } else if (validContacts.length > 1) {
+            // If multiple, show our picker modal
+            setExternalContacts(validContacts);
+            setIsContactPickerOpen(true);
           }
         }
       } catch (ex) {
         console.error('Error picking contact:', ex);
-        alert('Failed to pick contact. Please ensure you are using a supported browser (Chrome/Safari on Mobile) and accessing via HTTPS.');
+        setIsManualAddOpen(true);
       }
     } else {
-      // Fallback for desktop/unsupported browsers
-      const mockContact: Contact = {
-        id: crypto.randomUUID(),
-        name: 'New Friend',
-        avatar: `https://ui-avatars.com/api/?name=New+Friend&background=random`,
-        status: 'Hey there! I am using WhatsApp.',
-        phoneNumbers: ['1234567890'],
-        lastUsed: Date.now()
-      };
-
-      setContacts(prev => {
-        let updated = [...prev];
-        const newC = { ...mockContact, phoneNumbers: [...mockContact.phoneNumbers].sort() };
-
-        const existingIndex = updated.findIndex(ex =>
-          ex.name === newC.name ||
-          ex.phoneNumbers.some(n => newC.phoneNumbers.includes(n))
-        );
-
-        if (existingIndex !== -1) {
-          updated[existingIndex] = {
-            ...updated[existingIndex],
-            phoneNumbers: Array.from(new Set([...updated[existingIndex].phoneNumbers, ...newC.phoneNumbers])).sort(),
-            lastUsed: Date.now()
-          };
-        } else {
-          updated.unshift(newC);
-        }
-        return updated
-          .sort((a, b) => b.lastUsed - a.lastUsed)
-          .slice(0, 5);
-      });
-
-      setFormData(prev => ({
-        ...prev,
-        contact: mockContact,
-        selectedPhoneNumber: mockContact.phoneNumbers[0] || ''
-      }));
-      alert('Contact Picker API not supported on this device. Added a mock contact for demonstration.');
+      // Fallback for desktop/unsupported browsers: Show manual add modal
+      setIsManualAddOpen(true);
     }
   };
 
@@ -286,8 +370,8 @@ const App: React.FC = () => {
   return (
     <Layout>
       {/* Header */}
-      <div className="flex items-center justify-center mb-8">
-        <h1 className="text-xl font-bold text-slate-900 dark:text-white">Create Appointment</h1>
+      <div className="w-full flex items-center justify-center mb-8">
+        <h1 className="text-xl font-bold text-slate-900 dark:text-white text-center">WhatsAppointment</h1>
       </div>
 
       {/* Contacts List */}
@@ -320,7 +404,7 @@ const App: React.FC = () => {
           suggestions={addressHistory}
           onSuggestionClick={(val) => handleFieldChange('address', val)}
         />
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-1">
           <InputField
             label="Date"
             icon="event"
@@ -408,6 +492,67 @@ const App: React.FC = () => {
         <span className="material-icons-round">send</span>
         <span>Send via WhatsApp</span>
       </button>
+
+      {/* Contact Picker Modal */}
+      <ContactPickerModal
+        isOpen={isContactPickerOpen}
+        onClose={() => setIsContactPickerOpen(false)}
+        contacts={externalContacts}
+        isLoading={isFetchingContacts}
+        onSelect={handleSelectExternalContact}
+      />
+
+      {/* Manual Add Modal */}
+      {isManualAddOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-slate-900 rounded-[32px] w-full max-w-sm p-6 shadow-2xl border border-white/10 animate-in zoom-in-95 duration-200">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">Add Contact</h3>
+            <p className="text-xs text-slate-500 mb-6 font-medium">Add a person specifically for WhatsApp.</p>
+
+            <div className="space-y-4">
+              <InputField
+                label="Full Name"
+                icon="person"
+                value={manualContact.name}
+                onChange={(e) => setManualContact(prev => ({ ...prev, name: e.target.value }))}
+                placeholder="e.g. John Doe"
+              />
+              <InputField
+                label="Phone Number"
+                icon="phone"
+                value={manualContact.phone}
+                onChange={(e) => setManualContact(prev => ({ ...prev, phone: e.target.value }))}
+                placeholder="e.g. 60123456789"
+                type="tel"
+              />
+            </div>
+
+            <div className="mt-8 flex space-x-3">
+              <button
+                onClick={() => setIsManualAddOpen(false)}
+                className="flex-1 px-4 py-3 rounded-2xl font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleManualAdd}
+                className="flex-1 px-4 py-3 rounded-2xl font-bold bg-primary text-white shadow-lg shadow-primary/20 hover:brightness-110 transition-all"
+              >
+                Save
+              </button>
+            </div>
+
+            <div className="mt-6 p-4 rounded-2xl bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/30">
+              <div className="flex space-x-3">
+                <span className="material-icons-round text-blue-500 text-sm">info</span>
+                <p className="text-[10px] leading-relaxed text-blue-700 dark:text-blue-300 font-medium">
+                  <strong>Android Tip:</strong> For your full WhatsApp list to show in the "Add New" picker, ensure your WhatsApp contacts are synced to your phone's address book.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Home Indicator (Mimic iOS) */}
       <div className="w-32 h-1 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto mt-2 opacity-50"></div>
