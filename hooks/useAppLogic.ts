@@ -112,23 +112,20 @@ export function useAppLogic() {
 
   const handleSelectContact = (contact: Contact, phoneNumber: string) => {
     setContacts(prev => {
-      let updated = [...prev];
-      const existingIndex = updated.findIndex(ex =>
-        ex.id === contact.id ||
-        ex.name === contact.name ||
-        ex.phoneNumbers.some(n => contact.phoneNumbers.includes(n))
+      // 1. Check if the contact is ALREADY in our top 5 list
+      const exists = prev.some(c => 
+        c.id === contact.id || 
+        c.name.toLowerCase().trim() === contact.name.toLowerCase().trim()
       );
 
-      if (existingIndex !== -1) {
-        updated[existingIndex] = {
-          ...updated[existingIndex],
-          phoneNumbers: Array.from(new Set([...updated[existingIndex].phoneNumbers, ...contact.phoneNumbers])).sort(),
-          lastUsed: Date.now()
-        };
-      } else {
-        updated.unshift({ ...contact, lastUsed: Date.now() });
+      // 2. If they ALREADY exist, don't change the list order
+      if (exists) {
+        return prev;
       }
-      return updated.sort((a, b) => b.lastUsed - a.lastUsed).slice(0, 5);
+
+      // 3. If they are NEW, perform FIFO (First-In, First-Out)
+      const updatedContact = { ...contact, lastUsed: Date.now() };
+      return [updatedContact, ...prev].slice(0, 5);
     });
 
     setFormData(prev => ({
@@ -136,6 +133,11 @@ export function useAppLogic() {
       contact: contact,
       selectedPhoneNumber: phoneNumber
     }));
+
+    // Auto-close with delay for UX feedback
+    setTimeout(() => {
+      setIsContactPickerOpen(false);
+    }, 350);
   };
 
   const handleManualAdd = () => {
@@ -157,6 +159,19 @@ export function useAppLogic() {
     handleSelectContact(newContact, formattedNumber);
     setIsManualAddOpen(false);
     setManualContact({ name: '', phone: '' });
+  };
+
+  const handleCycleNext = () => {
+    if (contacts.length <= 1) return;
+    
+    const currentIndex = contacts.findIndex(c => c.id === formData.contact.id);
+    const nextIndex = (currentIndex + 1) % contacts.length;
+    const nextContact = contacts[nextIndex];
+    
+    // Use the first phone number as default
+    const nextPhone = nextContact.phoneNumbers[0] || '';
+    
+    handleSelectContact(nextContact, nextPhone);
   };
 
   const handleSend = () => {
@@ -214,6 +229,7 @@ export function useAppLogic() {
     setIsFetchingContacts,
     handleSelectContact,
     handleManualAdd,
+    handleCycleNext,
     handleSend
   };
 }

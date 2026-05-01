@@ -27,6 +27,7 @@ const App: React.FC = () => {
     setIsFetchingContacts,
     handleSelectContact,
     handleManualAdd,
+    handleCycleNext,
     handleSend
   } = useAppLogic();
 
@@ -63,7 +64,7 @@ const App: React.FC = () => {
               name: nc.name?.display || 'Unknown',
               avatar: nc.image?.base64String
                 ? `data:image/jpeg;base64,${nc.image.base64String}`
-                : `https://ui-avatars.com/api/?name=${encodeURIComponent(nc.name?.display || 'U')}&background=random`,
+                : `https://ui-avatars.com/api/?name=${encodeURIComponent(nc.name?.display || 'U')}&background=F1F5F9&color=64748B&bold=true`,
               status: nc.organization?.company || 'Hey there! I am using WhatsApp.',
               phoneNumbers: Array.from(new Set(nc.phones!.map(p => p.number.replace(/\D/g, '')))).sort(),
               lastUsed: Date.now()
@@ -123,109 +124,143 @@ const App: React.FC = () => {
 
   const leadTimes: AppointmentData['leadTime'][] = ['30 mins', '1 hour', '1 day'];
 
+  const [pickerSearch, setPickerSearch] = React.useState('');
+
+  React.useEffect(() => {
+    if (formData.contact.name && formData.contact.id !== 'default') {
+      setPickerSearch(formData.contact.name);
+    }
+  }, [formData.contact]);
+
   return (
     <Layout>
-      <div className="w-full flex items-center justify-center mb-8">
-        <h1 className="text-xl font-bold text-slate-900 dark:text-white text-center">WhatsAppointment</h1>
+      <div className="w-full flex flex-col items-center justify-center mb-4 mt-1">
+        <h1 className="text-xl font-black text-slate-900 text-center uppercase tracking-widest text-[14px] opacity-60">WhatsAppointment</h1>
       </div>
 
-      <ContactSelector
-        contacts={contacts}
-        selectedContactId={formData.contact.id}
-        selectedPhoneNumber={formData.selectedPhoneNumber}
-        onSelect={handleSelectContact}
-        onSeeAll={handleSeeAll}
-      />
+      <div className="mb-4">
+        <div className="flex items-center justify-between mb-2 px-1">
+          <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Select Contact</label>
+          <button onClick={handleSeeAll} className="text-[9px] font-bold text-emerald-500 uppercase tracking-widest">See All</button>
+        </div>
+        <ContactSelector
+          contacts={contacts}
+          selectedContact={formData.contact}
+          selectedPhoneNumber={formData.selectedPhoneNumber}
+          onSelect={handleSelectContact}
+          onSeeAll={handleSeeAll}
+          onCycleNext={handleCycleNext}
+        />
+      </div>
 
-      <div className="space-y-4 mb-6">
+      <div className="mb-4">
+        <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-2 px-1">Location</label>
         <InputField
-          label="Appointment Address"
+          label="Location"
           icon="location_on"
           value={formData.address}
           onChange={(e) => handleFieldChange('address', e.target.value)}
+          placeholder="Where are you meeting?"
           suggestions={addressHistory}
           onSuggestionClick={(val) => handleFieldChange('address', val)}
+          showVerified={false}
         />
-        <div className="grid grid-cols-2 gap-1">
-          <InputField
-            label="Date"
-            icon="event"
-            value={formData.date}
-            onChange={(e) => handleFieldChange('date', e.target.value)}
-            type="date"
-          />
-          <InputField
-            label="Time"
-            icon="schedule"
-            value={formData.time}
-            onChange={(e) => handleFieldChange('time', e.target.value)}
-            type="time"
-          />
-        </div>
       </div>
 
-      <div className="mb-6">
-        <div className="glass-light dark:glass rounded-3xl p-5 border border-white/10 group">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center space-x-2">
-              <span className="material-symbols-outlined text-primary group-hover:scale-110 transition-transform">notifications_active</span>
-              <span className="text-sm font-semibold text-slate-900 dark:text-white">Automatic Reminder</span>
-            </div>
-            <ToggleSwitch 
-              enabled={formData.reminderEnabled} 
-              onChange={() => handleFieldChange('reminderEnabled', !formData.reminderEnabled)} 
-            />
-          </div>
-          <div className={`transition-all duration-300 overflow-hidden ${formData.reminderEnabled ? 'max-h-32 opacity-100' : 'max-h-0 opacity-0'}`}>
-            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Lead Time</label>
-            <div className="flex flex-wrap gap-2 mb-4 px-1 py-1">
-              {leadTimes.map((time) => (
-                <button
-                  key={time}
-                  onClick={() => handleFieldChange('leadTime', time)}
-                  className={`px-4 py-2 text-xs font-medium rounded-xl border transition-all ${formData.leadTime === time
-                    ? 'border-primary bg-primary/10 text-primary shadow-sm shadow-primary/5'
-                    : 'border-white/10 dark:bg-white/5 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10'
-                    }`}
-                >
-                  {time}
-                </button>
-              ))}
-            </div>
-            <p className="text-[11px] leading-relaxed text-slate-500 dark:text-slate-400/80">
-              A follow-up WhatsApp message will be automatically triggered to remind {formData.contact.name.split(' ')[0]} of the upcoming appointment.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex-grow mb-8">
-        <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-3 uppercase tracking-widest ml-1">WhatsApp Preview</label>
-        <div className="relative glass-light dark:glass rounded-3xl p-5 border border-white/20 hover:border-primary/30 transition-colors cursor-default group">
-          <div className="flex items-start space-x-3">
-            <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <span className="material-icons-round text-primary text-sm">chat_bubble</span>
-            </div>
-            <div className="flex-1">
-              <p className="text-sm leading-relaxed text-slate-800 dark:text-slate-200 italic">
-                "Hello <span className="text-primary font-semibold">{formData.contact.name}</span>, looking forward to our meeting at <span className="text-primary font-semibold">{formData.address}</span> on <span className="text-primary font-semibold">{formData.date}</span> at <span className="text-primary font-semibold">{formData.time}</span>."
-              </p>
-              <div className="mt-4 flex items-center text-[10px] text-slate-400 uppercase tracking-widest">
-                <span className="material-icons-round text-xs mr-1 animate-pulse">auto_awesome</span>
-                Auto-generated based on inputs
+      <div className="grid grid-cols-2 gap-3 mb-4">
+        <div>
+          <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-2 px-1">Date</label>
+          <div className="relative bg-white border border-slate-50 rounded-2xl p-3 shadow-sm flex items-center group cursor-pointer active:scale-95 transition-all">
+            <span className="material-icons-round text-emerald-500 text-base mr-2 flex-shrink-0">calendar_today</span>
+            <div className="flex-1 overflow-hidden">
+              <input 
+                type="date" 
+                value={formData.date}
+                onChange={(e) => handleFieldChange('date', e.target.value)}
+                className="absolute inset-0 opacity-0 cursor-pointer z-10 w-full"
+              />
+              <div className="text-[13px] font-bold text-slate-900 truncate">
+                {formData.date ? formData.date.split('-').reverse().join('/') : 'Select Date'}
               </div>
             </div>
           </div>
-          <div className="absolute -bottom-2 -right-2 w-12 h-12 bg-primary/10 rounded-full blur-xl group-hover:bg-primary/20 transition-all"></div>
+        </div>
+        <div>
+          <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-2 px-1">Time</label>
+          <div className="relative bg-white border border-slate-50 rounded-2xl p-3 shadow-sm flex items-center group cursor-pointer active:scale-95 transition-all">
+            <span className="material-icons-round text-emerald-500 text-base mr-2 flex-shrink-0">schedule</span>
+            <div className="flex-1 overflow-hidden">
+              <input 
+                type="time" 
+                value={formData.time}
+                onChange={(e) => handleFieldChange('time', e.target.value)}
+                className="absolute inset-0 opacity-0 cursor-pointer z-10 w-full"
+              />
+              <div className="text-[13px] font-bold text-slate-900 truncate uppercase">
+                {formData.time ? (
+                  (() => {
+                    const [h, m] = formData.time.split(':');
+                    const hr = parseInt(h);
+                    const ampm = hr >= 12 ? 'pm' : 'am';
+                    return `${hr % 12 || 12}:${m}${ampm}`;
+                  })()
+                ) : 'Select Time'}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="mb-4">
+        <div className="flex items-center justify-between bg-slate-50/50 rounded-2xl p-4 border border-slate-100 shadow-sm">
+          <div>
+            <h3 className="text-xs font-bold text-slate-900 leading-tight">Automatic Reminder</h3>
+            <p className="text-[10px] font-medium text-slate-400 mt-0.5 italic">Send 1 hour before</p>
+          </div>
+          <ToggleSwitch
+            enabled={formData.reminderEnabled}
+            onChange={() => handleFieldChange('reminderEnabled', !formData.reminderEnabled)}
+          />
+        </div>
+      </div>
+
+      <div className="mt-4 px-1">
+        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 px-6">Message Preview</label>
+        <div className="relative bg-slate-100/50 border border-slate-100 rounded-[2.5rem] p-8 cursor-default group">
+          <div className="absolute top-6 right-6 text-slate-300">
+            <span className="material-icons-round text-base">edit</span>
+          </div>
+          
+          <div className="flex flex-col space-y-5">
+            <p className="text-[17px] leading-relaxed text-slate-600 font-medium pr-5">
+              Hi <span className="text-emerald-700 font-bold">{formData.contact.name || 'there'}</span>! Looking forward to our meeting at <span className="text-emerald-700 font-bold">{formData.address || 'the location'}</span> on <span className="text-emerald-700 font-bold">
+                {formData.date ? formData.date.split('-').reverse().join('/') : 'date'}
+              </span> at <span className="text-emerald-700 font-bold underline decoration-emerald-100 uppercase">
+                {formData.time ? (
+                  (() => {
+                    const [h, m] = formData.time.split(':');
+                    const hr = parseInt(h);
+                    const ampm = hr >= 12 ? 'PM' : 'AM';
+                    return `${hr % 12 || 12}:${m} ${ampm}`;
+                  })()
+                ) : 'time'}
+              </span>. See you then!
+            </p>
+            
+            <div className="flex items-center space-x-2.5">
+              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+              <span className="text-[9px] font-bold text-emerald-700 uppercase tracking-widest">WhatsApp Ready</span>
+            </div>
+          </div>
         </div>
       </div>
 
       <button
         onClick={handleSend}
-        className="w-full bg-primary text-white py-4 rounded-2xl font-bold flex items-center justify-center space-x-3 shadow-lg neon-glow active:scale-[0.98] hover:brightness-110 transition-all mb-4"
+        className="w-full bg-[#10b981] text-white py-3.5 rounded-2xl font-black text-sm uppercase tracking-wide flex items-center justify-center space-x-2 shadow-2xl shadow-emerald-100 active:scale-95 transition-all mb-4 mt-6"
       >
-        <span className="material-icons-round">send</span>
-        <span>Send via WhatsApp</span>
+        <span className="material-icons-round text-lg">send</span>
+        <span>Send WhatsApp</span>
       </button>
 
       <ContactPickerModal
@@ -234,6 +269,7 @@ const App: React.FC = () => {
         contacts={externalContacts}
         isLoading={isFetchingContacts}
         onSelect={handleSelectContact}
+        selectedContactId={formData.contact.id}
       />
 
       {isManualAddOpen && (
@@ -262,11 +298,11 @@ const App: React.FC = () => {
               <button
                 onClick={() => setIsManualAddOpen(false)}
                 className="flex-1 px-4 py-3 rounded-2xl font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
-                >Cancel</button>
+              >Cancel</button>
               <button
                 onClick={handleManualAdd}
                 className="flex-1 px-4 py-3 rounded-2xl font-bold bg-primary text-white shadow-lg shadow-primary/20 hover:brightness-110 transition-all"
-                >Save</button>
+              >Save</button>
             </div>
           </div>
         </div>

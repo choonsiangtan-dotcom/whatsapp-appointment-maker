@@ -11,6 +11,7 @@ interface InputFieldProps {
   suggestions?: string[];
   onSuggestionClick?: (val: string) => void;
   type?: string;
+  showVerified?: boolean;
 }
 
 const IconMap: Record<string, React.ReactNode> = {
@@ -40,30 +41,38 @@ const InputField: React.FC<InputFieldProps> = ({
   className = "",
   suggestions = [],
   onSuggestionClick,
-  type
+  type,
+  showVerified = true
 }) => {
   const [isFocused, setIsFocused] = React.useState(false);
 
   return (
-    <div className={`group relative ${className}`}>
-      <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5 ml-1">{label}</label>
+    <div className={`group transition-all duration-300 ${className}`}>
       <div className="relative flex items-center">
-        <div className="absolute left-2.5 text-primary transition-all duration-300 group-focus-within:scale-110">
-          {IconMap[icon] || <span className="material-symbols-outlined text-[24px]">{icon}</span>}
+        <div className="w-full bg-white border border-slate-100 rounded-[1.5rem] flex items-center transition-all duration-300 group-hover:border-emerald-200 shadow-sm overflow-hidden">
+          <div className="flex-shrink-0 ml-4 flex items-center justify-center w-11 h-11 rounded-full bg-emerald-50 text-emerald-600">
+            <span className="material-icons-round text-xl">{icon}</span>
+          </div>
+          <div className="flex-1 px-4 py-3 flex flex-col justify-center min-h-[3.5rem]">
+            <input
+              className="w-full bg-transparent border-none focus:ring-0 outline-none focus:outline-none text-slate-900 placeholder-slate-300 font-semibold py-0 px-0 text-sm"
+              placeholder={placeholder}
+              type={type}
+              value={value}
+              onChange={onChange}
+              onBlur={() => setTimeout(() => setIsFocused(false), 200)}
+              onFocus={() => setIsFocused(true)}
+            />
+            {value && icon !== 'search' && showVerified && (
+              <span className="text-[10px] text-slate-400 font-medium leading-none mt-1">Verified</span>
+            )}
+          </div>
         </div>
-        <input
-          className={`w-full bg-white/70 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl py-3.5 ${type === 'date' || type === 'time' ? 'pl-8 pr-1 text-[10px]' : 'pl-11 pr-4 text-slate-900'} dark:text-white focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all placeholder:text-slate-400/50 outline-none`}
-          type={type || "text"}
-          value={value}
-          onChange={onChange}
-          placeholder={placeholder}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setTimeout(() => setIsFocused(false), 200)}
-        />
+      </div>
 
         {/* Suggestions Dropdown */}
         {isFocused && suggestions.length > 0 && (
-          <div className="absolute left-0 right-0 top-full mt-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-2xl shadow-xl z-20 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="absolute left-0 right-0 bottom-full mb-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-2xl shadow-xl z-20 overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-200">
             {suggestions.map((s, i) => (
               <button
                 key={i}
@@ -76,7 +85,6 @@ const InputField: React.FC<InputFieldProps> = ({
             ))}
           </div>
         )}
-      </div>
     </div>
   );
 };
