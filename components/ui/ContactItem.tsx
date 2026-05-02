@@ -36,7 +36,7 @@ const ContactItem: React.FC<ContactItemProps> = ({
       </div>
 
       <div className="text-center w-full px-1">
-        <p className={`text-[10px] font-semibold truncate ${isSelected ? 'text-emerald-600' : 'text-slate-600'}`}>
+        <p className={`text-[12px] font-semibold truncate ${isSelected ? 'text-emerald-600' : 'text-slate-600'}`}>
           {contact.name.split(' ')[0]}
         </p>
       </div>

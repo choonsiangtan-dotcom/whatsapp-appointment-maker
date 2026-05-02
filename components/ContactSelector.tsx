@@ -27,9 +27,9 @@ const ContactSelector: React.FC<ContactSelectorProps> = ({
   const displayPhone = selectedPhoneNumber || selectedContact.phoneNumbers[0] || '';
 
   return (
-    <div className="flex flex-col bg-white rounded-[2rem] border border-slate-100 overflow-hidden shadow-sm">
-      {/* 1. The Avatar Shelf (Top Section) - Tightened */}
-      <div className="bg-slate-50/30 px-5 pt-5 pb-3 border-b border-slate-100/50">
+    <div className="flex flex-col solid-card overflow-hidden">
+      {/* 1. The Avatar Shelf (Top Section) - Balanced */}
+      <div className="bg-slate-50/30 px-5 pt-4 pb-2 border-b border-slate-100/50">
         <div className="flex items-center justify-between px-1">
           {uniqueRecent.map((c, i) => {
             const isSelected = c.id === selectedContact.id;
@@ -49,13 +49,13 @@ const ContactSelector: React.FC<ContactSelectorProps> = ({
                   <img
                     src={c.avatar}
                     alt={c.name}
-                    className="w-11 h-11 rounded-full object-cover shadow-sm bg-white"
+                    className="w-10 h-10 rounded-full object-cover shadow-sm bg-white"
                     onError={(e) => {
                       (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(c.name)}&background=random`;
                     }}
                   />
                 </div>
-                <span className={`text-[9px] mt-1.5 font-bold transition-all duration-300 truncate max-w-[48px] ${
+                <span className={`text-[11px] mt-1.5 font-semibold transition-all duration-300 truncate max-w-[48px] ${
                   isSelected ? 'text-emerald-600' : 'text-slate-400'
                 }`}>
                   {firstName}
@@ -67,14 +67,14 @@ const ContactSelector: React.FC<ContactSelectorProps> = ({
       </div>
 
       {/* 2. The Detail Body - Compacted */}
-      <div className="flex flex-col px-6 py-4 bg-white relative">
-        <div className="text-[17px] font-black text-slate-800 leading-tight truncate tracking-tight">
+      <div className="flex flex-col items-center justify-center px-6 py-2.5 bg-white relative">
+        <div className="text-[14px] font-bold text-slate-900 leading-tight truncate tracking-tight text-center">
           {selectedContact.name || 'Select Contact'}
         </div>
-        <div className="flex mt-2">
-          <div className="inline-flex items-center px-2.5 py-1 bg-slate-50 rounded-full border border-slate-100">
-            <span className="material-icons-round text-[12px] text-emerald-500 mr-1.5">phone</span>
-            <span className="text-[12px] font-bold text-slate-500 tracking-tight">
+        <div className="flex mt-1 justify-center">
+          <div className="inline-flex items-center px-2 py-0 bg-slate-50 rounded-full border border-slate-100">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 flex-shrink-0 inline-block"></span>
+            <span className="text-[12px] font-medium text-slate-500 tracking-tight">
               {displayPhone || 'No number selected'}
             </span>
           </div>

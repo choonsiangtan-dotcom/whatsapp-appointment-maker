@@ -49,13 +49,13 @@ const InputField: React.FC<InputFieldProps> = ({
   return (
     <div className={`group transition-all duration-300 ${className}`}>
       <div className="relative flex items-center">
-        <div className="w-full bg-white border border-slate-100 rounded-[1.5rem] flex items-center transition-all duration-300 group-hover:border-emerald-200 shadow-sm overflow-hidden">
-          <div className="flex-shrink-0 ml-4 flex items-center justify-center w-11 h-11 rounded-full bg-emerald-50 text-emerald-600">
-            <span className="material-icons-round text-xl">{icon}</span>
+        <div className="w-full bg-white rounded-[1.5rem] flex items-center transition-all duration-300 border border-slate-50 shadow-sm overflow-hidden h-[56px]">
+          <div className="flex-shrink-0 ml-3 flex items-center justify-center w-9 h-9 rounded-full bg-emerald-50 text-emerald-600">
+            <span className="material-icons-round text-base">{icon}</span>
           </div>
-          <div className="flex-1 px-4 py-3 flex flex-col justify-center min-h-[3.5rem]">
+          <div className="flex-1 px-3 py-1.5 flex flex-col justify-center min-h-[2.5rem]">
             <input
-              className="w-full bg-transparent border-none focus:ring-0 outline-none focus:outline-none text-slate-900 placeholder-slate-300 font-semibold py-0 px-0 text-sm"
+              className="w-full bg-transparent border-none focus:ring-0 outline-none focus:outline-none text-slate-900 placeholder-slate-300 font-medium py-0 px-0 text-[14px]"
               placeholder={placeholder}
               type={type}
               value={value}
@@ -64,7 +64,7 @@ const InputField: React.FC<InputFieldProps> = ({
               onFocus={() => setIsFocused(true)}
             />
             {value && icon !== 'search' && showVerified && (
-              <span className="text-[10px] text-slate-400 font-medium leading-none mt-1">Verified</span>
+              <span className="text-[12px] text-slate-400 font-normal leading-none mt-0.5">Verified</span>
             )}
           </div>
         </div>

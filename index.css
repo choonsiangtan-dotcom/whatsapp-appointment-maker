@@ -1,48 +1,29 @@
 @import "tailwindcss";
 
 :root {
-  --primary: #10b981;
-  --background-light: #f0fdf4;
-  --background-dark: #0F172A;
-  --border: #e2e8f0;
+  --primary: #128C7E;
+  --background: #F0FDF4;
+  --card-bg: #FFFFFF;
+  --text-main: #0F172A;
+  --text-muted: #64748B;
 }
 
 @theme {
   --color-primary: var(--primary);
-  --color-background-light: var(--background-light);
-  --color-background-dark: var(--background-dark);
-  --color-border: var(--border);
+  --color-background: var(--background);
+  --color-card-bg: var(--card-bg);
+  --font-sans: 'Outfit', 'Inter', sans-serif;
 }
 
 @layer components {
-  .card-container {
-    @apply mb-4 last:mb-0;
+  .solid-card {
+    background: var(--card-bg);
+    border-radius: 2.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
   }
 
-  .glass-inset {
-    background: #f8fafc;
-    border: 1px solid var(--border);
-    box-shadow: none;
-  }
-
-  .glass {
-    background: #ffffff;
-    border: 1px solid var(--border);
-  }
-
-  .glass-light {
-    background: rgba(255, 255, 255, 0.9);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 1px solid var(--border);
-  }
-
-  .neon-glow {
-    box-shadow: 0 0 15px rgba(16, 185, 129, 0.2);
-  }
-
-  .neon-glow-toggle {
-    box-shadow: 0 0 8px rgba(16, 185, 129, 0.3);
+  .label-muted {
+    @apply text-[11px] font-bold text-slate-400 uppercase tracking-[0.1em];
   }
 
   .scrollbar-hide::-webkit-scrollbar {
@@ -66,7 +47,7 @@ html, body {
   height: 100%;
   overflow-x: hidden;
   position: relative;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Outfit', 'Inter', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }

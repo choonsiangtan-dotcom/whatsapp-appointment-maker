@@ -30,14 +30,14 @@ const ContactPickerModal: React.FC<ContactPickerModalProps> = ({
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-[2px] animate-in fade-in duration-200">
-      <div className="bg-white rounded-2xl w-full max-w-md h-[80vh] flex flex-col shadow-xl border border-slate-200 animate-in zoom-in-95 duration-200 overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-white rounded-[2.5rem] w-full max-w-md h-[80vh] flex flex-col shadow-2xl animate-in zoom-in-95 duration-200 overflow-hidden">
         {/* Header */}
         <div className="p-6 border-b border-slate-100">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="text-xl font-bold text-slate-900">Select Contact</h3>
-              <p className="text-xs text-slate-500 font-medium">Choose a contact to add</p>
+              <h3 className="text-[24px] font-bold text-slate-900">Select Contact</h3>
+              <p className="text-[14px] text-slate-500 font-normal">Choose a contact to add</p>
             </div>
             <button
               onClick={onClose}
@@ -69,10 +69,10 @@ const ContactPickerModal: React.FC<ContactPickerModalProps> = ({
             </div>
           ) : (
             filteredContacts.map(contact => (
-              <div key={contact.id} className={`group/item border-2 rounded-2xl mb-3 transition-all duration-300 ${
+              <div key={contact.id} className={`group/item border-2 rounded-[2rem] mb-4 transition-all duration-300 overflow-hidden ${
                 selectedContactId === contact.id 
-                  ? 'border-emerald-500 bg-emerald-50/30' 
-                  : 'border-transparent hover:border-slate-100'
+                  ? 'border-emerald-500 bg-emerald-50/50 shadow-md shadow-emerald-500/10' 
+                  : 'border-slate-50 bg-slate-50/30 hover:border-emerald-200'
               }`}>
                 {/* Header / Main Selection Area */}
                 <button
@@ -92,7 +92,7 @@ const ContactPickerModal: React.FC<ContactPickerModalProps> = ({
                      />
                    </div>
                    <div className="flex-1 min-w-0">
-                     <p className="text-[15px] font-bold text-slate-900 truncate">{contact.name}</p>
+                     <p className="text-[16px] font-medium text-slate-900 truncate">{contact.name}</p>
                      {contact.status && <p className="text-[11px] text-slate-400 truncate font-medium">{contact.status}</p>}
                    </div>
                    <div className="flex flex-col items-end">
@@ -131,7 +131,7 @@ const ContactPickerModal: React.FC<ContactPickerModalProps> = ({
         <div className="p-6 bg-slate-50 border-t border-slate-100">
           <div className="flex space-x-3">
             <span className="material-icons-round text-emerald-500 text-sm">lightbulb</span>
-            <p className="text-[10px] leading-relaxed text-slate-500 font-semibold">
+            <p className="text-[14px] leading-relaxed text-slate-500 font-normal">
               Tip: Selecting a contact will add them to your <strong>Recents</strong> for quick access later.
             </p>
           </div>

@@ -134,14 +134,16 @@ const App: React.FC = () => {
 
   return (
     <Layout>
-      <div className="w-full flex flex-col items-center justify-center mb-4 mt-1">
-        <h1 className="text-xl font-black text-slate-900 text-center uppercase tracking-widest text-[14px] opacity-60">WhatsAppointment</h1>
+      <div className="w-full flex flex-col items-center justify-center mb-4 mt-0">
+        <h1 className="text-[18px] font-bold text-slate-900 text-center tracking-tight">
+          WhatsAppointment
+        </h1>
       </div>
 
-      <div className="mb-4">
-        <div className="flex items-center justify-between mb-2 px-1">
-          <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Select Contact</label>
-          <button onClick={handleSeeAll} className="text-[9px] font-bold text-emerald-500 uppercase tracking-widest">See All</button>
+      <div className="mb-3">
+        <div className="flex items-center justify-between mb-1.5 px-1">
+          <label className="label-muted text-[10px]">Select Contact</label>
+          <button onClick={handleSeeAll} className="text-[10px] font-bold text-emerald-600 uppercase tracking-wide">See All</button>
         </div>
         <ContactSelector
           contacts={contacts}
@@ -153,8 +155,8 @@ const App: React.FC = () => {
         />
       </div>
 
-      <div className="mb-4">
-        <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-2 px-1">Location</label>
+      <div className="mb-3">
+        <label className="block label-muted text-[10px] mb-1.5 px-1">Location</label>
         <InputField
           label="Location"
           icon="location_on"
@@ -167,11 +169,11 @@ const App: React.FC = () => {
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-3 mb-4">
+      <div className="grid grid-cols-2 gap-3 mb-3">
         <div>
-          <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-2 px-1">Date</label>
-          <div className="relative bg-white border border-slate-50 rounded-2xl p-3 shadow-sm flex items-center group cursor-pointer active:scale-95 transition-all">
-            <span className="material-icons-round text-emerald-500 text-base mr-2 flex-shrink-0">calendar_today</span>
+          <label className="block label-muted text-[10px] mb-1.5 px-1">Date</label>
+          <div className="relative solid-card p-3 flex items-center group cursor-pointer active:scale-[0.98] transition-all">
+            <span className="material-icons-round text-emerald-600 text-sm mr-2.5 flex-shrink-0">calendar_today</span>
             <div className="flex-1 overflow-hidden">
               <input 
                 type="date" 
@@ -186,9 +188,9 @@ const App: React.FC = () => {
           </div>
         </div>
         <div>
-          <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-2 px-1">Time</label>
-          <div className="relative bg-white border border-slate-50 rounded-2xl p-3 shadow-sm flex items-center group cursor-pointer active:scale-95 transition-all">
-            <span className="material-icons-round text-emerald-500 text-base mr-2 flex-shrink-0">schedule</span>
+          <label className="block label-muted text-[10px] mb-1.5 px-1">Time</label>
+          <div className="relative solid-card p-3 flex items-center group cursor-pointer active:scale-[0.98] transition-all">
+            <span className="material-icons-round text-emerald-600 text-sm mr-2.5 flex-shrink-0">schedule</span>
             <div className="flex-1 overflow-hidden">
               <input 
                 type="time" 
@@ -211,31 +213,33 @@ const App: React.FC = () => {
         </div>
       </div>
 
-      <div className="mb-4">
-        <div className="flex items-center justify-between bg-slate-50/50 rounded-2xl p-4 border border-slate-100 shadow-sm">
+      <div className="mb-1.5">
+        <div className="flex items-center justify-between bg-slate-100/50 rounded-[2.5rem] p-5">
           <div>
-            <h3 className="text-xs font-bold text-slate-900 leading-tight">Automatic Reminder</h3>
-            <p className="text-[10px] font-medium text-slate-400 mt-0.5 italic">Send 1 hour before</p>
+            <h3 className="text-[13px] font-bold text-slate-900 leading-tight">Automatic Reminder</h3>
+            <p className="text-[11px] font-medium text-slate-400">Send 1 hour before</p>
           </div>
           <ToggleSwitch
             enabled={formData.reminderEnabled}
             onChange={() => handleFieldChange('reminderEnabled', !formData.reminderEnabled)}
+            className="scale-95"
           />
         </div>
       </div>
 
-      <div className="mt-4 px-1">
-        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 px-6">Message Preview</label>
-        <div className="relative bg-slate-100/50 border border-slate-100 rounded-[2.5rem] p-8 cursor-default group">
-          <div className="absolute top-6 right-6 text-slate-300">
-            <span className="material-icons-round text-base">edit</span>
-          </div>
-          
-          <div className="flex flex-col space-y-5">
-            <p className="text-[17px] leading-relaxed text-slate-600 font-medium pr-5">
-              Hi <span className="text-emerald-700 font-bold">{formData.contact.name || 'there'}</span>! Looking forward to our meeting at <span className="text-emerald-700 font-bold">{formData.address || 'the location'}</span> on <span className="text-emerald-700 font-bold">
+      <div className="mt-0 px-1">
+        <div className="flex items-center justify-between mb-0 px-6">
+          <label className="label-muted text-[10px] leading-none">Message Preview</label>
+          <button className="text-slate-400 hover:text-emerald-600 transition-colors flex items-center">
+            <span className="material-icons-round text-[13px]">edit</span>
+          </button>
+        </div>
+        <div className="relative bg-slate-100/60 rounded-[2.5rem] p-6 cursor-default group">
+          <div className="flex flex-col space-y-3.5">
+            <p className="text-[14px] leading-relaxed text-slate-600 font-normal pr-2">
+              Hi <span className="text-slate-900 font-semibold">{formData.contact.name || 'there'}</span>! Looking forward to our meeting at <span className="text-slate-900 font-semibold">{formData.address || 'the location'}</span> on <span className="text-slate-900 font-semibold">
                 {formData.date ? formData.date.split('-').reverse().join('/') : 'date'}
-              </span> at <span className="text-emerald-700 font-bold underline decoration-emerald-100 uppercase">
+              </span> at <span className="text-emerald-600 font-bold">
                 {formData.time ? (
                   (() => {
                     const [h, m] = formData.time.split(':');
@@ -246,21 +250,16 @@ const App: React.FC = () => {
                 ) : 'time'}
               </span>. See you then!
             </p>
-            
-            <div className="flex items-center space-x-2.5">
-              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-              <span className="text-[9px] font-bold text-emerald-700 uppercase tracking-widest">WhatsApp Ready</span>
-            </div>
           </div>
         </div>
       </div>
 
       <button
         onClick={handleSend}
-        className="w-full bg-[#10b981] text-white py-3.5 rounded-2xl font-black text-sm uppercase tracking-wide flex items-center justify-center space-x-2 shadow-2xl shadow-emerald-100 active:scale-95 transition-all mb-4 mt-6"
+        className="w-full bg-[#128C7E] hover:bg-[#075E54] text-white py-3 rounded-[2rem] font-bold text-[15px] flex items-center justify-center space-x-3 shadow-lg active:scale-[0.98] transition-all mb-2 mt-4"
       >
         <span className="material-icons-round text-lg">send</span>
-        <span>Send WhatsApp</span>
+        <span>Send via WhatsApp</span>
       </button>
 
       <ContactPickerModal
