@@ -8,8 +8,22 @@ import { Contacts as CapacitorContacts } from '@capacitor-community/contacts';
 import ContactPickerModal from './components/ContactPickerModal';
 import { useAppLogic } from './hooks/useAppLogic';
 import ToggleSwitch from './components/ui/ToggleSwitch';
+import History from './components/History';
+import FollowUpModal from './components/FollowUpModal';
+import { useNotificationPermission } from './hooks/useNotificationPermission';
 
 const App: React.FC = () => {
+  const { 
+    hasPermission, 
+    requestPermission, 
+    hasNotificationPermission, 
+    requestNotificationPerm,
+    autoConfirmEnabled,
+    setAutoConfirmEnabled,
+    alertsEnabled,
+    setAlertsEnabled,
+    openAppNotificationSettings
+  } = useNotificationPermission();
   const {
     contacts,
     formData,
@@ -28,8 +42,24 @@ const App: React.FC = () => {
     handleSelectContact,
     handleManualAdd,
     handleCycleNext,
-    handleSend
+    handleSend,
+    currentPage,
+    setCurrentPage,
+    history,
+    updateAppointmentStatus,
+    deleteAppointment,
+    selectedFollowUp,
+    setSelectedFollowUp,
+    handleFollowUp,
+    handleSendFollowUp,
+    handleReschedule,
+    reschedulingId,
+    setReschedulingId
   } = useAppLogic();
+
+
+
+
 
   const blobToBase64 = (blob: Blob): Promise<string> => {
     return new Promise((resolve) => {
@@ -133,134 +163,285 @@ const App: React.FC = () => {
   }, [formData.contact]);
 
   return (
-    <Layout>
-      <div className="w-full flex flex-col items-center justify-center mb-4 mt-0">
-        <h1 className="text-[18px] font-bold text-slate-900 text-center tracking-tight">
-          WhatsAppointment
-        </h1>
-      </div>
+    <Layout currentPage={currentPage} onPageChange={setCurrentPage}>
+      {currentPage === 'schedule' ? (
+        <div className="w-full space-y-4">
+          {reschedulingId && (
+            <div className="flex items-center justify-between bg-teal-50 border border-teal-200/50 rounded-xl p-3 text-[#006b5f] text-[13px] shadow-sm animate-pulse">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-[18px] text-[#006b5f]">edit_calendar</span>
+                <span className="font-semibold" style={{ fontFamily: 'Inter, sans-serif' }}>
+                  Rescheduling appointment
+                </span>
+              </div>
+              <button 
+                onClick={() => setReschedulingId(null)} 
+                className="text-[11px] font-bold text-teal-600 hover:text-teal-800 transition-colors uppercase tracking-wider"
+                style={{ fontFamily: 'Manrope, sans-serif' }}
+              >
+                Cancel
+              </button>
+            </div>
+          )}
 
-      <div className="mb-3">
-        <div className="flex items-center justify-between mb-1.5 px-1">
-          <label className="label-muted text-[10px]">Select Contact</label>
-          <button onClick={handleSeeAll} className="text-[10px] font-bold text-emerald-600 uppercase tracking-wide">See All</button>
-        </div>
-        <ContactSelector
-          contacts={contacts}
-          selectedContact={formData.contact}
-          selectedPhoneNumber={formData.selectedPhoneNumber}
-          onSelect={handleSelectContact}
-          onSeeAll={handleSeeAll}
-          onCycleNext={handleCycleNext}
-        />
-      </div>
+          {/* Section 1: SELECT CONTACT */}
+          <section className="space-y-1.5">
+            <div className="flex items-center justify-between px-1">
+              <h2 className="label-caps tracking-wider">Select Contact</h2>
+              <span onClick={handleSeeAll} className="text-[#006b5f] text-[12px] font-bold cursor-pointer">View All</span>
+            </div>
+            <ContactSelector
+              contacts={contacts}
+              selectedContact={formData.contact}
+              selectedPhoneNumber={formData.selectedPhoneNumber}
+              onSelect={handleSelectContact}
+              onSeeAll={handleSeeAll}
+              onCycleNext={handleCycleNext}
+            />
+          </section>
 
-      <div className="mb-3">
-        <label className="block label-muted text-[10px] mb-1.5 px-1">Location</label>
-        <InputField
-          label="Location"
-          icon="location_on"
-          value={formData.address}
-          onChange={(e) => handleFieldChange('address', e.target.value)}
-          placeholder="Where are you meeting?"
-          suggestions={addressHistory}
-          onSuggestionClick={(val) => handleFieldChange('address', val)}
-          showVerified={false}
-        />
-      </div>
-
-      <div className="grid grid-cols-2 gap-3 mb-3">
-        <div>
-          <label className="block label-muted text-[10px] mb-1.5 px-1">Date</label>
-          <div className="relative solid-card p-3 flex items-center group cursor-pointer active:scale-[0.98] transition-all">
-            <span className="material-icons-round text-emerald-600 text-sm mr-2.5 flex-shrink-0">calendar_today</span>
-            <div className="flex-1 overflow-hidden">
-              <input 
-                type="date" 
-                value={formData.date}
-                onChange={(e) => handleFieldChange('date', e.target.value)}
-                className="absolute inset-0 opacity-0 cursor-pointer z-10 w-full"
+          {/* Main Form Card */}
+          <div className="bg-white rounded-xl ambient-shadow p-4 space-y-4 border border-slate-100">
+            
+            {/* Section 2: LOCATION */}
+            <div className="space-y-1.5">
+              <label className="label-caps tracking-wider block">Location</label>
+              <InputField
+                label="Location"
+                icon="location_on"
+                value={formData.address}
+                onChange={(e) => handleFieldChange('address', e.target.value)}
+                placeholder="Appointment Address"
+                suggestions={addressHistory}
+                onSuggestionClick={(val) => handleFieldChange('address', val)}
+                showVerified={false}
+                suggestionIcon="location_on"
               />
-              <div className="text-[13px] font-bold text-slate-900 truncate">
-                {formData.date ? formData.date.split('-').reverse().join('/') : 'Select Date'}
+            </div>
+
+            {/* Section 3: DATE and TIME */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <label className="label-caps tracking-wider block">Date</label>
+                <div className="relative group transition-all duration-300">
+                  <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#006b5f] text-[18px]">
+                    calendar_today
+                  </span>
+                  <input
+                    type="date"
+                    value={formData.date}
+                    onChange={(e) => handleFieldChange('date', e.target.value)}
+                    className="absolute inset-0 opacity-0 cursor-pointer z-10 w-full"
+                  />
+                  <div className="w-full h-10 pl-10 pr-3 bg-[#f2f3ff] border border-[#bacac5]/30 rounded-[10px] flex items-center text-[14px] text-[#131b2e]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                    {formData.date ? formData.date.split('-').reverse().join('/') : 'Select Date'}
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <label className="label-caps tracking-wider block">Time</label>
+                <div className="relative group transition-all duration-300">
+                  <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#006b5f] text-[18px]">
+                    schedule
+                  </span>
+                  <input
+                    type="time"
+                    value={formData.time}
+                    onChange={(e) => handleFieldChange('time', e.target.value)}
+                    className="absolute inset-0 opacity-0 cursor-pointer z-10 w-full"
+                  />
+                  <div className="w-full h-10 pl-10 pr-3 bg-[#f2f3ff] border border-[#bacac5]/30 rounded-[10px] flex items-center text-[14px] text-[#131b2e] uppercase" style={{ fontFamily: 'Inter, sans-serif' }}>
+                    {formData.time ? (
+                      (() => {
+                        const [h, m] = formData.time.split(':');
+                        const hr = parseInt(h);
+                        const ampm = hr >= 12 ? 'PM' : 'AM';
+                        return `${hr % 12 || 12}:${m} ${ampm}`;
+                      })()
+                    ) : 'Select Time'}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Section 4: AUTOMATIC REMINDER */}
+            <div className="pt-1">
+              <div className="flex items-center justify-between mb-2.5">
+                <div className="flex items-center gap-1.5 text-[#131b2e]">
+                  <span className="material-symbols-outlined text-[#006b5f] text-[18px]">notifications_active</span>
+                  <span className="text-[14px] font-semibold" style={{ fontFamily: 'Inter, sans-serif' }}>Automatic Reminder</span>
+                </div>
+                <ToggleSwitch
+                  enabled={formData.reminderEnabled}
+                  onChange={() => handleFieldChange('reminderEnabled', !formData.reminderEnabled)}
+                />
+              </div>
+              
+              <div className="flex gap-2">
+                <button className="flex-1 py-1.5 px-1 rounded-lg bg-[#fe7488] text-[#730425] text-[11px] font-bold tracking-widest border border-[#a93349]/20" style={{ fontFamily: 'Manrope, sans-serif' }}>
+                  30 MINS
+                </button>
+                <button className="flex-1 py-1.5 px-1 rounded-lg bg-[#e2e7ff] text-[#3c4a46] text-[11px] font-medium tracking-widest border border-transparent" style={{ fontFamily: 'Manrope, sans-serif' }}>
+                  1 HOUR
+                </button>
+                <button className="flex-1 py-1.5 px-1 rounded-lg bg-[#e2e7ff] text-[#3c4a46] text-[11px] font-medium tracking-widest border border-transparent" style={{ fontFamily: 'Manrope, sans-serif' }}>
+                  2 HOURS
+                </button>
               </div>
             </div>
           </div>
+
+          {/* Section 5: MESSAGE PREVIEW */}
+          <section className="space-y-2">
+            <label className="label-caps tracking-wider block px-1">Message Preview</label>
+            <div className="bg-[#2dd4bf]/10 border border-[#2dd4bf]/30 rounded-xl p-3 relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-1.5">
+                <span className="material-symbols-outlined text-[#006b5f]/20 text-[28px]">format_quote</span>
+              </div>
+              <div className="space-y-1.5 relative z-10">
+                <p className="text-[14px] text-[#730425] leading-snug" style={{ fontFamily: 'Inter, sans-serif' }}>
+                  Hello <span className="font-bold text-[#006b5f]">{formData.contact.name || 'there'}</span>, this is a reminder for our appointment on <span className="font-bold text-[#006b5f]">
+                    {formData.date ? formData.date.split('-').reverse().join('/') : 'date'} at {formData.time ? (
+                      (() => {
+                        const [h, m] = formData.time.split(':');
+                        const hr = parseInt(h);
+                        const ampm = hr >= 12 ? 'PM' : 'AM';
+                        return `${hr % 12 || 12}:${m} ${ampm}`;
+                      })()
+                    ) : 'time'}
+                  </span> at <span className="font-bold text-[#006b5f]">{formData.address || 'the location'}</span>. See you then!
+                </p>
+              </div>
+              <div className="mt-2.5 flex justify-end">
+                <button className="flex items-center gap-1 text-[#006b5f] text-[11px] font-bold">
+                  <span className="material-symbols-outlined text-[14px]">edit</span> Edit Text
+                </button>
+              </div>
+            </div>
+          </section>
+
+          {/* Footer Button */}
+          <footer className="pt-0.5">
+            <button
+              onClick={handleSend}
+              className="w-full h-12 bg-[#006b5f] text-white rounded-[12px] font-bold text-[16px] flex items-center justify-center gap-2 shadow-lg shadow-[#006b5f]/20 active:scale-[0.98] transition-all"
+              style={{ fontFamily: 'Manrope, sans-serif' }}
+            >
+              <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>
+                {reschedulingId ? 'sync_saved_locally' : 'send'}
+              </span>
+              <span>{reschedulingId ? 'Update & Send via WhatsApp' : 'Send via WhatsApp'}</span>
+            </button>
+          </footer>
         </div>
-        <div>
-          <label className="block label-muted text-[10px] mb-1.5 px-1">Time</label>
-          <div className="relative solid-card p-3 flex items-center group cursor-pointer active:scale-[0.98] transition-all">
-            <span className="material-icons-round text-emerald-600 text-sm mr-2.5 flex-shrink-0">schedule</span>
-            <div className="flex-1 overflow-hidden">
-              <input 
-                type="time" 
-                value={formData.time}
-                onChange={(e) => handleFieldChange('time', e.target.value)}
-                className="absolute inset-0 opacity-0 cursor-pointer z-10 w-full"
-              />
-              <div className="text-[13px] font-bold text-slate-900 truncate uppercase">
-                {formData.time ? (
-                  (() => {
-                    const [h, m] = formData.time.split(':');
-                    const hr = parseInt(h);
-                    const ampm = hr >= 12 ? 'pm' : 'am';
-                    return `${hr % 12 || 12}:${m}${ampm}`;
-                  })()
-                ) : 'Select Time'}
+      ) : currentPage === 'history' ? (
+        <History 
+          history={history} 
+          onUpdateStatus={updateAppointmentStatus} 
+          onDelete={deleteAppointment} 
+          onFollowUp={handleFollowUp}
+          onReschedule={handleReschedule}
+        />
+
+      ) : (
+
+          <div className="w-full space-y-6 pt-4">
+            <div className="px-1">
+              <h2 className="label-caps tracking-wider text-[#6b7a76]">Settings</h2>
+            </div>
+            
+            <div className="bg-white rounded-2xl p-5 ambient-shadow border border-slate-100 space-y-6">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1 flex-1 pr-4">
+                  <h3 className="text-[16px] font-bold text-[#131b2e]" style={{ fontFamily: 'Manrope, sans-serif' }}>Auto-Confirm Appointments</h3>
+                  <p className="text-[12px] text-[#6b7a76]">Automatically mark as confirmed when a recipient replies with "Yes" or "Confirm" via WhatsApp.</p>
+                </div>
+                <ToggleSwitch
+                  enabled={autoConfirmEnabled}
+                  onChange={() => setAutoConfirmEnabled(!autoConfirmEnabled)}
+                />
+              </div>
+
+              <div className="pt-4 border-t border-slate-50 space-y-4">
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[14px] font-semibold text-[#131b2e]" style={{ fontFamily: 'Manrope, sans-serif' }}>Notification Access (System Listener)</span>
+                    <div className={`px-2.5 py-1 rounded-full text-[10px] font-bold flex items-center gap-1.5 ${
+                      hasPermission 
+                        ? 'bg-[#006b5f]/10 text-[#006b5f] border border-[#006b5f]/20' 
+                        : 'bg-amber-50 text-amber-700 border border-amber-200'
+                    }`}>
+                      <span className="relative flex h-2 w-2">
+                        <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${hasPermission ? 'bg-[#006b5f]' : 'bg-amber-500'}`}></span>
+                        <span className={`relative inline-flex rounded-full h-2 w-2 ${hasPermission ? 'bg-[#006b5f]' : 'bg-amber-500'}`}></span>
+                      </span>
+                      {hasPermission ? 'ACTIVE' : 'INACTIVE'}
+                    </div>
+                  </div>
+
+                  <button 
+                    onClick={requestPermission}
+                    className="w-full py-2.5 bg-[#f2f3ff] text-[#006b5f] rounded-xl font-bold text-[13px] flex items-center justify-center gap-2 transition-transform active:scale-[0.98]"
+                    style={{ fontFamily: 'Manrope, sans-serif' }}
+                  >
+                    <span className="material-symbols-outlined text-[18px]">settings_suggest</span>
+                    {hasPermission ? 'Manage Notification Access' : 'Enable Notification Access'}
+                  </button>
+                </div>
+
+                <div className="pt-3 border-t border-slate-50">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="space-y-1 flex-1 pr-4">
+                      <span className="text-[14px] font-semibold text-[#131b2e]" style={{ fontFamily: 'Manrope, sans-serif' }}>Heads-Up Alerts (Banner Alerts)</span>
+                      <p className="text-[11px] text-[#6b7a76]">Show high-priority notification banners when appointment statuses update.</p>
+                    </div>
+                    {hasNotificationPermission ? (
+                      <ToggleSwitch
+                        enabled={alertsEnabled}
+                        onChange={() => setAlertsEnabled(!alertsEnabled)}
+                      />
+                    ) : (
+                      <div className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 uppercase">
+                        Blocked
+                      </div>
+                    )}
+                  </div>
+
+                  {!hasNotificationPermission ? (
+                    <button 
+                      onClick={requestNotificationPerm}
+                      className="w-full py-2.5 bg-[#006b5f]/10 text-[#006b5f] rounded-xl font-bold text-[13px] flex items-center justify-center gap-2 transition-transform active:scale-[0.98]"
+                      style={{ fontFamily: 'Manrope, sans-serif' }}
+                    >
+                      <span className="material-symbols-outlined text-[18px]">notifications_active</span>
+                      Enable Heads-Up Alerts
+                    </button>
+                  ) : (
+                    <button 
+                      onClick={openAppNotificationSettings}
+                      className="w-full py-2.5 bg-[#f2f3ff] text-[#006b5f] rounded-xl font-bold text-[13px] flex items-center justify-center gap-2 transition-transform active:scale-[0.98]"
+                      style={{ fontFamily: 'Manrope, sans-serif' }}
+                    >
+                      <span className="material-symbols-outlined text-[18px]">settings</span>
+                      Manage OS Notifications
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-[#006b5f]/5 rounded-2xl p-4 border border-[#006b5f]/20">
+              <div className="flex gap-3">
+                <span className="material-symbols-outlined text-[#006b5f]">info</span>
+                <p className="text-[12px] text-[#006b5f] leading-relaxed">
+                  This feature requires <strong>Notification Access</strong> permission on your Android device to "read" incoming WhatsApp messages locally. No data is sent to external servers.
+                </p>
               </div>
             </div>
           </div>
-        </div>
-      </div>
+      )}
 
-      <div className="mb-1.5">
-        <div className="flex items-center justify-between bg-slate-100/50 rounded-[2.5rem] p-5">
-          <div>
-            <h3 className="text-[13px] font-bold text-slate-900 leading-tight">Automatic Reminder</h3>
-            <p className="text-[11px] font-medium text-slate-400">Send 1 hour before</p>
-          </div>
-          <ToggleSwitch
-            enabled={formData.reminderEnabled}
-            onChange={() => handleFieldChange('reminderEnabled', !formData.reminderEnabled)}
-            className="scale-95"
-          />
-        </div>
-      </div>
 
-      <div className="mt-0 px-1">
-        <div className="flex items-center justify-between mb-0 px-6">
-          <label className="label-muted text-[10px] leading-none">Message Preview</label>
-          <button className="text-slate-400 hover:text-emerald-600 transition-colors flex items-center">
-            <span className="material-icons-round text-[13px]">edit</span>
-          </button>
-        </div>
-        <div className="relative bg-slate-100/60 rounded-[2.5rem] p-6 cursor-default group">
-          <div className="flex flex-col space-y-3.5">
-            <p className="text-[14px] leading-relaxed text-slate-600 font-normal pr-2">
-              Hi <span className="text-slate-900 font-semibold">{formData.contact.name || 'there'}</span>! Looking forward to our meeting at <span className="text-slate-900 font-semibold">{formData.address || 'the location'}</span> on <span className="text-slate-900 font-semibold">
-                {formData.date ? formData.date.split('-').reverse().join('/') : 'date'}
-              </span> at <span className="text-emerald-600 font-bold">
-                {formData.time ? (
-                  (() => {
-                    const [h, m] = formData.time.split(':');
-                    const hr = parseInt(h);
-                    const ampm = hr >= 12 ? 'PM' : 'AM';
-                    return `${hr % 12 || 12}:${m} ${ampm}`;
-                  })()
-                ) : 'time'}
-              </span>. See you then!
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <button
-        onClick={handleSend}
-        className="w-full bg-[#128C7E] hover:bg-[#075E54] text-white py-3 rounded-[2rem] font-bold text-[15px] flex items-center justify-center space-x-3 shadow-lg active:scale-[0.98] transition-all mb-2 mt-4"
-      >
-        <span className="material-icons-round text-lg">send</span>
-        <span>Send via WhatsApp</span>
-      </button>
 
       <ContactPickerModal
         isOpen={isContactPickerOpen}
@@ -272,10 +453,10 @@ const App: React.FC = () => {
       />
 
       {isManualAddOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-slate-900 rounded-[32px] w-full max-w-sm p-6 shadow-2xl border border-white/10 animate-in zoom-in-95 duration-200">
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">Add Contact</h3>
-            <p className="text-xs text-slate-500 mb-6 font-medium">Add a person specifically for WhatsApp.</p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#131b2e]/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-[2rem] w-full max-w-sm p-6 shadow-2xl border border-[#bacac5]/20 animate-in zoom-in-95 duration-200">
+            <h3 className="text-[20px] font-bold text-[#131b2e] mb-1" style={{ fontFamily: 'Manrope, sans-serif' }}>Add Contact</h3>
+            <p className="text-[14px] text-[#6b7a76] mb-6 font-normal" style={{ fontFamily: 'Inter, sans-serif' }}>Add a person specifically for WhatsApp.</p>
             <div className="space-y-4">
               <InputField
                 label="Full Name"
@@ -286,7 +467,7 @@ const App: React.FC = () => {
               />
               <InputField
                 label="Phone Number"
-                icon="phone"
+                icon="call"
                 value={manualContact.phone}
                 onChange={(e) => setManualContact(prev => ({ ...prev, phone: e.target.value }))}
                 placeholder="e.g. 60123456789"
@@ -296,17 +477,31 @@ const App: React.FC = () => {
             <div className="mt-8 flex space-x-3">
               <button
                 onClick={() => setIsManualAddOpen(false)}
-                className="flex-1 px-4 py-3 rounded-2xl font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
+                className="flex-1 px-4 py-3 rounded-xl font-bold text-[#6b7a76] hover:bg-[#f2f3ff] transition-colors"
+                style={{ fontFamily: 'Manrope, sans-serif' }}
               >Cancel</button>
               <button
                 onClick={handleManualAdd}
-                className="flex-1 px-4 py-3 rounded-2xl font-bold bg-primary text-white shadow-lg shadow-primary/20 hover:brightness-110 transition-all"
+                className="flex-1 px-4 py-3 rounded-xl font-bold bg-[#006b5f] text-white shadow-lg shadow-[#006b5f]/20 hover:brightness-110 active:scale-[0.98] transition-all"
+                style={{ fontFamily: 'Manrope, sans-serif' }}
               >Save</button>
             </div>
           </div>
         </div>
       )}
+
+
+
+      {selectedFollowUp && (
+
+        <FollowUpModal
+          appointment={selectedFollowUp}
+          onClose={() => setSelectedFollowUp(null)}
+          onSend={handleSendFollowUp}
+        />
+      )}
       <div className="w-32 h-1 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto mt-2 opacity-50"></div>
+
     </Layout>
   );
 };

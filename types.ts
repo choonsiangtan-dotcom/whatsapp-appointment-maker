@@ -8,6 +8,17 @@ export interface Contact {
   lastUsed: number; // For "recent 5" sorting and deduplication
 }
 
+
+export type AppointmentStatus = 'SENT' | 'PENDING' | 'CONFIRMED' | 'RESCHEDULED' | 'NO-SHOW' | 'CANCELLED';
+
+export interface HistoricalAppointment extends AppointmentData {
+  id: string;
+  status: AppointmentStatus;
+  sentAt: number; // timestamp
+  updatedAt: number; // timestamp
+  syncSuccessful?: boolean;
+}
+
 export interface AppointmentData {
   address: string;
   date: string;
@@ -16,6 +27,7 @@ export interface AppointmentData {
   selectedPhoneNumber: string;
   reminderEnabled: boolean;
   leadTime: '30 mins' | '1 hour' | '1 day';
+  messageText?: string;
 }
 
 export interface ExtractionResult {
@@ -24,3 +36,4 @@ export interface ExtractionResult {
   date?: string;
   time?: string;
 }
+
