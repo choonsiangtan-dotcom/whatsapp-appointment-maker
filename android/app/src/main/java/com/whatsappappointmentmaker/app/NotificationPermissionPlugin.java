@@ -40,6 +40,10 @@ public class NotificationPermissionPlugin extends Plugin {
         String flat = Settings.Secure.getString(getContext().getContentResolver(), "enabled_notification_listeners");
         boolean enabled = flat != null && flat.contains(cn.flattenToString());
         
+        if (enabled) {
+            MainActivity.forceRebindService();
+        }
+        
         JSObject ret = new JSObject();
         ret.put("granted", enabled);
         call.resolve(ret);
@@ -75,14 +79,37 @@ public class NotificationPermissionPlugin extends Plugin {
     public void getPendingNavigation(PluginCall call) {
         JSObject ret = new JSObject();
         ret.put("tab", MainActivity.pendingNavigationTab);
+        ret.put("appointmentId", MainActivity.pendingAppointmentId);
         MainActivity.pendingNavigationTab = null; // Reset after reading
+        MainActivity.pendingAppointmentId = null;
         call.resolve(ret);
+    }
+
+    @PluginMethod
+    public void openStartupManager(PluginCall call) {
+        MainActivity.openStartupManager();
+        call.resolve();
+    }
+
+    @PluginMethod
+    public void checkBatteryOptimization(PluginCall call) {
+        boolean isIgnoring = MainActivity.isIgnoringBatteryOptimizations();
+        JSObject ret = new JSObject();
+        ret.put("ignored", isIgnoring);
+        call.resolve(ret);
+    }
+
+    @PluginMethod
+    public void requestIgnoreBatteryOptimization(PluginCall call) {
+        MainActivity.requestIgnoreBatteryOptimizations();
+        call.resolve();
     }
 
     @PluginMethod
     public void showNotification(PluginCall call) {
         String title = call.getString("title");
         String body = call.getString("body");
+        String appointmentId = call.getString("appointmentId");
 
         if (title == null || body == null) {
             call.reject("Title and body are required");
@@ -105,6 +132,9 @@ public class NotificationPermissionPlugin extends Plugin {
 
         Intent intent = new Intent(context, MainActivity.class);
         intent.putExtra("action", "navigate-history");
+        if (appointmentId != null) {
+            intent.putExtra("appointmentId", appointmentId);
+        }
         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         
         int flags = PendingIntent.FLAG_UPDATE_CURRENT;

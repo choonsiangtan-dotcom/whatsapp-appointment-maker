@@ -10,9 +10,10 @@ interface HistoryProps {
   onDelete: (id: string) => void;
   onFollowUp: (appointment: HistoricalAppointment) => void;
   onReschedule: (appointment: HistoricalAppointment) => void;
+  onReminder: (appointment: HistoricalAppointment) => void;
 }
 
-const History: React.FC<HistoryProps> = ({ history, onUpdateStatus, onDelete, onFollowUp, onReschedule }) => {
+const History: React.FC<HistoryProps> = ({ history, onUpdateStatus, onDelete, onFollowUp, onReschedule, onReminder }) => {
 
 
   const [search, setSearch] = useState('');
@@ -96,6 +97,7 @@ const History: React.FC<HistoryProps> = ({ history, onUpdateStatus, onDelete, on
               onDelete={onDelete}
               onFollowUp={onFollowUp}
               onReschedule={onReschedule}
+              onReminder={onReminder}
             />
           ))
         ) : (

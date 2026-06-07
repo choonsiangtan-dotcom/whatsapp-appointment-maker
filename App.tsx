@@ -10,6 +10,7 @@ import { useAppLogic } from './hooks/useAppLogic';
 import ToggleSwitch from './components/ui/ToggleSwitch';
 import History from './components/History';
 import FollowUpModal from './components/FollowUpModal';
+import ReminderModal from './components/ReminderModal';
 import { useNotificationPermission } from './hooks/useNotificationPermission';
 
 const App: React.FC = () => {
@@ -22,7 +23,10 @@ const App: React.FC = () => {
     setAutoConfirmEnabled,
     alertsEnabled,
     setAlertsEnabled,
-    openAppNotificationSettings
+    openAppNotificationSettings,
+    batteryOptimizationIgnored,
+    openStartupManager,
+    requestIgnoreBatteryOptimization
   } = useNotificationPermission();
   const {
     contacts,
@@ -52,10 +56,124 @@ const App: React.FC = () => {
     setSelectedFollowUp,
     handleFollowUp,
     handleSendFollowUp,
+    selectedReminder,
+    setSelectedReminder,
+    handleReminder,
+    handleSendReminder,
     handleReschedule,
     reschedulingId,
     setReschedulingId
   } = useAppLogic();
+
+  const [showFollowUpInfo, setShowFollowUpInfo] = React.useState(false);
+  const [showPreMeetingInfo, setShowPreMeetingInfo] = React.useState(false);
+
+  // --- Reminder Strategy Dedicated Configuration Hub States ---
+  const [defaultAutomaticActivation, setDefaultAutomaticActivation] = React.useState<boolean>(() => {
+    return localStorage.getItem('defaultAutomaticActivation') !== 'false';
+  });
+
+  const [defaultFollowUpTimer, setDefaultFollowUpTimer] = React.useState<string>(() => {
+    return localStorage.getItem('defaultFollowUpTimer') || '20s';
+  });
+
+  const [defaultPreMeetingTimer, setDefaultPreMeetingTimer] = React.useState<string>(() => {
+    return localStorage.getItem('defaultPreMeetingTimer') || '20s';
+  });
+
+  const [vibrateEnabled, setVibrateEnabled] = React.useState<boolean>(() => {
+    return localStorage.getItem('recoveryProtocol_vibrate') !== 'false';
+  });
+
+  const [soundEnabled, setSoundEnabled] = React.useState<boolean>(() => {
+    return localStorage.getItem('recoveryProtocol_sound') !== 'false'; // default to true
+  });
+
+  const [persistentEnabled, setPersistentEnabled] = React.useState<boolean>(() => {
+    return localStorage.getItem('recoveryProtocol_persistent') === 'true';
+  });
+
+  const [oneTapSendEnabled, setOneTapSendEnabled] = React.useState<boolean>(() => {
+    return localStorage.getItem('oneTapSendEnabled') !== 'false'; // default to true
+  });
+
+  const [confirmKeywords, setConfirmKeywords] = React.useState<string[]>(() => {
+    const saved = localStorage.getItem('confirmKeywords');
+    return saved ? JSON.parse(saved) : ['ok', 'yes', 'confirm', 'sure', 'confirmed', 'yep', 'can', 'noted', 'fine', 'see you', 'okay', 'correct', 'agree', 'perfect', 'will do', 'booked', 'awesome', '👍', '👌', 'deal'];
+  });
+
+  const [keywordInput, setKeywordInput] = React.useState('');
+
+  const [showGlobalFollowUpInfo, setShowGlobalFollowUpInfo] = React.useState(false);
+  const [showGlobalPreMeetingInfo, setShowGlobalPreMeetingInfo] = React.useState(false);
+
+  // Sync states to localStorage
+  React.useEffect(() => {
+    localStorage.setItem('defaultAutomaticActivation', String(defaultAutomaticActivation));
+  }, [defaultAutomaticActivation]);
+
+  React.useEffect(() => {
+    localStorage.setItem('defaultFollowUpTimer', defaultFollowUpTimer);
+  }, [defaultFollowUpTimer]);
+
+  React.useEffect(() => {
+    localStorage.setItem('defaultPreMeetingTimer', defaultPreMeetingTimer);
+  }, [defaultPreMeetingTimer]);
+
+  React.useEffect(() => {
+    localStorage.setItem('recoveryProtocol_vibrate', String(vibrateEnabled));
+  }, [vibrateEnabled]);
+
+  React.useEffect(() => {
+    localStorage.setItem('recoveryProtocol_sound', String(soundEnabled));
+  }, [soundEnabled]);
+
+  React.useEffect(() => {
+    localStorage.setItem('recoveryProtocol_persistent', String(persistentEnabled));
+  }, [persistentEnabled]);
+
+  React.useEffect(() => {
+    localStorage.setItem('oneTapSendEnabled', String(oneTapSendEnabled));
+  }, [oneTapSendEnabled]);
+
+  React.useEffect(() => {
+    localStorage.setItem('confirmKeywords', JSON.stringify(confirmKeywords));
+  }, [confirmKeywords]);
+
+  const playAlertSound = () => {
+    try {
+      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const oscillator = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(880, audioCtx.currentTime); // high tone A5
+      oscillator.frequency.setValueAtTime(1109, audioCtx.currentTime + 0.08); // third C#6
+      
+      gainNode.gain.setValueAtTime(0.08, audioCtx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.25);
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+
+      oscillator.start();
+      oscillator.stop(audioCtx.currentTime + 0.25);
+    } catch (e) {
+      console.warn('Audio Context not allowed or supported yet', e);
+    }
+  };
+
+  const handleAddKeyword = () => {
+    const trimmed = keywordInput.trim().toLowerCase();
+    if (trimmed && !confirmKeywords.includes(trimmed)) {
+      setConfirmKeywords([...confirmKeywords, trimmed]);
+      setKeywordInput('');
+    }
+  };
+
+  const handleRemoveKeyword = (keyword: string) => {
+    setConfirmKeywords(confirmKeywords.filter(k => k !== keyword));
+  };
 
 
 
@@ -93,7 +211,7 @@ const App: React.FC = () => {
               id: nc.contactId || crypto.randomUUID(),
               name: nc.name?.display || 'Unknown',
               avatar: nc.image?.base64String
-                ? `data:image/jpeg;base64,${nc.image.base64String}`
+                ? `data:image/jpeg;base64,${nc.image.base64String.replace(/[\r\n]/g, '')}`
                 : `https://ui-avatars.com/api/?name=${encodeURIComponent(nc.name?.display || 'U')}&background=F1F5F9&color=64748B&bold=true`,
               status: nc.organization?.company || 'Hey there! I am using WhatsApp.',
               phoneNumbers: Array.from(new Set(nc.phones!.map(p => p.number.replace(/\D/g, '')))).sort(),
@@ -264,29 +382,95 @@ const App: React.FC = () => {
               </div>
             </div>
 
-            {/* Section 4: AUTOMATIC REMINDER */}
-            <div className="pt-1">
-              <div className="flex items-center justify-between mb-2.5">
-                <div className="flex items-center gap-1.5 text-[#131b2e]">
-                  <span className="material-symbols-outlined text-[#006b5f] text-[18px]">notifications_active</span>
-                  <span className="text-[14px] font-semibold" style={{ fontFamily: 'Inter, sans-serif' }}>Automatic Reminder</span>
-                </div>
-                <ToggleSwitch
-                  enabled={formData.reminderEnabled}
-                  onChange={() => handleFieldChange('reminderEnabled', !formData.reminderEnabled)}
-                />
-              </div>
+            {/* Section 4: AUTOMATIC REMINDERS */}
+            <div className="pt-1 space-y-4">
               
-              <div className="flex gap-2">
-                <button className="flex-1 py-1.5 px-1 rounded-lg bg-[#fe7488] text-[#730425] text-[11px] font-bold tracking-widest border border-[#a93349]/20" style={{ fontFamily: 'Manrope, sans-serif' }}>
-                  30 MINS
-                </button>
-                <button className="flex-1 py-1.5 px-1 rounded-lg bg-[#e2e7ff] text-[#3c4a46] text-[11px] font-medium tracking-widest border border-transparent" style={{ fontFamily: 'Manrope, sans-serif' }}>
-                  1 HOUR
-                </button>
-                <button className="flex-1 py-1.5 px-1 rounded-lg bg-[#e2e7ff] text-[#3c4a46] text-[11px] font-medium tracking-widest border border-transparent" style={{ fontFamily: 'Manrope, sans-serif' }}>
-                  2 HOURS
-                </button>
+              {/* Follow-Up Block */}
+              <div className="p-3 bg-amber-50/30 border border-amber-200/40 rounded-xl space-y-3 relative transition-all duration-300">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 text-[#131b2e]">
+                    <span className="material-symbols-outlined text-[#006b5f] text-[18px]">update</span>
+                    <span className="text-[14px] font-semibold" style={{ fontFamily: 'Inter, sans-serif' }}>Follow-Up Nudge</span>
+                  </div>
+                  <ToggleSwitch
+                    enabled={formData.followUpEnabled}
+                    onChange={() => handleFieldChange('followUpEnabled', !formData.followUpEnabled)}
+                  />
+                </div>
+                
+                {formData.followUpEnabled && (
+                  <div className={`flex items-center flex-wrap gap-x-2 gap-y-1 text-[#131b2e] text-[13px]`} style={{ fontFamily: 'Inter, sans-serif' }}>
+                    <span>If recipient does not reply in</span>
+                    <div className="relative inline-block">
+                      <select
+                        value={formData.followUpTimer}
+                        onChange={(e) => handleFieldChange('followUpTimer', e.target.value)}
+                        className={`appearance-none bg-transparent border-b border-[#006b5f] text-[#006b5f] font-bold px-1 py-0.5 outline-none cursor-pointer pr-5`}
+                      >
+                        <option value="20s">20s (Test)</option>
+                        <option value="15 mins">15 Mins</option>
+                        <option value="30 mins">30 Mins</option>
+                        <option value="1 hour">1 Hour</option>
+                        <option value="2 hours">2 Hours</option>
+                      </select>
+                      <span className="material-symbols-outlined absolute right-0 top-1/2 -translate-y-1/2 text-[14px] pointer-events-none">arrow_drop_down</span>
+                    </div>
+                    <span>, prompt me to send a follow-up message.</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Pre-Meeting Reminder Block */}
+              <div className="p-3 bg-emerald-50/20 border border-emerald-200/40 rounded-xl space-y-3 relative transition-all duration-300">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 text-[#131b2e]">
+                    <span className="material-symbols-outlined text-[#006b5f] text-[18px]">event_available</span>
+                    <span className="text-[14px] font-semibold" style={{ fontFamily: 'Inter, sans-serif' }}>Pre-Meeting Reminder</span>
+                  </div>
+                  <ToggleSwitch
+                    enabled={formData.preMeetingEnabled}
+                    onChange={() => handleFieldChange('preMeetingEnabled', !formData.preMeetingEnabled)}
+                  />
+                </div>
+
+                {formData.preMeetingEnabled && (
+                  <div className={`flex items-center flex-wrap gap-x-2 gap-y-1 text-[#131b2e] text-[13px]`} style={{ fontFamily: 'Inter, sans-serif' }}>
+                    <span>Send an automated reminder message</span>
+                    <div className="relative inline-block">
+                      <select
+                        value={formData.preMeetingTimer}
+                        onChange={(e) => handleFieldChange('preMeetingTimer', e.target.value)}
+                        className={`appearance-none bg-transparent border-b border-[#006b5f] text-[#006b5f] font-bold px-1 py-0.5 outline-none cursor-pointer pr-5`}
+                      >
+                        {(() => {
+                          const allOptions = [
+                            { label: '20s (Test)', value: '20s', ms: 20 * 1000 },
+                            { label: '15 Mins', value: '15 mins', ms: 15 * 60 * 1000 },
+                            { label: '30 Mins', value: '30 mins', ms: 30 * 60 * 1000 },
+                            { label: '1 Hour', value: '1 hour', ms: 60 * 60 * 1000 },
+                            { label: '1 Day', value: '1 day', ms: 24 * 60 * 60 * 1000 }
+                          ];
+                          let diff = Infinity;
+                          if (formData.date && formData.time) {
+                            const [year, month, day] = formData.date.split('-').map(Number);
+                            const [hours, minutes] = formData.time.split(':').map(Number);
+                            diff = new Date(year, month - 1, day, hours, minutes).getTime() - Date.now();
+                          }
+                          return allOptions.map(opt => {
+                            const isDisabled = diff > 0 && diff <= opt.ms;
+                            return (
+                              <option key={opt.value} value={opt.value} disabled={isDisabled}>
+                                {opt.label}
+                              </option>
+                            );
+                          });
+                        })()}
+                      </select>
+                      <span className="material-symbols-outlined absolute right-0 top-1/2 -translate-y-1/2 text-[14px] pointer-events-none">arrow_drop_down</span>
+                    </div>
+                    <span>before the scheduled meeting.</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -341,6 +525,7 @@ const App: React.FC = () => {
           onDelete={deleteAppointment} 
           onFollowUp={handleFollowUp}
           onReschedule={handleReschedule}
+          onReminder={handleReminder}
         />
 
       ) : (
@@ -386,6 +571,43 @@ const App: React.FC = () => {
                   >
                     <span className="material-symbols-outlined text-[18px]">settings_suggest</span>
                     {hasPermission ? 'Manage Notification Access' : 'Enable Notification Access'}
+                  </button>
+                </div>
+
+                {/* Battery Optimization / Honor Background Settings */}
+                <div className="pt-3 border-t border-slate-50 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <span className="text-[14px] font-semibold text-[#131b2e]" style={{ fontFamily: 'Manrope, sans-serif' }}>Device Background Running</span>
+                      <p className="text-[11px] text-[#6b7a76]">Allow the service to stay active in the background for real-time capture.</p>
+                    </div>
+                    <div className={`px-2.5 py-1 rounded-full text-[10px] font-bold flex items-center gap-1.5 ${
+                      batteryOptimizationIgnored 
+                        ? 'bg-[#006b5f]/10 text-[#006b5f] border border-[#006b5f]/20' 
+                        : 'bg-amber-50 text-amber-700 border border-amber-200'
+                    }`}>
+                      {batteryOptimizationIgnored ? 'OPTIMIZATION EXCLUDED' : 'RESTRICTED'}
+                    </div>
+                  </div>
+
+                  {!batteryOptimizationIgnored && (
+                    <button 
+                      onClick={requestIgnoreBatteryOptimization}
+                      className="w-full py-2.5 bg-amber-50 text-amber-800 border border-amber-200 rounded-xl font-bold text-[13px] flex items-center justify-center gap-2 transition-transform active:scale-[0.98]"
+                      style={{ fontFamily: 'Manrope, sans-serif' }}
+                    >
+                      <span className="material-symbols-outlined text-[18px]">battery_charging_full</span>
+                      Disable Battery Optimization
+                    </button>
+                  )}
+
+                  <button 
+                    onClick={openStartupManager}
+                    className="w-full py-2.5 bg-[#f2f3ff] text-[#006b5f] rounded-xl font-bold text-[13px] flex items-center justify-center gap-2 transition-transform active:scale-[0.98]"
+                    style={{ fontFamily: 'Manrope, sans-serif' }}
+                  >
+                    <span className="material-symbols-outlined text-[18px]">bolt</span>
+                    Configure App Launch (Honor Settings)
                   </button>
                 </div>
 
@@ -436,6 +658,168 @@ const App: React.FC = () => {
                 <p className="text-[12px] text-[#006b5f] leading-relaxed">
                   This feature requires <strong>Notification Access</strong> permission on your Android device to "read" incoming WhatsApp messages locally. No data is sent to external servers.
                 </p>
+              </div>
+            </div>
+
+            {/* --- Reminder Strategy Dedicated Configuration Hub --- */}
+            <div className="px-1 mt-6">
+              <h2 className="label-caps tracking-wider text-[#6b7a76]">Reminder Strategy</h2>
+            </div>
+
+            {/* Pillar 1: Global Defaults */}
+            <div className="bg-white rounded-2xl p-5 ambient-shadow border border-slate-100 space-y-6">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1 flex-1 pr-4">
+                  <h3 className="text-[16px] font-bold text-[#131b2e]" style={{ fontFamily: 'Manrope, sans-serif' }}>Automatic Reminders Default</h3>
+                  <p className="text-[12px] text-[#6b7a76]">Enable Follow-Up Nudges and Pre-Meeting Reminders automatically for all new meetings.</p>
+                </div>
+                <ToggleSwitch
+                  enabled={defaultAutomaticActivation}
+                  onChange={() => setDefaultAutomaticActivation(!defaultAutomaticActivation)}
+                />
+              </div>
+
+              <div className="pt-4 border-t border-slate-50 space-y-4">
+                {/* Default Follow-Up Timer */}
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <span className="text-[14px] font-semibold text-[#131b2e]" style={{ fontFamily: 'Manrope, sans-serif' }}>Default Follow-Up Timer</span>
+                    <p className="text-[11px] text-[#6b7a76]">Select standard time window to wait for follow‑up nudges.</p>
+                  </div>
+                  <div className="relative">
+                    <select
+                      value={defaultFollowUpTimer}
+                      onChange={(e) => setDefaultFollowUpTimer(e.target.value)}
+                      className="appearance-none bg-slate-50 border border-slate-100 rounded-xl px-3 py-1.5 text-[13px] font-bold text-[#006b5f] pr-8 focus:outline-none focus:border-[#006b5f]/50 cursor-pointer"
+                    >
+                      <option value="20s">20s (Test)</option>
+                      <option value="15 mins">15 Mins</option>
+                      <option value="30 mins">30 Mins</option>
+                      <option value="1 hour">1 Hour</option>
+                      <option value="2 hours">2 Hours</option>
+                    </select>
+                    <span className="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 text-[16px] pointer-events-none text-slate-400">arrow_drop_down</span>
+                  </div>
+                </div>
+
+                {/* Default Pre-Meeting Timer */}
+                <div className="flex items-center justify-between pt-2 border-t border-slate-50/50">
+                  <div className="space-y-0.5">
+                    <span className="text-[14px] font-semibold text-[#131b2e]" style={{ fontFamily: 'Manrope, sans-serif' }}>Default Pre-Meeting Timer</span>
+                    <p className="text-[11px] text-[#6b7a76]">Standard lead time to notify for scheduled appointments.</p>
+                  </div>
+                  <div className="relative">
+                    <select
+                      value={defaultPreMeetingTimer}
+                      onChange={(e) => setDefaultPreMeetingTimer(e.target.value)}
+                      className="appearance-none bg-slate-50 border border-slate-100 rounded-xl px-3 py-1.5 text-[13px] font-bold text-[#006b5f] pr-8 focus:outline-none focus:border-[#006b5f]/50 cursor-pointer"
+                    >
+                      <option value="20s">20s (Test)</option>
+                      <option value="15 mins">15 Mins</option>
+                      <option value="30 mins">30 Mins</option>
+                      <option value="1 hour">1 Hour</option>
+                      <option value="1 day">1 Day</option>
+                    </select>
+                    <span className="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 text-[16px] pointer-events-none text-slate-400">arrow_drop_down</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Pillar 2: Recovery Protocol */}
+            <div className="px-1 mt-6">
+              <h2 className="label-caps tracking-wider text-[#6b7a76]">Recovery Protocol</h2>
+            </div>
+            <div className="bg-white rounded-2xl p-5 ambient-shadow border border-slate-100 space-y-6">
+              {/* Sound Option */}
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <span className="text-[14px] font-semibold text-[#131b2e]" style={{ fontFamily: 'Manrope, sans-serif' }}>Alert Sound</span>
+                  <p className="text-[11px] text-[#6b7a76]">Play brief ringtone alerts when notification banners display.</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <button 
+                    onClick={playAlertSound}
+                    className="w-8 h-8 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 hover:text-[#006b5f] transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">volume_up</span>
+                  </button>
+                  <ToggleSwitch
+                    enabled={soundEnabled}
+                    onChange={() => setSoundEnabled(!soundEnabled)}
+                  />
+                </div>
+              </div>
+
+              {/* Vibration Option */}
+              <div className="flex items-center justify-between pt-4 border-t border-slate-50">
+                <div className="space-y-0.5">
+                  <span className="text-[14px] font-semibold text-[#131b2e]" style={{ fontFamily: 'Manrope, sans-serif' }}>Alert Vibration</span>
+                  <p className="text-[11px] text-[#6b7a76]">Vibrate physical handset device during new status alerts.</p>
+                </div>
+                <ToggleSwitch
+                  enabled={vibrateEnabled}
+                  onChange={() => setVibrateEnabled(!vibrateEnabled)}
+                />
+              </div>
+
+              {/* Persistent Alert Option */}
+              <div className="flex items-center justify-between pt-4 border-t border-slate-50">
+                <div className="space-y-0.5 pr-4 flex-1">
+                  <span className="text-[14px] font-semibold text-[#131b2e]" style={{ fontFamily: 'Manrope, sans-serif' }}>Persistent Alerts</span>
+                  <p className="text-[11px] text-[#6b7a76]">Re-alert status changes until dismissed manually inside app.</p>
+                </div>
+                <ToggleSwitch
+                  enabled={persistentEnabled}
+                  onChange={() => setPersistentEnabled(!persistentEnabled)}
+                />
+              </div>
+            </div>
+
+            {/* Pillar 3: Keyword Library */}
+            <div className="px-1 mt-6">
+              <h2 className="label-caps tracking-wider text-[#6b7a76]">Keyword Library</h2>
+            </div>
+            <div className="bg-white rounded-2xl p-5 ambient-shadow border border-slate-100 space-y-4">
+              <div className="space-y-1">
+                <h3 className="text-[14px] font-bold text-[#131b2e]" style={{ fontFamily: 'Manrope, sans-serif' }}>Confirmation Keywords</h3>
+                <p className="text-[11px] text-[#6b7a76]">Replies matching these terms transition appointments from PENDING to CONFIRMED.</p>
+              </div>
+
+              {/* Tag Cloud */}
+              <div className="flex flex-wrap gap-2 py-2">
+                {confirmKeywords.map(keyword => (
+                  <div 
+                    key={keyword}
+                    className="flex items-center gap-1 pl-2.5 pr-1.5 py-1 bg-[#006b5f]/5 border border-[#006b5f]/15 rounded-lg text-[12px] font-semibold text-[#006b5f]"
+                  >
+                    <span>{keyword}</span>
+                    <button 
+                      onClick={() => handleRemoveKeyword(keyword)}
+                      className="w-4 h-4 flex items-center justify-center rounded-full hover:bg-[#006b5f]/10 text-slate-400 hover:text-[#f43f5e] transition-colors"
+                    >
+                      <span className="material-symbols-outlined text-[12px]">close</span>
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              {/* Add Input */}
+              <div className="flex gap-2 pt-2 border-t border-slate-50">
+                <input
+                  type="text"
+                  value={keywordInput}
+                  onChange={(e) => setKeywordInput(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleAddKeyword()}
+                  placeholder="Add custom confirmation term..."
+                  className="flex-1 h-9 px-3 bg-slate-50 border border-slate-100 rounded-xl text-[12px] text-[#131b2e] focus:outline-none focus:border-[#006b5f]/40"
+                />
+                <button
+                  onClick={handleAddKeyword}
+                  className="h-9 px-4 bg-[#006b5f] text-white rounded-xl text-[12px] font-bold active:scale-[0.98] transition-transform"
+                >
+                  Add
+                </button>
               </div>
             </div>
           </div>
@@ -493,11 +877,18 @@ const App: React.FC = () => {
 
 
       {selectedFollowUp && (
-
         <FollowUpModal
           appointment={selectedFollowUp}
           onClose={() => setSelectedFollowUp(null)}
           onSend={handleSendFollowUp}
+        />
+      )}
+
+      {selectedReminder && (
+        <ReminderModal
+          appointment={selectedReminder}
+          onClose={() => setSelectedReminder(null)}
+          onSend={handleSendReminder}
         />
       )}
       <div className="w-32 h-1 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto mt-2 opacity-50"></div>

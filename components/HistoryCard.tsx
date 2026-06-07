@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { HistoricalAppointment, AppointmentStatus } from '../types';
 
 interface HistoryCardProps {
@@ -7,12 +7,21 @@ interface HistoryCardProps {
   onDelete: (id: string) => void;
   onFollowUp: (appointment: HistoricalAppointment) => void;
   onReschedule: (appointment: HistoricalAppointment) => void;
+  onReminder: (appointment: HistoricalAppointment) => void;
   isThreadItem?: boolean;
 }
 
-const HistoryCard: React.FC<HistoryCardProps> = ({ appointment, onUpdateStatus, onDelete, onFollowUp, onReschedule, isThreadItem = false }) => {
+const HistoryCard: React.FC<HistoryCardProps> = ({ appointment, onUpdateStatus, onDelete, onFollowUp, onReschedule, onReminder, isThreadItem = false }) => {
   const [isSwiped, setIsSwiped] = useState(false);
+  const [now, setNow] = useState(Date.now());
 
+  useEffect(() => {
+    if (appointment.status !== 'PENDING' && appointment.status !== 'SENT' && appointment.status !== 'CONFIRMED') return;
+    const timer = setInterval(() => {
+      setNow(Date.now());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [appointment.status]);
 
   const getStatusConfig = (status: AppointmentStatus) => {
     switch (status) {
@@ -23,7 +32,6 @@ const HistoryCard: React.FC<HistoryCardProps> = ({ appointment, onUpdateStatus, 
       case 'RESCHEDULED':
         return { bg: 'bg-[#fffbeb]', text: 'text-[#b45309]', label: 'RESCHEDULED', pulse: 'bounce-subtle' };
       case 'NO-SHOW':
-
         return { bg: 'bg-[#fee2e2]', text: 'text-[#991b1b]', label: 'NO-SHOW', pulse: '' };
       case 'PENDING':
         return { bg: 'bg-[#ffedd5]', text: 'text-[#9a3412]', label: 'PENDING', pulse: 'status-pulse-amber' };
@@ -37,12 +45,45 @@ const HistoryCard: React.FC<HistoryCardProps> = ({ appointment, onUpdateStatus, 
   const config = getStatusConfig(appointment.status);
 
   const formatElapsedTime = (sentAt: number) => {
-    const diff = Date.now() - sentAt;
-    const mins = Math.floor(diff / 60000);
+    const diff = now - sentAt;
+    const totalSecs = Math.floor(diff / 1000);
+    const secs = totalSecs % 60;
+    const mins = Math.floor(totalSecs / 60);
     const hrs = Math.floor(mins / 60);
     
-    if (hrs > 0) return `${hrs}h ${mins % 60}m`;
-    return `${mins}m`;
+    const formattedSecs = secs.toString().padStart(2, '0');
+    
+    if (hrs > 0) {
+      const formattedMins = (mins % 60).toString().padStart(2, '0');
+      return `${hrs}h ${formattedMins}m ${formattedSecs}s`;
+    }
+    const formattedMins = mins.toString().padStart(2, '0');
+    return `${formattedMins}m ${formattedSecs}s`;
+  };
+
+  const formatCountdown = (dateStr: string, timeStr: string) => {
+    try {
+      const [year, month, day] = dateStr.split('-').map(Number);
+      const [hours, minutes] = timeStr.split(':').map(Number);
+      const apptTime = new Date(year, month - 1, day, hours, minutes).getTime();
+      const diff = apptTime - now;
+
+      if (diff <= 0) return 'Meeting Started';
+
+      const totalSecs = Math.floor(diff / 1000);
+      const secs = totalSecs % 60;
+      const totalMins = Math.floor(totalSecs / 60);
+      const mins = totalMins % 60;
+      const hrs = Math.floor(totalMins / 60);
+
+      const formattedSecs = secs.toString().padStart(2, '0');
+      const formattedMins = mins.toString().padStart(2, '0');
+
+      if (hrs > 0) return `${hrs}h ${formattedMins}m ${formattedSecs}s`;
+      return `${formattedMins}m ${formattedSecs}s`;
+    } catch (e) {
+      return '';
+    }
   };
 
 
@@ -150,6 +191,22 @@ const HistoryCard: React.FC<HistoryCardProps> = ({ appointment, onUpdateStatus, 
                 <span className="material-symbols-outlined text-[14px]">send</span>
                 FOLLOW UP
               </button>
+            ) : appointment.status === 'CONFIRMED' ? (
+              <div className="flex gap-1">
+                <button 
+                  onClick={() => onReminder(appointment)}
+                  className="flex items-center gap-1 px-2 py-1.5 bg-[#006b5f] text-white rounded-lg text-[10px] font-bold shadow-sm active:scale-95 transition-all whitespace-nowrap"
+                >
+                  <span className="material-symbols-outlined text-[13px]">notifications_active</span>
+                  REMIND
+                </button>
+                <button 
+                  onClick={() => onReschedule(appointment)}
+                  className="flex items-center gap-1 px-2 py-1.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-[10px] font-bold shadow-sm active:scale-95 transition-all whitespace-nowrap"
+                >
+                  Reschedule
+                </button>
+              </div>
             ) : (
               <button 
                 onClick={() => onReschedule(appointment)}
@@ -182,9 +239,23 @@ const HistoryCard: React.FC<HistoryCardProps> = ({ appointment, onUpdateStatus, 
           </button>
           
           {appointment.status === 'PENDING' && (
-            <div className="ml-auto text-[10px] font-bold text-[#9a3412] flex items-center gap-1 bg-[#ffedd5] px-2 py-0.5 rounded-full">
+            <div className="ml-auto text-[10px] font-extrabold text-[#9a3412] flex items-center gap-1 bg-[#ffedd5] px-2.5 py-0.5 rounded-full border border-[#9a3412]/10 shadow-sm animate-pulse" style={{ fontFamily: 'Manrope, sans-serif' }}>
               <span className="material-symbols-outlined text-[12px]">schedule</span>
               Pending for: {formatElapsedTime(appointment.sentAt)}
+            </div>
+          )}
+
+          {appointment.status === 'SENT' && (
+            <div className="ml-auto text-[10px] font-extrabold text-[#3c4a46] flex items-center gap-1 bg-[#eaedff] px-2.5 py-0.5 rounded-full border border-[#eaedff]/20 shadow-sm" style={{ fontFamily: 'Manrope, sans-serif' }}>
+              <span className="material-symbols-outlined text-[12px]">hourglass_empty</span>
+              Waiting: {formatElapsedTime(appointment.sentAt)}
+            </div>
+          )}
+
+          {appointment.status === 'CONFIRMED' && (
+            <div className="ml-auto text-[10px] font-extrabold text-[#065f46] flex items-center gap-1 bg-[#d1fae5] px-2.5 py-0.5 rounded-full border border-[#065f46]/10 shadow-sm" style={{ fontFamily: 'Manrope, sans-serif' }}>
+              <span className="material-symbols-outlined text-[12px]">alarm</span>
+              Meeting in: {formatCountdown(appointment.date, appointment.time)}
             </div>
           )}
         </div>

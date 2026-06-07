@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Screenshots and temp files
+screenshot*.png
+temp_diff_App.txt
+window_dump.xml

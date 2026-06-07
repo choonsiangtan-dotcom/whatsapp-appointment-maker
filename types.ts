@@ -25,8 +25,11 @@ export interface AppointmentData {
   time: string;
   contact: Contact;
   selectedPhoneNumber: string;
-  reminderEnabled: boolean;
+  followUpEnabled: boolean;
+  preMeetingEnabled: boolean;
   leadTime: '30 mins' | '1 hour' | '1 day';
+  followUpTimer?: '15 mins' | '30 mins' | '1 hour' | '2 hours' | string;
+  preMeetingTimer?: '15 mins' | '30 mins' | '1 hour' | '1 day' | string;
   messageText?: string;
 }
 

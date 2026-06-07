@@ -8,6 +8,9 @@ export interface NotificationPermissionPlugin {
   checkNotificationPermission(): Promise<{ granted: boolean }>;
   requestNotificationPermission(): Promise<void>;
   showNotification(options: { title: string; body: string }): Promise<void>;
+  openStartupManager(): Promise<void>;
+  checkBatteryOptimization(): Promise<{ ignored: boolean }>;
+  requestIgnoreBatteryOptimization(): Promise<void>;
 }
 
 const NotificationPermission = registerPlugin<NotificationPermissionPlugin>('NotificationPermission');
@@ -15,6 +18,7 @@ const NotificationPermission = registerPlugin<NotificationPermissionPlugin>('Not
 export function useNotificationPermission() {
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [hasNotificationPermission, setHasNotificationPermission] = useState<boolean | null>(null);
+  const [batteryOptimizationIgnored, setBatteryOptimizationIgnored] = useState<boolean | null>(null);
 
   const checkPermission = useCallback(async () => {
     try {
@@ -33,6 +37,16 @@ export function useNotificationPermission() {
     } catch (e) {
       console.warn('checkNotificationPermission not available', e);
       setHasNotificationPermission(true);
+    }
+  }, []);
+
+  const checkBatteryOptimization = useCallback(async () => {
+    try {
+      const result = await NotificationPermission.checkBatteryOptimization();
+      setBatteryOptimizationIgnored(result.ignored);
+    } catch (e) {
+      console.warn('checkBatteryOptimization not available', e);
+      setBatteryOptimizationIgnored(true);
     }
   }, []);
 
@@ -62,21 +76,40 @@ export function useNotificationPermission() {
     }
   }, []);
 
+  const openStartupManager = useCallback(async () => {
+    try {
+      await NotificationPermission.openStartupManager();
+    } catch (e) {
+      console.error('Failed to open startup manager', e);
+    }
+  }, []);
+
+  const requestIgnoreBatteryOptimization = useCallback(async () => {
+    try {
+      await NotificationPermission.requestIgnoreBatteryOptimization();
+      setTimeout(checkBatteryOptimization, 1000);
+    } catch (e) {
+      console.error('Failed to request ignore battery optimization', e);
+    }
+  }, [checkBatteryOptimization]);
+
   useEffect(() => {
     checkPermission();
     checkNotificationPerm();
+    checkBatteryOptimization();
 
     // Re-check permission when app returns to foreground
     const handleVisibilityChange = () => {
       if (!document.hidden) {
         checkPermission();
         checkNotificationPerm();
+        checkBatteryOptimization();
       }
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [checkPermission, checkNotificationPerm]);
+  }, [checkPermission, checkNotificationPerm, checkBatteryOptimization]);
 
   const [autoConfirmEnabled, setAutoConfirmEnabledState] = useState<boolean>(() => {
     return localStorage.getItem('whatsapp_appointment_maker_auto_confirm') !== 'false';
@@ -115,6 +148,9 @@ export function useNotificationPermission() {
     setAutoConfirmEnabled,
     alertsEnabled,
     setAlertsEnabled,
-    openAppNotificationSettings
+    openAppNotificationSettings,
+    batteryOptimizationIgnored,
+    openStartupManager,
+    requestIgnoreBatteryOptimization
   };
 }

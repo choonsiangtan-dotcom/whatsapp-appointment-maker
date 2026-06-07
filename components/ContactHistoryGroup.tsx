@@ -8,6 +8,7 @@ interface ContactHistoryGroupProps {
   onDelete: (id: string) => void;
   onFollowUp: (appointment: HistoricalAppointment) => void;
   onReschedule: (appointment: HistoricalAppointment) => void;
+  onReminder: (appointment: HistoricalAppointment) => void;
 }
 
 const ContactHistoryGroup: React.FC<ContactHistoryGroupProps> = ({ 
@@ -15,7 +16,8 @@ const ContactHistoryGroup: React.FC<ContactHistoryGroupProps> = ({
   onUpdateStatus, 
   onDelete, 
   onFollowUp, 
-  onReschedule 
+  onReschedule,
+  onReminder
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isArchiveExpanded, setIsArchiveExpanded] = useState(false);
@@ -103,6 +105,7 @@ const ContactHistoryGroup: React.FC<ContactHistoryGroupProps> = ({
   const nextAppt = sortedActive.length > 0 ? sortedActive[0] : sortedArchived[0];
 
   const pendingAppt = activeItems.find(a => a.status === 'PENDING');
+  const confirmedAppt = activeItems.find(a => a.status === 'CONFIRMED');
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -148,10 +151,22 @@ const ContactHistoryGroup: React.FC<ContactHistoryGroupProps> = ({
                     e.stopPropagation();
                     onFollowUp(pendingAppt);
                   }}
-                  className="flex items-center justify-center w-7 h-7 bg-[#006b5f] text-white rounded-full hover:bg-[#005a50] transition-all shadow-sm active:scale-95"
+                  className="flex items-center justify-center w-7 h-7 bg-[#a93349] text-white rounded-full hover:brightness-115 transition-all shadow-sm active:scale-95"
                   title="Nudge"
                 >
                   <span className="material-symbols-outlined text-[15px]">send</span>
+                </button>
+              )}
+              {confirmedAppt && (
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onReminder(confirmedAppt);
+                  }}
+                  className="flex items-center justify-center w-7 h-7 bg-[#006b5f] text-white rounded-full hover:brightness-115 transition-all shadow-sm active:scale-95"
+                  title="Remind"
+                >
+                  <span className="material-symbols-outlined text-[15px]">notifications_active</span>
                 </button>
               )}
               <div className="flex items-center gap-1">
@@ -200,6 +215,7 @@ const ContactHistoryGroup: React.FC<ContactHistoryGroupProps> = ({
                 onDelete={onDelete}
                 onFollowUp={onFollowUp}
                 onReschedule={onReschedule}
+                onReminder={onReminder}
                 isThreadItem={true}
               />
             ))}
@@ -229,6 +245,7 @@ const ContactHistoryGroup: React.FC<ContactHistoryGroupProps> = ({
                       onDelete={onDelete}
                       onFollowUp={onFollowUp}
                       onReschedule={onReschedule}
+                      onReminder={onReminder}
                       isThreadItem={true}
                     />
                   ))}
