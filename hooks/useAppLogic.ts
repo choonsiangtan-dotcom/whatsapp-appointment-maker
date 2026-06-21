@@ -153,6 +153,8 @@ export function useAppLogic() {
   const [selectedFollowUp, setSelectedFollowUp] = useState<HistoricalAppointment | null>(null);
   const [selectedReminder, setSelectedReminder] = useState<HistoricalAppointment | null>(null);
   const [selectedNotesAppt, setSelectedNotesAppt] = useState<HistoricalAppointment | null>(null);
+  const [selectedClientHistoryContact, setSelectedClientHistoryContact] = useState<any | null>(null);
+  const [showTimePicker, setShowTimePicker] = useState(false);
 
   // --- Rescheduling State ---
   const [reschedulingId, setReschedulingId] = useState<string | null>(() => {
@@ -426,6 +428,63 @@ export function useAppLogic() {
       window.removeEventListener('navigate-tab', handleNavigation);
     };
   }, []);
+
+  // --- Android Hardware Back Button Listener ---
+  useEffect(() => {
+    const backButtonListener = App.addListener('backButton', () => {
+      if (selectedClientHistoryContact) {
+        setSelectedClientHistoryContact(null);
+        return;
+      }
+      if (selectedNotesAppt) {
+        setSelectedNotesAppt(null);
+        return;
+      }
+      if (selectedFollowUp) {
+        setSelectedFollowUp(null);
+        return;
+      }
+      if (selectedReminder) {
+        setSelectedReminder(null);
+        return;
+      }
+      if (showTimePicker) {
+        setShowTimePicker(false);
+        return;
+      }
+      if (isContactPickerOpen) {
+        setIsContactPickerOpen(false);
+        return;
+      }
+      if (isManualAddOpen) {
+        setIsManualAddOpen(false);
+        return;
+      }
+      if (reschedulingId) {
+        setReschedulingId(null);
+        return;
+      }
+      if (currentPage !== 'schedule') {
+        setCurrentPage('schedule');
+        return;
+      }
+      App.exitApp();
+    });
+
+    return () => {
+      backButtonListener.remove();
+    };
+  }, [
+    selectedClientHistoryContact,
+    selectedNotesAppt,
+    selectedFollowUp,
+    selectedReminder,
+    showTimePicker,
+    isContactPickerOpen,
+    isManualAddOpen,
+    reschedulingId,
+    currentPage
+  ]);
 
   // --- WhatsApp Notification Listener (Auto-Confirm) ---
   useEffect(() => {
@@ -998,9 +1057,10 @@ export function useAppLogic() {
     messageTemplate,
     setMessageTemplate,
     rescheduleTemplate,
-    setRescheduleTemplate
+    setRescheduleTemplate,
+    selectedClientHistoryContact,
+    setSelectedClientHistoryContact,
+    showTimePicker,
+    setShowTimePicker
   };
-
-
 }
-

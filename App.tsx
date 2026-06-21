@@ -73,10 +73,12 @@ const App: React.FC = () => {
     messageTemplate,
     setMessageTemplate,
     rescheduleTemplate,
-    setRescheduleTemplate
+    setRescheduleTemplate,
+    selectedClientHistoryContact,
+    setSelectedClientHistoryContact,
+    showTimePicker,
+    setShowTimePicker
   } = useAppLogic();
-
-  const [selectedClientHistoryContact, setSelectedClientHistoryContact] = React.useState<any | null>(null);
 
   const handleRebookWrapped = (appt: any) => {
     setSelectedClientHistoryContact(null);
@@ -129,7 +131,6 @@ const App: React.FC = () => {
   const [showFollowUpInfo, setShowFollowUpInfo] = React.useState(false);
   const [showPreMeetingInfo, setShowPreMeetingInfo] = React.useState(false);
   const [activeTab, setActiveTab] = React.useState<'followUp' | 'preMeeting'>('followUp');
-  const [showTimePicker, setShowTimePicker] = React.useState(false);
 
   // --- Reminder Strategy Dedicated Configuration Hub States ---
   const [defaultAutomaticActivation, setDefaultAutomaticActivation] = React.useState<boolean>(() => {

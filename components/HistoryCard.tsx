@@ -11,6 +11,7 @@ interface HistoryCardProps {
   onRebook: (appointment: HistoricalAppointment) => void;
   onEditNotes: (appointment: HistoricalAppointment) => void;
   isThreadItem?: boolean;
+  isCompactTimeline?: boolean;
 }
 
 const HistoryCard: React.FC<HistoryCardProps> = ({ 
@@ -22,7 +23,8 @@ const HistoryCard: React.FC<HistoryCardProps> = ({
   onReminder, 
   onRebook,
   onEditNotes,
-  isThreadItem = false 
+  isThreadItem = false,
+  isCompactTimeline = false
 }) => {
   const [isSwiped, setIsSwiped] = useState(false);
   const [now, setNow] = useState(Date.now());
@@ -138,6 +140,182 @@ const HistoryCard: React.FC<HistoryCardProps> = ({
       return '';
     }
   };
+
+  if (isCompactTimeline) {
+    return (
+      <div className="relative overflow-hidden rounded-2xl ambient-shadow">
+        <div 
+          className="relative z-10 w-full bg-white px-4 py-2 border border-slate-100 rounded-2xl"
+          onClick={() => {
+            if (isSwiped) setIsSwiped(false);
+          }}
+        >
+          <div className="flex flex-col gap-1.5">
+            {/* ROW 1: Header Row */}
+            <div className="flex flex-col gap-1 pb-1">
+              <div className="flex items-center justify-between">
+                <span className="text-[16px] font-bold text-[#0E2E33] leading-tight">
+                  {formatDate(appointment.date)}, {formatTime(appointment.time)}
+                </span>
+                <span className={`px-2 py-0.5 rounded-full txt-label-caps text-[9px] ${config.bg} ${config.text} ${config.pulse} flex-shrink-0`}>
+                  {config.label}
+                </span>
+              </div>
+              <span className="text-[12px] text-[#6b7a76] leading-normal mb-1">
+                {appointment.address}
+              </span>
+            </div>
+
+            {/* ROW 2: Merged Actions (Even horizontal chain: Notes -> Trash -> Spacer -> Rebook -> Badge) */}
+            <div className="flex items-center gap-4 mt-2 pt-2 border-t border-slate-50">
+              {/* Notes Button */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEditNotes(appointment);
+                }}
+                className="flex items-center gap-1.5 text-[#006b5f] hover:bg-[#006b5f]/5 px-1 py-0.5 rounded transition-all flex-shrink-0"
+                aria-label="Notes"
+              >
+                <span className="material-symbols-outlined text-[18px]">description</span>
+                <span className="text-[13px] font-bold">Notes</span>
+              </button>
+
+              {/* Trash/Delete Icon */}
+              {confirmDelete ? (
+                <div className="flex items-center gap-2 bg-rose-50 px-2 py-0.5 rounded border border-rose-100 flex-shrink-0">
+                  <span className="text-[11px] font-bold text-[#f43f5e]">Delete?</span>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDelete(appointment.id);
+                      setConfirmDelete(false);
+                    }}
+                    className="text-[11px] font-extrabold text-[#f43f5e] hover:underline"
+                  >
+                    Yes
+                  </button>
+                  <span className="text-[#f43f5e]/30">|</span>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setConfirmDelete(false);
+                    }}
+                    className="text-[11px] font-bold text-slate-500 hover:underline"
+                  >
+                    No
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setConfirmDelete(true);
+                  }}
+                  className="text-[#f43f5e] hover:bg-rose-50 p-1 rounded transition-colors flex items-center justify-center flex-shrink-0"
+                  aria-label="Delete"
+                >
+                  <span className="material-symbols-outlined text-[18px]">delete</span>
+                </button>
+              )}
+
+              {/* Spacer(weight=1) */}
+              <div className="flex-1" />
+
+              {/* Action Button: wrap_content with 8dp horizontal padding */}
+              {isPast ? (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onRebook(appointment);
+                  }}
+                  className="flex items-center gap-1 px-2 py-1 border border-[#006b5f] text-[#006b5f] hover:bg-[#006b5f]/5 rounded-lg text-[11px] font-bold tracking-wider uppercase transition-all whitespace-nowrap flex-shrink-0"
+                >
+                  <span className="material-symbols-outlined text-[13px]">add</span>
+                  REBOOK
+                </button>
+              ) : appointment.status === 'PENDING' ? (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onFollowUp(appointment);
+                  }}
+                  className="flex items-center gap-1 px-2 py-1 border border-[#a93349] text-[#a93349] hover:bg-[#a93349]/5 rounded-lg text-[11px] font-bold tracking-wider uppercase transition-all whitespace-nowrap flex-shrink-0"
+                >
+                  <span className="material-symbols-outlined text-[13px]">send</span>
+                  FOLLOW UP
+                </button>
+              ) : appointment.status === 'CONFIRMED' ? (
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onReminder(appointment);
+                    }}
+                    className="flex items-center gap-1 px-2 py-1 border border-[#006b5f] text-[#006b5f] hover:bg-[#006b5f]/5 rounded-lg text-[11px] font-bold tracking-wider uppercase transition-all whitespace-nowrap"
+                  >
+                    <span className="material-symbols-outlined text-[13px]">notifications_active</span>
+                    REMIND
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onReschedule(appointment);
+                    }}
+                    className="px-2 py-1 border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-lg text-[11px] font-bold transition-all whitespace-nowrap"
+                  >
+                    Reschedule
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onReschedule(appointment);
+                  }}
+                  className="flex items-center gap-1 px-2 py-1 border border-[#006b5f] text-[#006b5f] hover:bg-[#006b5f]/5 rounded-lg text-[11px] font-bold tracking-wider uppercase transition-all whitespace-nowrap flex-shrink-0"
+                >
+                  <span className="material-symbols-outlined text-[13px]">calendar_today</span>
+                  Reschedule
+                </button>
+              )}
+
+              {/* ✓ Badge (Status capsule) */}
+              {isPast ? (
+                <div className="w-6 h-6 rounded-full bg-[#F1F3F4] border border-slate-200 flex items-center justify-center flex-shrink-0 shadow-sm">
+                  <span className="material-symbols-outlined text-[14px] text-[#5F6368] font-bold">done</span>
+                </div>
+              ) : (
+                <>
+                  {appointment.status === 'PENDING' && (
+                    <div className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#9a3412] flex items-center gap-0.5 bg-[#ffedd5] rounded-lg border border-[#9a3412]/10 shadow-sm animate-pulse flex-shrink-0">
+                      <span className="material-symbols-outlined text-[12px]">schedule</span>
+                      Pend: {formatElapsedTime(appointment.sentAt)}
+                    </div>
+                  )}
+
+                  {appointment.status === 'SENT' && (
+                    <div className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#3c4a46] flex items-center gap-0.5 bg-[#eaedff] rounded-lg border border-[#eaedff]/20 shadow-sm flex-shrink-0">
+                      <span className="material-symbols-outlined text-[12px]">hourglass_empty</span>
+                      Wait: {formatElapsedTime(appointment.sentAt)}
+                    </div>
+                  )}
+
+                  {appointment.status === 'CONFIRMED' && (
+                    <div className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#065f46] flex items-center gap-0.5 bg-[#d1fae5] rounded-lg border border-[#065f46]/10 shadow-sm flex-shrink-0">
+                      <span className="material-symbols-outlined text-[12px]">alarm</span>
+                      In: {formatCountdown(appointment.date, appointment.time)}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`relative overflow-hidden ${isThreadItem ? 'rounded-xl mt-2 first:mt-0' : 'rounded-2xl ambient-shadow'}`}>
