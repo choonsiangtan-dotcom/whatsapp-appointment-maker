@@ -829,6 +829,38 @@ export function useAppLogic() {
 
     const openUrl = phone ? `https://wa.me/${phone}?text=${encodedMessage}` : `https://wa.me/?text=${encodedMessage}`;
     window.open(openUrl, '_system');
+
+    // Revert to Step 1 and reset form data for next appointment scheduling
+    const now = new Date();
+    const dateStr = now.toISOString().split('T')[0];
+    const timeStr = now.toTimeString().split(' ')[0].slice(0, 5);
+
+    const defaultReminderEnabled = localStorage.getItem('defaultAutomaticActivation') !== 'false';
+    const defaultFollowUpTimer = localStorage.getItem('defaultFollowUpTimer') || '20s';
+    const defaultPreMeetingTimer = localStorage.getItem('defaultPreMeetingTimer') || '20s';
+
+    const defaultContact: Contact = contacts[0] || {
+      id: 'default',
+      name: 'Select Contact',
+      avatar: 'https://ui-avatars.com/api/?name=?&background=random',
+      status: 'Hey there! I am using WhatsApp.',
+      phoneNumbers: []
+    };
+
+    setFormData({
+      address: '',
+      date: dateStr,
+      time: timeStr,
+      contact: defaultContact,
+      selectedPhoneNumber: defaultContact.phoneNumbers[0] || '',
+      followUpEnabled: defaultReminderEnabled,
+      preMeetingEnabled: defaultReminderEnabled,
+      leadTime: '30 mins',
+      followUpTimer: defaultFollowUpTimer as any,
+      preMeetingTimer: defaultPreMeetingTimer as any
+    });
+
+    setCurrentStep(1);
   };
 
   const updateAppointmentStatus = (id: string, status: AppointmentStatus) => {
