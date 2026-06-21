@@ -77,7 +77,9 @@ const App: React.FC = () => {
     selectedClientHistoryContact,
     setSelectedClientHistoryContact,
     showTimePicker,
-    setShowTimePicker
+    setShowTimePicker,
+    currentStep,
+    setCurrentStep
   } = useAppLogic();
 
   const handleRebookWrapped = (appt: any) => {
@@ -96,6 +98,7 @@ const App: React.FC = () => {
 
   const [isEditingTemplate, setIsEditingTemplate] = React.useState(false);
   const [tempTemplate, setTempTemplate] = React.useState('');
+  const [searchQuery, setSearchQuery] = React.useState('');
 
   // Helper to parse double asterisks or single asterisks for bold formatting in preview
   const renderFormattedMessage = (text: string) => {
@@ -481,303 +484,514 @@ const App: React.FC = () => {
             </div>
           )}
 
-          {/* Section 1: SELECT CONTACT */}
-          <section className="space-y-1.5">
-            <div className="flex items-center justify-between px-1">
-              <h2 className="label-caps tracking-wider">Select Contact</h2>
-              <span onClick={handleSeeAll} className="text-[#006b5f] text-[12px] font-bold cursor-pointer">View All</span>
-            </div>
-            <ContactSelector
-              contacts={contacts}
-              selectedContact={formData.contact}
-              selectedPhoneNumber={formData.selectedPhoneNumber}
-              onSelect={handleSelectContact}
-              onSeeAll={handleSeeAll}
-              onCycleNext={handleCycleNext}
-            />
-          </section>
+          {/* Step Progress Bar */}
+          <div className="flex items-center justify-between px-6 py-3 bg-slate-50/70 dark:bg-slate-900/40 rounded-2xl border border-slate-100 dark:border-slate-800/40">
+            {[
+              { step: 1, label: 'Contact', icon: 'person' },
+              { step: 2, label: 'Schedule', icon: 'schedule' },
+              { step: 3, label: 'Preview', icon: 'chat' }
+            ].map((item, index) => {
+              const isActive = currentStep === item.step;
+              const isCompleted = currentStep > item.step;
+              return (
+                <React.Fragment key={item.step}>
+                  <div 
+                    className="flex flex-col items-center gap-1 flex-1 relative cursor-pointer" 
+                    onClick={() => {
+                      if (item.step < currentStep || (item.step === 2 && formData.contact.id !== 'default') || (item.step === 3 && formData.contact.id !== 'default')) {
+                        setCurrentStep(item.step);
+                      }
+                    }}
+                  >
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${
+                      isActive 
+                        ? 'bg-[#006b5f] text-white shadow-md shadow-[#006b5f]/20 scale-110 font-bold'
+                        : isCompleted
+                          ? 'bg-teal-500/20 text-[#006b5f] border border-[#006b5f]/30'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-400 border border-slate-200/50 dark:border-slate-700/50'
+                    }`}>
+                      {isCompleted ? (
+                        <span className="material-symbols-outlined text-[16px] font-bold">done</span>
+                      ) : (
+                        <span className="text-[12px] font-bold">{item.step}</span>
+                      )}
+                    </div>
+                    <span className={`text-[10px] font-bold tracking-wider uppercase transition-colors duration-300 ${
+                      isActive ? 'text-[#006b5f]' : 'text-slate-400 dark:text-slate-500'
+                    }`}>{item.label}</span>
+                  </div>
+                  {index < 2 && (
+                    <div className="w-8 h-[2px] bg-slate-200 dark:bg-slate-800 flex-shrink-0">
+                      <div className="h-full bg-[#006b5f] transition-all duration-500" style={{
+                        width: currentStep > item.step ? '100%' : '0%'
+                      }} />
+                    </div>
+                  )}
+                </React.Fragment>
+              );
+            })}
+          </div>
 
-          {/* Main Form Card */}
-          <div className="bg-white rounded-xl ambient-shadow p-4 space-y-4 border border-slate-100">
-            
-            {/* Section 2: LOCATION */}
-            <div className="space-y-1.5">
-              <label className="label-caps tracking-wider block">Location</label>
-              <InputField
-                label="Location"
-                icon="location_on"
-                value={formData.address}
-                onChange={(e) => handleFieldChange('address', e.target.value)}
-                placeholder="Appointment Address"
-                suggestions={addressHistory}
-                onSuggestionClick={(val) => handleFieldChange('address', val)}
-                showVerified={false}
-                suggestionIcon="location_on"
-              />
-            </div>
+          {/* 3-Step Slider Container */}
+          <div className="overflow-hidden w-full relative">
+            <div 
+              className="flex w-[300%] transition-transform duration-300 ease-in-out"
+              style={{ transform: `translateX(-${(currentStep - 1) * 33.333}%)` }}
+            >
+              {/* STEP 1: CONTACT SELECTION PAGE */}
+              <div className="w-1/3 flex-shrink-0 px-1 space-y-4">
+                <section className="space-y-3">
+                  <div className="flex items-center justify-between px-1">
+                    <h2 className="label-caps tracking-wider">Select Contact</h2>
+                    <span onClick={handleSeeAll} className="text-[#006b5f] text-[12px] font-bold cursor-pointer hover:underline">
+                      View All
+                    </span>
+                  </div>
 
-            {/* Section 3: DATE and TIME */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <label className="label-caps tracking-wider block">Date</label>
-                <div className="relative group transition-all duration-300">
-                  <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#006b5f] text-[18px]">
-                    calendar_today
-                  </span>
-                  <input
-                    type="date"
-                    value={formData.date}
-                    onChange={(e) => handleFieldChange('date', e.target.value)}
-                    className="absolute inset-0 opacity-0 cursor-pointer z-10 w-full"
-                  />
-                  <div className="w-full h-10 pl-10 pr-3 bg-slate-50 dark:bg-slate-900/30 border border-slate-200/60 dark:border-slate-800/60 rounded-[10px] flex items-center txt-secondary text-[#131b2e] dark:text-slate-100">
-                    {formData.date ? formData.date.split('-').reverse().join('/') : 'Select Date'}
+                  {/* Search and Action Row */}
+                  <div className="flex gap-2">
+                    <div className="relative flex-1">
+                      <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">
+                        search
+                      </span>
+                      <input
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder="Search name or phone..."
+                        className="w-full h-10 pl-9 pr-3 bg-slate-50 dark:bg-slate-900/30 border border-slate-200/60 dark:border-slate-800/60 rounded-[10px] text-sm text-[#131b2e] dark:text-slate-100 focus:outline-none focus:border-[#006b5f]/50"
+                      />
+                    </div>
+                    <button
+                      onClick={() => setIsManualAddOpen(true)}
+                      className="h-10 w-10 flex items-center justify-center bg-slate-50 dark:bg-slate-900/30 border border-slate-200/60 dark:border-slate-800/60 rounded-[10px] text-[#006b5f] hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                      title="Add Contact Manually"
+                    >
+                      <span className="material-symbols-outlined text-[20px]">person_add</span>
+                    </button>
+                    <button
+                      onClick={handleSeeAll}
+                      className="h-10 w-10 flex items-center justify-center bg-slate-50 dark:bg-slate-900/30 border border-slate-200/60 dark:border-slate-800/60 rounded-[10px] text-[#006b5f] hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                      title="Import Contacts"
+                    >
+                      <span className="material-symbols-outlined text-[20px]">import_contacts</span>
+                    </button>
+                  </div>
+
+                  {/* High Density Contact List */}
+                  <div className="space-y-2 max-h-[360px] overflow-y-auto pr-1">
+                    {(() => {
+                      const filteredRecent = contacts.filter(c => 
+                        c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                        c.phoneNumbers.some(p => p.includes(searchQuery))
+                      );
+                      
+                      if (filteredRecent.length > 0) {
+                        return filteredRecent.map((c) => {
+                          const isSelected = c.id === formData.contact.id;
+                          return (
+                            <div
+                              key={`${c.id}-${c.phoneNumbers[0] || ''}`}
+                              onClick={() => {
+                                handleSelectContact(c, c.phoneNumbers[0] || '');
+                              }}
+                              className={`flex items-center justify-between p-3 rounded-xl border transition-all cursor-pointer ${
+                                isSelected 
+                                  ? 'bg-teal-50/50 border-[#006b5f]/30 dark:bg-teal-950/20 dark:border-[#006b5f]/30' 
+                                  : 'bg-white border-slate-100 hover:border-slate-200 dark:bg-slate-900 dark:border-slate-800/50 hover:dark:border-slate-700'
+                              }`}
+                            >
+                              <div className="flex items-center gap-3">
+                                <img
+                                  src={c.avatar}
+                                  alt={c.name}
+                                  className="w-10 h-10 rounded-full object-cover bg-slate-100"
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(c.name)}&background=random`;
+                                  }}
+                                />
+                                <div>
+                                  <h4 className="font-semibold text-sm text-[#131b2e] dark:text-slate-100">{c.name}</h4>
+                                  <p className="text-[11px] text-slate-500 font-medium">{c.phoneNumbers[0] || 'No number'}</p>
+                                </div>
+                              </div>
+                              <span className="material-symbols-outlined text-slate-400 text-[18px]">
+                                chevron_right
+                              </span>
+                            </div>
+                          );
+                        });
+                      } else {
+                        return (
+                          <div className="text-center py-8 bg-slate-50/50 dark:bg-slate-900/10 rounded-xl border border-dashed border-slate-200 dark:border-slate-800">
+                            <span className="material-symbols-outlined text-slate-400 text-[32px] block mb-1">
+                              search_off
+                            </span>
+                            <p className="text-slate-500 text-sm mb-3">No matching contacts in recents</p>
+                            <div className="flex justify-center gap-2">
+                              <button
+                                onClick={handleSeeAll}
+                                className="px-3 py-1.5 text-xs font-bold bg-[#006b5f] text-white rounded-lg hover:bg-[#005c52] transition-colors"
+                              >
+                                View Device Contacts
+                              </button>
+                              <button
+                                onClick={() => setIsManualAddOpen(true)}
+                                className="px-3 py-1.5 text-xs font-bold border border-slate-200 text-slate-600 dark:border-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                              >
+                                Add Manually
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      }
+                    })()}
+                  </div>
+                </section>
+              </div>
+
+              {/* STEP 2: SCHEDULE CONFIGURATION PAGE */}
+              <div className="w-1/3 flex-shrink-0 px-1 space-y-4">
+                <div className="bg-white rounded-xl ambient-shadow p-4 space-y-4 border border-slate-100 dark:bg-slate-900 dark:border-slate-800/80">
+                  
+                  {/* Selected Contact Indicator */}
+                  <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-900/50 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800/60">
+                    <img
+                      src={formData.contact.avatar}
+                      alt={formData.contact.name}
+                      className="w-9 h-9 rounded-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(formData.contact.name)}&background=random`;
+                      }}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Scheduling for</p>
+                      <h3 className="font-semibold text-sm text-[#131b2e] dark:text-slate-100 truncate">
+                        {formData.contact.name}
+                      </h3>
+                    </div>
+                    <button 
+                      onClick={() => setCurrentStep(1)}
+                      className="text-xs font-bold text-[#006b5f] hover:underline"
+                    >
+                      Change
+                    </button>
+                  </div>
+
+                  {/* Section 2: LOCATION */}
+                  <div className="space-y-1.5">
+                    <label className="label-caps tracking-wider block">Location</label>
+                    <InputField
+                      label="Location"
+                      icon="location_on"
+                      value={formData.address}
+                      onChange={(e) => handleFieldChange('address', e.target.value)}
+                      placeholder="Appointment Address"
+                      suggestions={addressHistory}
+                      onSuggestionClick={(val) => handleFieldChange('address', val)}
+                      showVerified={false}
+                      suggestionIcon="location_on"
+                    />
+                  </div>
+
+                  {/* Section 3: DATE and TIME */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <label className="label-caps tracking-wider block">Date</label>
+                      <div className="relative group transition-all duration-300">
+                        <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#006b5f] text-[18px]">
+                          calendar_today
+                        </span>
+                        <input
+                          type="date"
+                          value={formData.date}
+                          onChange={(e) => handleFieldChange('date', e.target.value)}
+                          className="absolute inset-0 opacity-0 cursor-pointer z-10 w-full"
+                        />
+                        <div className="w-full h-10 pl-10 pr-3 bg-slate-50 dark:bg-slate-900/30 border border-slate-200/60 dark:border-slate-800/60 rounded-[10px] flex items-center txt-secondary text-[#131b2e] dark:text-slate-100">
+                          {formData.date ? formData.date.split('-').reverse().join('/') : 'Select Date'}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="label-caps tracking-wider block">Time</label>
+                      <button 
+                        type="button"
+                        onClick={() => {
+                          console.log("Time picker clicked!");
+                          setShowTimePicker(true);
+                        }}
+                        className="w-full h-10 pl-10 pr-3 bg-slate-50 dark:bg-slate-900/30 border border-slate-200/60 dark:border-slate-800/60 rounded-[10px] flex items-center txt-secondary text-[#131b2e] dark:text-slate-100 uppercase relative group transition-all duration-300 cursor-pointer"
+                      >
+                        <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#006b5f] text-[18px]">
+                          schedule
+                        </span>
+                        <span>
+                          {formData.time ? (
+                            (() => {
+                              const [h, m] = formData.time.split(':');
+                              const hr = parseInt(h);
+                              const ampm = hr >= 12 ? 'PM' : 'AM';
+                              return `${hr % 12 || 12}:${m} ${ampm}`;
+                            })()
+                          ) : 'Select Time'}
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Section 4: AUTOMATIC REMINDERS */}
+                  <div className="pt-1">
+                    <div className="bg-slate-50/50 dark:bg-slate-900/20 border border-slate-200/40 dark:border-slate-800/50 rounded-xl p-[12px] space-y-3 relative transition-all duration-300">
+                      {/* TabLayout */}
+                      <div className="bg-slate-100/80 dark:bg-slate-900/60 p-1 rounded-xl flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => setActiveTab('followUp')}
+                          className={`flex-1 py-1.5 rounded-lg text-[13px] font-bold transition-all duration-200 flex items-center justify-center gap-1.5 ${
+                            activeTab === 'followUp'
+                              ? 'bg-white dark:bg-slate-800 text-[#006b5f] shadow-sm'
+                              : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300'
+                          }`}
+                        >
+                          <span className="material-symbols-outlined text-[16px]">update</span>
+                          <span>Follow-Up</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setActiveTab('preMeeting')}
+                          className={`flex-1 py-1.5 rounded-lg text-[13px] font-bold transition-all duration-200 flex items-center justify-center gap-1.5 ${
+                            activeTab === 'preMeeting'
+                              ? 'bg-white dark:bg-slate-800 text-[#006b5f] shadow-sm'
+                              : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300'
+                          }`}
+                        >
+                          <span className="material-symbols-outlined text-[16px]">event_available</span>
+                          <span>Pre-Meeting</span>
+                        </button>
+                      </div>
+
+                      {/* ViewPager2 container */}
+                      <div className="overflow-hidden w-full relative">
+                        <div
+                          className="flex transition-transform duration-300 ease-out"
+                          style={{ transform: `translateX(-${activeTab === 'followUp' ? '0' : '100'}%)` }}
+                        >
+                          {/* Page 1: Follow-Up */}
+                          <div className="w-full flex-shrink-0">
+                            <div className="flex items-center justify-between min-h-[40px]">
+                              <div className={`flex items-center gap-2 text-[13px] transition-opacity duration-200 ${formData.followUpEnabled ? 'text-slate-700 dark:text-slate-300 font-medium' : 'text-slate-400 dark:text-slate-600'}`}>
+                                <span>Nudge if no reply within:</span>
+                                <div className="relative inline-block">
+                                  <select
+                                    value={formData.followUpTimer}
+                                    onChange={(e) => handleFieldChange('followUpTimer', e.target.value)}
+                                    disabled={!formData.followUpEnabled}
+                                    className={`appearance-none bg-transparent border-b ${formData.followUpEnabled ? 'border-[#006b5f] text-[#006b5f]' : 'border-slate-300 text-slate-400'} font-bold px-1 py-0.5 outline-none cursor-pointer pr-5 disabled:cursor-not-allowed`}
+                                  >
+                                    <option value="20s">20s (Test)</option>
+                                    <option value="15 mins">15 Mins</option>
+                                    <option value="30 mins">30 Mins</option>
+                                    <option value="1 hour">1 Hour</option>
+                                    <option value="2 hours">2 Hours</option>
+                                  </select>
+                                  <span className={`material-symbols-outlined absolute right-0 top-1/2 -translate-y-1/2 text-[14px] pointer-events-none ${formData.followUpEnabled ? 'text-[#006b5f]' : 'text-slate-400'}`}>arrow_drop_down</span>
+                                </div>
+                              </div>
+                              <ToggleSwitch
+                                enabled={formData.followUpEnabled}
+                                onChange={() => handleFieldChange('followUpEnabled', !formData.followUpEnabled)}
+                              />
+                            </div>
+                          </div>
+
+                          {/* Page 2: Pre-Meeting */}
+                          <div className="w-full flex-shrink-0">
+                            <div className="flex items-center justify-between min-h-[40px]">
+                              <div className={`flex items-center gap-2 text-[13px] transition-opacity duration-200 ${formData.preMeetingEnabled ? 'text-slate-700 dark:text-slate-300 font-medium' : 'text-slate-400 dark:text-slate-600'}`}>
+                                <span>Send reminder before:</span>
+                                <div className="relative inline-block">
+                                  <select
+                                    value={formData.preMeetingTimer}
+                                    onChange={(e) => handleFieldChange('preMeetingTimer', e.target.value)}
+                                    disabled={!formData.preMeetingEnabled}
+                                    className={`appearance-none bg-transparent border-b ${formData.preMeetingEnabled ? 'border-[#006b5f] text-[#006b5f]' : 'border-slate-300 text-slate-400'} font-bold px-1 py-0.5 outline-none cursor-pointer pr-5 disabled:cursor-not-allowed`}
+                                  >
+                                    {(() => {
+                                      const allOptions = [
+                                        { label: '20s (Test)', value: '20s', ms: 20 * 1000 },
+                                        { label: '15 Mins', value: '15 mins', ms: 15 * 60 * 1000 },
+                                        { label: '30 Mins', value: '30 mins', ms: 30 * 60 * 1000 },
+                                        { label: '1 Hour', value: '1 hour', ms: 60 * 60 * 1000 },
+                                        { label: '1 Day', value: '1 day', ms: 24 * 60 * 60 * 1000 }
+                                      ];
+                                      let diff = Infinity;
+                                      if (formData.date && formData.time) {
+                                        const [year, month, day] = formData.date.split('-').map(Number);
+                                        const [hours, minutes] = formData.time.split(':').map(Number);
+                                        diff = new Date(year, month - 1, day, hours, minutes).getTime() - Date.now();
+                                      }
+                                      return allOptions.map(opt => {
+                                        const isDisabled = diff > 0 && diff <= opt.ms;
+                                        return (
+                                          <option key={opt.value} value={opt.value} disabled={isDisabled}>
+                                            {opt.label}
+                                          </option>
+                                        );
+                                      });
+                                    })()}
+                                  </select>
+                                  <span className={`material-symbols-outlined absolute right-0 top-1/2 -translate-y-1/2 text-[14px] pointer-events-none ${formData.preMeetingEnabled ? 'text-[#006b5f]' : 'text-slate-400'}`}>arrow_drop_down</span>
+                                </div>
+                              </div>
+                              <ToggleSwitch
+                                enabled={formData.preMeetingEnabled}
+                                onChange={() => handleFieldChange('preMeetingEnabled', !formData.preMeetingEnabled)}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div className="space-y-1.5">
-                <label className="label-caps tracking-wider block">Time</label>
-                <button 
-                  type="button"
-                  onClick={() => {
-                    console.log("Time picker clicked!");
-                    setShowTimePicker(true);
-                  }}
-                  className="w-full h-10 pl-10 pr-3 bg-slate-50 dark:bg-slate-900/30 border border-slate-200/60 dark:border-slate-800/60 rounded-[10px] flex items-center txt-secondary text-[#131b2e] dark:text-slate-100 uppercase relative group transition-all duration-300 cursor-pointer"
-                >
-                  <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#006b5f] text-[18px]">
-                    schedule
-                  </span>
-                  <span>
-                    {formData.time ? (
-                      (() => {
-                        const [h, m] = formData.time.split(':');
-                        const hr = parseInt(h);
-                        const ampm = hr >= 12 ? 'PM' : 'AM';
-                        return `${hr % 12 || 12}:${m} ${ampm}`;
-                      })()
-                    ) : 'Select Time'}
-                  </span>
-                </button>
-              </div>
-            </div>
 
-            {/* Section 4: AUTOMATIC REMINDERS */}
-            <div className="pt-1">
-              <div className="bg-slate-50/50 dark:bg-slate-900/20 border border-slate-200/40 dark:border-slate-800/50 rounded-xl p-[12px] space-y-3 relative transition-all duration-300">
-                {/* TabLayout */}
-                <div className="bg-slate-100/80 dark:bg-slate-900/60 p-1 rounded-xl flex items-center gap-1">
+                {/* Persistent Navigation Buttons */}
+                <div className="flex gap-3 pt-2">
                   <button
                     type="button"
-                    onClick={() => setActiveTab('followUp')}
-                    className={`flex-1 py-1.5 rounded-lg text-[13px] font-bold transition-all duration-200 flex items-center justify-center gap-1.5 ${
-                      activeTab === 'followUp'
-                        ? 'bg-white dark:bg-slate-800 text-[#006b5f] shadow-sm'
-                        : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300'
-                    }`}
+                    onClick={() => setCurrentStep(1)}
+                    className="flex-1 h-11 border border-slate-200 text-slate-600 dark:border-slate-700 dark:text-slate-300 rounded-[12px] font-bold text-sm flex items-center justify-center gap-2 active:scale-[0.98] transition-all font-display hover:bg-slate-50 dark:hover:bg-slate-800"
                   >
-                    <span className="material-symbols-outlined text-[16px]">update</span>
-                    <span>Follow-Up</span>
+                    <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+                    Back
                   </button>
                   <button
                     type="button"
-                    onClick={() => setActiveTab('preMeeting')}
-                    className={`flex-1 py-1.5 rounded-lg text-[13px] font-bold transition-all duration-200 flex items-center justify-center gap-1.5 ${
-                      activeTab === 'preMeeting'
-                        ? 'bg-white dark:bg-slate-800 text-[#006b5f] shadow-sm'
-                        : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300'
-                    }`}
+                    onClick={() => setCurrentStep(3)}
+                    className="flex-1 h-11 bg-[#006b5f] text-white rounded-[12px] font-bold text-sm flex items-center justify-center gap-2 active:scale-[0.98] transition-all font-display shadow-lg shadow-[#006b5f]/10 hover:bg-[#005c52]"
                   >
-                    <span className="material-symbols-outlined text-[16px]">event_available</span>
-                    <span>Pre-Meeting</span>
+                    Continue
+                    <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
                   </button>
                 </div>
+              </div>
 
-                {/* ViewPager2 container */}
-                <div className="overflow-hidden w-full relative">
-                  <div
-                    className="flex transition-transform duration-300 ease-out"
-                    style={{ transform: `translateX(-${activeTab === 'followUp' ? '0' : '100'}%)` }}
-                  >
-                    {/* Page 1: Follow-Up */}
-                    <div className="w-full flex-shrink-0">
-                      <div className="flex items-center justify-between min-h-[40px]">
-                        <div className={`flex items-center gap-2 text-[13px] transition-opacity duration-200 ${formData.followUpEnabled ? 'text-slate-700 dark:text-slate-300 font-medium' : 'text-slate-400 dark:text-slate-600'}`}>
-                          <span>Nudge if no reply within:</span>
-                          <div className="relative inline-block">
-                            <select
-                              value={formData.followUpTimer}
-                              onChange={(e) => handleFieldChange('followUpTimer', e.target.value)}
-                              disabled={!formData.followUpEnabled}
-                              className={`appearance-none bg-transparent border-b ${formData.followUpEnabled ? 'border-[#006b5f] text-[#006b5f]' : 'border-slate-300 text-slate-400'} font-bold px-1 py-0.5 outline-none cursor-pointer pr-5 disabled:cursor-not-allowed`}
-                            >
-                              <option value="20s">20s (Test)</option>
-                              <option value="15 mins">15 Mins</option>
-                              <option value="30 mins">30 Mins</option>
-                              <option value="1 hour">1 Hour</option>
-                              <option value="2 hours">2 Hours</option>
-                            </select>
-                            <span className={`material-symbols-outlined absolute right-0 top-1/2 -translate-y-1/2 text-[14px] pointer-events-none ${formData.followUpEnabled ? 'text-[#006b5f]' : 'text-slate-400'}`}>arrow_drop_down</span>
-                          </div>
-                        </div>
-                        <ToggleSwitch
-                          enabled={formData.followUpEnabled}
-                          onChange={() => handleFieldChange('followUpEnabled', !formData.followUpEnabled)}
+              {/* STEP 3: MESSAGE PREVIEW & SEND PAGE */}
+              <div className="w-1/3 flex-shrink-0 px-1 space-y-4">
+                <section className="space-y-3 bg-white rounded-xl ambient-shadow p-4 border border-slate-100 dark:bg-slate-900 dark:border-slate-800/80">
+                  <label className={`label-caps tracking-wider block ${reschedulingId ? 'text-amber-600 dark:text-amber-500 font-bold' : ''}`}>
+                    {reschedulingId ? 'Reschedule Message Preview' : 'Message Preview'}
+                  </label>
+                  
+                  {/* Expanded & Padded Preview Card */}
+                  <div className="bg-slate-50/70 dark:bg-slate-900/40 border border-slate-200/50 dark:border-slate-800/80 rounded-xl p-5 min-h-[180px] relative overflow-hidden flex flex-col justify-between">
+                    {isEditingTemplate ? (
+                      <div className="space-y-3 relative z-10 w-full">
+                        <textarea
+                          value={tempTemplate}
+                          onChange={(e) => setTempTemplate(e.target.value)}
+                          className="w-full h-32 p-3 text-[13px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-[#006b5f] font-sans"
+                          placeholder="Write your message template..."
                         />
-                      </div>
-                    </div>
+                        
+                        {/* Helper Pills */}
+                        <div className="flex flex-wrap gap-1.5 items-center">
+                          <span className="text-[11px] text-slate-400 dark:text-slate-500 mr-1">Insert:</span>
+                          {[
+                            { label: 'Name', placeholder: '{name}' },
+                            { label: 'Location', placeholder: '{location}' },
+                            { label: 'Date', placeholder: '{date}' },
+                            { label: 'Time', placeholder: '{time}' }
+                          ].map((pill) => (
+                            <button
+                              key={pill.placeholder}
+                              type="button"
+                              onClick={() => {
+                                setTempTemplate(prev => prev + pill.placeholder);
+                              }}
+                              className="px-2 py-0.5 text-[11px] bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-md border border-slate-200/50 dark:border-slate-700 transition-colors font-mono"
+                            >
+                              {pill.label}
+                            </button>
+                          ))}
+                        </div>
 
-                    {/* Page 2: Pre-Meeting */}
-                    <div className="w-full flex-shrink-0">
-                      <div className="flex items-center justify-between min-h-[40px]">
-                        <div className={`flex items-center gap-2 text-[13px] transition-opacity duration-200 ${formData.preMeetingEnabled ? 'text-slate-700 dark:text-slate-300 font-medium' : 'text-slate-400 dark:text-slate-600'}`}>
-                          <span>Send reminder before:</span>
-                          <div className="relative inline-block">
-                            <select
-                              value={formData.preMeetingTimer}
-                              onChange={(e) => handleFieldChange('preMeetingTimer', e.target.value)}
-                              disabled={!formData.preMeetingEnabled}
-                              className={`appearance-none bg-transparent border-b ${formData.preMeetingEnabled ? 'border-[#006b5f] text-[#006b5f]' : 'border-slate-300 text-slate-400'} font-bold px-1 py-0.5 outline-none cursor-pointer pr-5 disabled:cursor-not-allowed`}
-                            >
-                              {(() => {
-                                const allOptions = [
-                                  { label: '20s (Test)', value: '20s', ms: 20 * 1000 },
-                                  { label: '15 Mins', value: '15 mins', ms: 15 * 60 * 1000 },
-                                  { label: '30 Mins', value: '30 mins', ms: 30 * 60 * 1000 },
-                                  { label: '1 Hour', value: '1 hour', ms: 60 * 60 * 1000 },
-                                  { label: '1 Day', value: '1 day', ms: 24 * 60 * 60 * 1000 }
-                                ];
-                                let diff = Infinity;
-                                if (formData.date && formData.time) {
-                                  const [year, month, day] = formData.date.split('-').map(Number);
-                                  const [hours, minutes] = formData.time.split(':').map(Number);
-                                  diff = new Date(year, month - 1, day, hours, minutes).getTime() - Date.now();
-                                }
-                                return allOptions.map(opt => {
-                                  const isDisabled = diff > 0 && diff <= opt.ms;
-                                  return (
-                                    <option key={opt.value} value={opt.value} disabled={isDisabled}>
-                                      {opt.label}
-                                    </option>
-                                  );
-                                });
-                              })()}
-                            </select>
-                            <span className={`material-symbols-outlined absolute right-0 top-1/2 -translate-y-1/2 text-[14px] pointer-events-none ${formData.preMeetingEnabled ? 'text-[#006b5f]' : 'text-slate-400'}`}>arrow_drop_down</span>
-                          </div>
+                        {/* Actions */}
+                        <div className="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800/60">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsEditingTemplate(false);
+                            }}
+                            className="px-3 py-1 text-[11px] font-bold text-slate-500 hover:text-slate-700 transition-colors"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (reschedulingId) {
+                                setRescheduleTemplate(tempTemplate);
+                              } else {
+                                setMessageTemplate(tempTemplate);
+                              }
+                              setIsEditingTemplate(false);
+                            }}
+                            className="px-3 py-1 text-[11px] font-bold bg-[#006b5f] hover:bg-[#005247] text-white rounded-md transition-colors"
+                          >
+                            Save
+                          </button>
                         </div>
-                        <ToggleSwitch
-                          enabled={formData.preMeetingEnabled}
-                          onChange={() => handleFieldChange('preMeetingEnabled', !formData.preMeetingEnabled)}
-                        />
                       </div>
-                    </div>
+                    ) : (
+                      <>
+                        <div className="space-y-1.5 relative z-10">
+                          <p className="txt-secondary text-slate-700 dark:text-slate-300 leading-relaxed text-sm">
+                            {renderFormattedMessage(getParsedMessage())}
+                          </p>
+                        </div>
+                        <div className="mt-4 flex justify-end">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setTempTemplate(reschedulingId ? rescheduleTemplate : messageTemplate);
+                              setIsEditingTemplate(true);
+                            }}
+                            className="flex items-center gap-1 text-[#006b5f] text-xs font-bold font-display hover:underline"
+                          >
+                            <span className="material-symbols-outlined text-[14px]">edit</span> Edit Text
+                          </button>
+                        </div>
+                      </>
+                    )}
                   </div>
+                </section>
+
+                {/* Final Primary Sending CTA and Back Button */}
+                <div className="flex flex-col gap-2.5 pt-2">
+                  <button
+                    onClick={handleSend}
+                    className="w-full h-12 bg-[#006b5f] hover:bg-[#005c52] text-white rounded-[12px] font-bold text-[16px] flex items-center justify-center gap-2 active:scale-[0.98] transition-all font-display shadow-lg shadow-[#006b5f]/20"
+                  >
+                    <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>
+                      rocket_launch
+                    </span>
+                    <span>{reschedulingId ? '🚀 UPDATE & SEND VIA WHATSAPP' : '🚀 SEND VIA WHATSAPP'}</span>
+                  </button>
+                  
+                  <button
+                    type="button"
+                    onClick={() => setCurrentStep(2)}
+                    className="w-full h-10 border border-slate-200 text-slate-500 hover:text-slate-700 dark:border-slate-800 dark:text-slate-400 dark:hover:text-slate-200 rounded-[10px] font-bold text-xs flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all font-display"
+                  >
+                    <span className="material-symbols-outlined text-[14px]">arrow_back</span>
+                    Back to Schedule Configuration
+                  </button>
                 </div>
               </div>
             </div>
           </div>
-
-          {/* Section 5: MESSAGE PREVIEW */}
-          <section className="space-y-2">
-            <label className={`label-caps tracking-wider block px-1 ${reschedulingId ? 'text-amber-600 dark:text-amber-500 font-bold' : ''}`}>
-              {reschedulingId ? 'Reschedule Message Preview' : 'Message Preview'}
-            </label>
-            <div className="bg-slate-50/70 dark:bg-slate-900/40 border border-slate-200/50 dark:border-slate-800/80 rounded-xl p-3 relative overflow-hidden">
-              {isEditingTemplate ? (
-                <div className="space-y-3 relative z-10">
-                  <textarea
-                    value={tempTemplate}
-                    onChange={(e) => setTempTemplate(e.target.value)}
-                    className="w-full h-24 p-2.5 text-[13px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-[#006b5f] font-sans"
-                    placeholder="Write your message template..."
-                  />
-                  
-                  {/* Helper Pills */}
-                  <div className="flex flex-wrap gap-1.5 items-center">
-                    <span className="text-[11px] text-slate-400 dark:text-slate-500 mr-1">Insert:</span>
-                    {[
-                      { label: 'Name', placeholder: '{name}' },
-                      { label: 'Location', placeholder: '{location}' },
-                      { label: 'Date', placeholder: '{date}' },
-                      { label: 'Time', placeholder: '{time}' }
-                    ].map((pill) => (
-                      <button
-                        key={pill.placeholder}
-                        type="button"
-                        onClick={() => {
-                          setTempTemplate(prev => prev + pill.placeholder);
-                        }}
-                        className="px-2 py-0.5 text-[11px] bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-md border border-slate-200/50 dark:border-slate-700 transition-colors font-mono"
-                      >
-                        {pill.label}
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800/60">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsEditingTemplate(false);
-                      }}
-                      className="px-3 py-1 text-[11px] font-bold text-slate-500 hover:text-slate-700 transition-colors"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (reschedulingId) {
-                          setRescheduleTemplate(tempTemplate);
-                        } else {
-                          setMessageTemplate(tempTemplate);
-                        }
-                        setIsEditingTemplate(false);
-                      }}
-                      className="px-3 py-1 text-[11px] font-bold bg-[#006b5f] hover:bg-[#005247] text-white rounded-md transition-colors"
-                    >
-                      Save
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <div className="space-y-1.5 relative z-10">
-                    <p className="txt-secondary text-slate-700 dark:text-slate-300 leading-snug">
-                      {renderFormattedMessage(getParsedMessage())}
-                    </p>
-                  </div>
-                  <div className="mt-2.5 flex justify-end">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setTempTemplate(reschedulingId ? rescheduleTemplate : messageTemplate);
-                        setIsEditingTemplate(true);
-                      }}
-                      className="flex items-center gap-1 text-[#006b5f] text-[11px] font-bold font-display"
-                    >
-                      <span className="material-symbols-outlined text-[14px]">edit</span> Edit Text
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-          </section>
-
-          {/* Footer Button */}
-          <footer className="pt-0.5">
-            <button
-              onClick={handleSend}
-              className="w-full h-12 bg-[#006b5f] text-white rounded-[12px] font-bold text-[16px] flex items-center justify-center gap-2 active:scale-[0.98] transition-all font-display"
-            >
-              <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>
-                {reschedulingId ? 'sync_saved_locally' : 'send'}
-              </span>
-              <span>{reschedulingId ? 'Update & Send via WhatsApp' : 'Send via WhatsApp'}</span>
-            </button>
-          </footer>
         </div>
       ) : currentPage === 'history' ? (
         <History 

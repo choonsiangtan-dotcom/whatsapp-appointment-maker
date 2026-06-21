@@ -155,6 +155,7 @@ export function useAppLogic() {
   const [selectedNotesAppt, setSelectedNotesAppt] = useState<HistoricalAppointment | null>(null);
   const [selectedClientHistoryContact, setSelectedClientHistoryContact] = useState<any | null>(null);
   const [showTimePicker, setShowTimePicker] = useState(false);
+  const [currentStep, setCurrentStep] = useState<number>(1);
 
   // --- Rescheduling State ---
   const [reschedulingId, setReschedulingId] = useState<string | null>(() => {
@@ -464,6 +465,10 @@ export function useAppLogic() {
         setReschedulingId(null);
         return;
       }
+      if (currentPage === 'schedule' && currentStep > 1) {
+        setCurrentStep(currentStep - 1);
+        return;
+      }
       if (currentPage !== 'schedule') {
         setCurrentPage('schedule');
         return;
@@ -483,7 +488,8 @@ export function useAppLogic() {
     isContactPickerOpen,
     isManualAddOpen,
     reschedulingId,
-    currentPage
+    currentPage,
+    currentStep
   ]);
 
   // --- WhatsApp Notification Listener (Auto-Confirm) ---
@@ -705,6 +711,8 @@ export function useAppLogic() {
       selectedPhoneNumber: phoneNumber
     }));
 
+    setCurrentStep(2);
+
     // Auto-close with delay for UX feedback
     setTimeout(() => {
       setIsContactPickerOpen(false);
@@ -864,6 +872,7 @@ export function useAppLogic() {
     localStorage.removeItem('reschedulingId');
     localStorage.removeItem('rescheduleFormData');
     setCurrentPage('schedule');
+    setCurrentStep(2);
   };
 
   const handleFollowUp = (appt: HistoricalAppointment) => {
@@ -1011,6 +1020,7 @@ export function useAppLogic() {
 
     // 3. Navigate back to schedule page
     setCurrentPage('schedule');
+    setCurrentStep(2);
   };
 
 
@@ -1061,6 +1071,8 @@ export function useAppLogic() {
     selectedClientHistoryContact,
     setSelectedClientHistoryContact,
     showTimePicker,
-    setShowTimePicker
+    setShowTimePicker,
+    currentStep,
+    setCurrentStep
   };
 }
