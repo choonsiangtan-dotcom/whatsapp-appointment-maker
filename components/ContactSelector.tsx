@@ -19,27 +19,29 @@ const ContactSelector: React.FC<ContactSelectorProps> = ({
   onSeeAll,
   onCycleNext
 }) => {
-  // Deduplicate and get the top 5 recent contacts
-  const uniqueRecent = Array.from(new Map<string, Contact>(contacts.map(c => [c.id, c])).values()).slice(0, 5);
+  // Deduplicate and get the top 5 recent contacts (distinct by ID + first phone number)
+  const uniqueRecent: Contact[] = [];
+  const seenKeys = new Set<string>();
+  for (const c of contacts) {
+    const key = `${c.id}-${c.phoneNumbers[0] || ''}`;
+    if (!seenKeys.has(key)) {
+      seenKeys.add(key);
+      uniqueRecent.push(c);
+    }
+  }
+  const topRecent = uniqueRecent.slice(0, 5);
 
   return (
     <div className="flex gap-3 overflow-x-auto hide-scrollbar py-1 px-1">
-      {/* Add New */}
-      <div className="flex-shrink-0 flex flex-col items-center gap-1 cursor-pointer" onClick={onSeeAll}>
-        <div className="w-[48px] h-[48px] rounded-full border-[2px] border-dashed border-[#bacac5] flex items-center justify-center bg-white active:scale-95 transition-transform duration-200">
-          <span className="material-symbols-outlined text-[#bacac5] text-[24px]" style={{ fontVariationSettings: "'wght' 300" }}>add</span>
-        </div>
-        <span className="text-[10px] font-medium text-[#6b7a76]" style={{ fontFamily: 'Manrope, sans-serif' }}>New</span>
-      </div>
-
       {/* Contacts */}
-      {uniqueRecent.map((c) => {
-        const isSelected = c.id === selectedContact.id;
+      {topRecent.map((c) => {
+        const isSelected = c.id === selectedContact.id && 
+          (selectedPhoneNumber ? selectedPhoneNumber === c.phoneNumbers[0] : true);
         const firstName = c.name.split(' ')[0];
 
         return (
           <div 
-            key={c.id} 
+            key={`${c.id}-${c.phoneNumbers[0] || ''}`} 
             onClick={() => onSelect?.(c, c.phoneNumbers[0])}
             className="flex-shrink-0 flex flex-col items-center gap-1 cursor-pointer group"
           >
@@ -57,11 +59,16 @@ const ContactSelector: React.FC<ContactSelectorProps> = ({
                 }}
               />
             </div>
-            <span className={`text-[11px] font-medium transition-colors ${
-              isSelected ? 'text-[#131b2e] font-bold' : 'text-[#3c4a46]'
-            }`} style={{ fontFamily: 'Manrope, sans-serif' }}>
-              {firstName}
+            <span className={`font-display text-[11px] font-medium transition-colors text-center ${
+              isSelected ? 'text-[#131b2e] font-bold max-w-[80px] leading-tight break-words' : 'text-[#3c4a46] truncate max-w-[56px]'
+            }`}>
+              {isSelected ? c.name : firstName}
             </span>
+            {isSelected && c.phoneNumbers[0] && (
+              <span className="text-[10px] font-bold text-[#006b5f] mt-0.5 tracking-tight">
+                {c.phoneNumbers[0]}
+              </span>
+            )}
           </div>
         );
       })}

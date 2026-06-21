@@ -4,9 +4,10 @@ interface LayoutProps {
   children: React.ReactNode;
   currentPage: 'schedule' | 'history' | 'settings';
   onPageChange: (page: 'schedule' | 'history' | 'settings') => void;
+  modals?: React.ReactNode;
 }
 
-const Layout: React.FC<LayoutProps> = ({ children, currentPage, onPageChange }) => {
+const Layout: React.FC<LayoutProps> = ({ children, currentPage, onPageChange, modals }) => {
   return (
     <div className="min-h-screen flex items-center justify-center p-0 md:p-4 bg-[#faf8ff]">
       {/* Phone Frame */}
@@ -22,7 +23,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentPage, onPageChange }) 
               calendar_month
             </span>
             <div>
-              <h1 className="text-[16px] font-extrabold tracking-tight text-[#006b5f] leading-none" style={{ fontFamily: 'Manrope, sans-serif' }}>
+              <h1 className="text-[16px] font-extrabold tracking-tight text-[#006b5f] leading-none font-display">
                 WhatsAppointment
               </h1>
               <p className="text-[8px] uppercase tracking-[0.14em] text-[#6b7a76] font-bold leading-none mt-0.5">
@@ -44,6 +45,9 @@ const Layout: React.FC<LayoutProps> = ({ children, currentPage, onPageChange }) 
           {children}
         </div>
 
+        {/* Modals Container */}
+        {modals}
+
         {/* ── Bottom Nav Bar ── */}
         <nav className="absolute bottom-0 left-0 right-0 z-50 h-[64px] flex justify-around items-center px-4 bg-white/85 backdrop-blur-md border-t border-[#bacac5]/20 shadow-[0_-4px_12px_rgba(45,140,140,0.05)] rounded-t-2xl"
           style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
@@ -56,7 +60,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentPage, onPageChange }) 
             <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: currentPage === 'schedule' ? "'FILL' 1" : "''" }}>
               add_circle
             </span>
-            <span className="text-[10px] font-semibold" style={{ fontFamily: 'Manrope, sans-serif' }}>Schedule</span>
+            <span className="text-[10px] font-semibold font-display">Schedule</span>
           </div>
 
           {/* History */}
@@ -67,7 +71,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentPage, onPageChange }) 
             <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: currentPage === 'history' ? "'FILL' 1" : "''" }}>
               history
             </span>
-            <span className="text-[10px] font-semibold" style={{ fontFamily: 'Manrope, sans-serif' }}>History</span>
+            <span className="text-[10px] font-semibold font-display">History</span>
           </div>
 
           {/* Settings */}
@@ -78,7 +82,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentPage, onPageChange }) 
             <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: currentPage === 'settings' ? "'FILL' 1" : "''" }}>
               settings
             </span>
-            <span className="text-[10px] font-semibold" style={{ fontFamily: 'Manrope, sans-serif' }}>Settings</span>
+            <span className="text-[10px] font-semibold font-display">Settings</span>
           </div>
 
         </nav>

@@ -62,7 +62,66 @@
   --color-outline:                  var(--outline);
   --color-outline-variant:          var(--outline-variant);
   --color-background:               var(--background);
-  --font-sans: 'Manrope', 'Inter', sans-serif;
+  --font-sans: 'Inter', sans-serif;
+  --font-display: 'Manrope', 'Inter', sans-serif;
+}
+
+/* ─────────────────────────────────────────
+   Semantic Typography System
+   ───────────────────────────────────────── */
+@utility txt-display {
+  font-family: 'Manrope', 'Inter', sans-serif;
+  font-size: 2rem; /* 32px */
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+@utility txt-headline {
+  font-family: 'Manrope', 'Inter', sans-serif;
+  font-size: 1.25rem; /* 20px */
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+
+@utility txt-title {
+  font-family: 'Manrope', 'Inter', sans-serif;
+  font-size: 1.0625rem; /* 17px */
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+@utility txt-body {
+  font-family: 'Inter', sans-serif;
+  font-size: 1rem; /* 16px */
+  font-weight: 400;
+  line-height: 1.5;
+  text-wrap: pretty;
+}
+
+@utility txt-secondary {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.875rem; /* 14px */
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+@utility txt-caption {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.75rem; /* 12px */
+  font-weight: 400;
+  line-height: 1.4;
+}
+
+@utility txt-label-caps {
+  font-family: 'Manrope', 'Inter', sans-serif;
+  font-size: 0.6875rem; /* 11px */
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
 }
 
 /* ─────────────────────────────────────────
@@ -75,7 +134,7 @@ html, body {
   height: 100%;
   overflow-x: hidden;
   position: relative;
-  font-family: 'Manrope', 'Inter', sans-serif;
+  font-family: 'Inter', sans-serif;
   background-color: var(--surface);
   color: var(--on-surface);
   -webkit-font-smoothing: antialiased;

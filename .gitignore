@@ -25,5 +25,8 @@ dist-ssr
 
 # Screenshots and temp files
 screenshot*.png
-temp_diff_App.txt
+temp_diff_*.txt
+temp_app.txt
 window_dump.xml
+.impeccable/
+scratch_impeccable/

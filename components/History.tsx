@@ -11,9 +11,11 @@ interface HistoryProps {
   onFollowUp: (appointment: HistoricalAppointment) => void;
   onReschedule: (appointment: HistoricalAppointment) => void;
   onReminder: (appointment: HistoricalAppointment) => void;
+  onRebook: (appointment: HistoricalAppointment) => void;
+  onEditNotes: (appointment: HistoricalAppointment) => void;
 }
 
-const History: React.FC<HistoryProps> = ({ history, onUpdateStatus, onDelete, onFollowUp, onReschedule, onReminder }) => {
+const History: React.FC<HistoryProps> = ({ history, onUpdateStatus, onDelete, onFollowUp, onReschedule, onReminder, onRebook, onEditNotes }) => {
 
 
   const [search, setSearch] = useState('');
@@ -70,8 +72,12 @@ const History: React.FC<HistoryProps> = ({ history, onUpdateStatus, onDelete, on
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search"
-            className="w-full h-11 pl-10 pr-4 bg-white border border-[#bacac5]/30 rounded-2xl text-[14px] text-[#131b2e] focus:outline-none focus:border-[#006b5f]/50 ambient-shadow"
-            style={{ fontFamily: 'Inter, sans-serif' }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.currentTarget.blur();
+              }
+            }}
+            className="w-full h-11 pl-10 pr-4 bg-white border border-[#bacac5]/30 rounded-2xl text-[14px] text-[#131b2e] focus:outline-none focus:border-[#006b5f]/50 ambient-shadow font-sans"
           />
         </div>
         <button className="w-11 h-11 flex items-center justify-center bg-white border border-[#bacac5]/30 rounded-2xl text-[#006b5f] ambient-shadow">
@@ -98,6 +104,8 @@ const History: React.FC<HistoryProps> = ({ history, onUpdateStatus, onDelete, on
               onFollowUp={onFollowUp}
               onReschedule={onReschedule}
               onReminder={onReminder}
+              onRebook={onRebook}
+              onEditNotes={onEditNotes}
             />
           ))
         ) : (

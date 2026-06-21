@@ -41,8 +41,8 @@ const ContactPickerModal: React.FC<ContactPickerModalProps> = ({
         <div className="p-6 border-b border-[#bacac5]/20 bg-[#faf8ff]">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="text-[20px] font-bold text-[#131b2e]" style={{ fontFamily: 'Manrope, sans-serif' }}>Select Contact</h3>
-              <p className="text-[14px] text-[#6b7a76] font-normal mt-0.5" style={{ fontFamily: 'Inter, sans-serif' }}>Choose a contact to add</p>
+              <h3 className="txt-display font-bold text-[#131b2e]">Select Contact</h3>
+              <p className="txt-secondary text-[#6b7a76] font-normal mt-0.5">Choose a contact to add</p>
             </div>
             <button
               onClick={onClose}
@@ -65,12 +65,12 @@ const ContactPickerModal: React.FC<ContactPickerModalProps> = ({
           {isLoading ? (
             <div className="flex flex-col items-center justify-center h-full space-y-4">
               <div className="w-10 h-10 border-4 border-[#2dd4bf] border-t-transparent rounded-full animate-spin"></div>
-              <p className="text-sm text-[#6b7a76] font-medium" style={{ fontFamily: 'Inter, sans-serif' }}>Fetching contacts...</p>
+              <p className="txt-secondary text-[#6b7a76] font-medium">Fetching contacts...</p>
             </div>
           ) : filteredContacts.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full space-y-4 opacity-50">
               <span className="material-symbols-outlined text-6xl text-[#bacac5]">person_search</span>
-              <p className="text-sm text-[#6b7a76] font-medium italic" style={{ fontFamily: 'Inter, sans-serif' }}>No contacts found</p>
+              <p className="txt-secondary text-[#6b7a76] font-medium italic">No contacts found</p>
             </div>
           ) : (
             filteredContacts.map(contact => (
@@ -97,8 +97,8 @@ const ContactPickerModal: React.FC<ContactPickerModalProps> = ({
                      />
                    </div>
                    <div className="flex-1 min-w-0">
-                     <p className="text-[16px] font-bold text-[#131b2e] truncate" style={{ fontFamily: 'Manrope, sans-serif' }}>{contact.name}</p>
-                     {contact.status && <p className="text-[12px] text-[#6b7a76] truncate font-normal mt-0.5" style={{ fontFamily: 'Inter, sans-serif' }}>{contact.status}</p>}
+                     <p className="txt-title font-bold text-[#131b2e] truncate">{contact.name}</p>
+                     {contact.status && <p className="txt-caption text-[#6b7a76] truncate font-normal mt-0.5">{contact.status}</p>}
                    </div>
                    <div className="flex flex-col items-end">
                      {selectedContactId === contact.id ? (
@@ -118,12 +118,11 @@ const ContactPickerModal: React.FC<ContactPickerModalProps> = ({
                       <button
                         key={`${contact.id}-${num}-${idx}`}
                         onClick={() => onSelect(contact, num)}
-                        className={`w-full text-left px-4 py-3 text-[14px] rounded-xl border flex items-center justify-between group transition-all ${
+                        className={`w-full text-left px-4 py-3 text-[14px] rounded-xl border flex items-center justify-between group transition-all font-sans ${
                           selectedContactId === contact.id 
                             ? 'bg-white border-[#006b5f]/30 text-[#006b5f] font-bold' 
                             : 'bg-[#faf8ff] border-transparent hover:border-[#2dd4bf]/40 hover:bg-[#eaedff] text-[#3c4a46] font-medium'
                         }`}
-                        style={{ fontFamily: 'Inter, sans-serif' }}
                       >
                         <span>{num}</span>
                         <span className={`material-symbols-outlined text-[18px] text-[#006b5f] transition-opacity ${
@@ -142,7 +141,7 @@ const ContactPickerModal: React.FC<ContactPickerModalProps> = ({
         <div className="p-5 bg-[#faf8ff] border-t border-[#bacac5]/20">
           <div className="flex space-x-3 items-start">
             <span className="material-symbols-outlined text-[#006b5f] text-[20px]">lightbulb</span>
-            <p className="text-[13px] leading-relaxed text-[#6b7a76] font-normal" style={{ fontFamily: 'Inter, sans-serif' }}>
+            <p className="txt-secondary leading-relaxed text-[#6b7a76] font-normal">
               Selecting a contact will add them to your <strong className="text-[#3c4a46]">Recents</strong> for quick access later.
             </p>
           </div>

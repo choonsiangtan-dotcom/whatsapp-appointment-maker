@@ -38,26 +38,22 @@ export function useAppLogic() {
           };
         });
 
-        // Aggressive Overlap Deduplication
+        // Deduplicate distinct ID/name + primary phone number pairs
         const uniqueContacts: Contact[] = [];
         migrated.sort((a, b) => b.lastUsed - a.lastUsed).forEach((c: Contact) => {
           const existing = uniqueContacts.find(ex =>
-            ex.name === c.name ||
-            ex.phoneNumbers.some(n => c.phoneNumbers.includes(n))
+            (ex.id && c.id ? ex.id === c.id : ex.name.toLowerCase().trim() === c.name.toLowerCase().trim()) &&
+            ex.phoneNumbers[0] === c.phoneNumbers[0]
           );
 
           if (existing) {
-            existing.phoneNumbers = Array.from(new Set([...existing.phoneNumbers, ...c.phoneNumbers])).sort();
             existing.lastUsed = Math.max(existing.lastUsed, c.lastUsed);
-            if (existing.avatar.includes('ui-avatars') && !c.avatar.includes('ui-avatars')) {
-              existing.avatar = c.avatar;
-            }
           } else {
             uniqueContacts.push(c);
           }
         });
 
-        return uniqueContacts.slice(0, 5);
+        return uniqueContacts.slice(0, 10);
       } catch (e) {
         console.error('Failed to parse contacts from localStorage', e);
       }
@@ -129,6 +125,24 @@ export function useAppLogic() {
     localStorage.setItem('addressHistory', JSON.stringify(addressHistory));
   }, [addressHistory]);
 
+  // --- Message Template ---
+  const [messageTemplate, setMessageTemplate] = useState<string>(() => {
+    return localStorage.getItem('messageTemplate') || 'Hello *{name}*, looking forward to our meeting at *{location}* on *{date}* at *{time}*. *Reply OK to confirm.*';
+  });
+
+  useEffect(() => {
+    localStorage.setItem('messageTemplate', messageTemplate);
+  }, [messageTemplate]);
+
+  // --- Reschedule Message Template ---
+  const [rescheduleTemplate, setRescheduleTemplate] = useState<string>(() => {
+    return localStorage.getItem('rescheduleTemplate') || 'Hello *{name}*, our meeting has been rescheduled to *{location}* on *{date}* at *{time}*. *Reply OK to confirm.*';
+  });
+
+  useEffect(() => {
+    localStorage.setItem('rescheduleTemplate', rescheduleTemplate);
+  }, [rescheduleTemplate]);
+
   // --- UI/Modal States ---
   const [isManualAddOpen, setIsManualAddOpen] = useState(false);
   const [manualContact, setManualContact] = useState({ name: '', phone: '' });
@@ -138,6 +152,7 @@ export function useAppLogic() {
   const [currentPage, setCurrentPage] = useState<'schedule' | 'history' | 'settings'>('schedule');
   const [selectedFollowUp, setSelectedFollowUp] = useState<HistoricalAppointment | null>(null);
   const [selectedReminder, setSelectedReminder] = useState<HistoricalAppointment | null>(null);
+  const [selectedNotesAppt, setSelectedNotesAppt] = useState<HistoricalAppointment | null>(null);
 
   // --- Rescheduling State ---
   const [reschedulingId, setReschedulingId] = useState<string | null>(() => {
@@ -431,11 +446,15 @@ export function useAppLogic() {
         return;
       }
 
+      // Strip any backslashes (often introduced by shell escaping during debugging)
+      const cleanMessage = message.replace(/\\/g, '');
+
       const storedKeywords = localStorage.getItem('confirmKeywords');
-      const confirmKeywords = storedKeywords 
+      const confirmKeywords = (storedKeywords 
         ? JSON.parse(storedKeywords)
-        : ['ok', 'yes', 'confirm', 'sure', 'confirmed', 'yep', 'can', 'noted', 'fine', 'see you', 'okay', 'correct', 'agree', 'perfect', 'will do', 'booked', 'awesome', '👍', '👌', 'deal'];
-      const rescheduleKeywords = ['cannot', "can't", 'reschedule', 'change', 'unable', 'busy', 'next time', 'other time', 'different day'];
+        : ['ok', 'yes', 'confirm', 'sure', 'confirmed', 'yep', 'noted', 'fine', 'see you', 'okay', 'correct', 'agree', 'perfect', 'will do', 'booked', 'awesome', '👍', '👌', 'deal']
+      ).filter((k: string) => k.toLowerCase() !== 'can');
+      const rescheduleKeywords = ['cannot', 'can not', "can't", 'cant', 'reschedule', 'change', 'unable', 'busy', 'next time', 'other time', 'different day', 'cancel', 'cancelling', 'postpone', 'not free', 'no free', 'another time', 'another day'];
       const ambiguousKeywords = [
         'maybe', 'perhaps', 'unsure', 'not sure', 'not-sure', 'think about', 
         'later', 'depends', 'might', 'possibly', 'let you know', 'let u know',
@@ -452,13 +471,13 @@ export function useAppLogic() {
         });
       };
 
-      const isRescheduleRequest = checkKeywords(message, rescheduleKeywords);
-      const isAmbiguous = checkKeywords(message, ambiguousKeywords);
+      const isRescheduleRequest = checkKeywords(cleanMessage, rescheduleKeywords);
+      const isAmbiguous = checkKeywords(cleanMessage, ambiguousKeywords);
       // Prioritize reschedule request, but if ambiguous and not rescheduling, block confirmation
-      const isConfirmation = (isRescheduleRequest || isAmbiguous) ? false : checkKeywords(message, confirmKeywords);
+      const isConfirmation = (isRescheduleRequest || isAmbiguous) ? false : checkKeywords(cleanMessage, confirmKeywords);
 
       if (isAmbiguous && !isRescheduleRequest) {
-        console.log(`[WhatsAppointment] Reply is ambiguous ("${message}"). Keeping appointment status PENDING.`);
+        console.log(`[WhatsAppointment] Reply is ambiguous ("${cleanMessage}"). Keeping appointment status PENDING.`);
       }
 
       setHistory(prev => {
@@ -594,20 +613,31 @@ export function useAppLogic() {
     }
 
     setContacts(prev => {
-      // 1. Check if the contact is ALREADY in our top 5 list
-      const exists = prev.some(c => 
-        c.id === contact.id || 
-        c.name.toLowerCase().trim() === contact.name.toLowerCase().trim()
+      // 1. Move the selected phone number to the first position of the array
+      const otherNumbers = contact.phoneNumbers.filter(num => num !== phoneNumber);
+      const reorderedNumbers = [phoneNumber, ...otherNumbers];
+      
+      const contactWithSelectedNum = {
+        ...contact,
+        phoneNumbers: reorderedNumbers,
+        lastUsed: Date.now()
+      };
+
+      // 2. Check if this specific contact + phone number combo is already in recents
+      const existsIndex = prev.findIndex(c => 
+        (c.id && contact.id ? c.id === contact.id : c.name.toLowerCase().trim() === contact.name.toLowerCase().trim()) &&
+        c.phoneNumbers[0] === phoneNumber
       );
 
-      // 2. If they ALREADY exist, don't change the list order
-      if (exists) {
-        return prev;
+      let updated = [...prev];
+      if (existsIndex > -1) {
+        // If it exists, update it in place so it stays at the original position
+        updated[existsIndex] = contactWithSelectedNum;
+      } else {
+        // If it's a new contact selection, prepend it to the list
+        updated = [contactWithSelectedNum, ...updated];
       }
-
-      // 3. If they are NEW, perform FIFO (First-In, First-Out)
-      const updatedContact = { ...contact, lastUsed: Date.now() };
-      return [updatedContact, ...prev].slice(0, 5);
+      return updated.slice(0, 10);
     });
 
     setFormData(prev => ({
@@ -665,10 +695,11 @@ export function useAppLogic() {
     }
 
     setContacts(prev => {
-      const updated = prev.map(c =>
-        c.id === formData.contact.id ? { ...c, lastUsed: Date.now() } : c
-      ).sort((a, b) => b.lastUsed - a.lastUsed);
-      return updated.slice(0, 5);
+      return prev.map(c =>
+        (c.id === formData.contact.id && c.phoneNumbers[0] === formData.selectedPhoneNumber)
+          ? { ...c, lastUsed: Date.now() }
+          : c
+      );
     });
 
     const formattedDate = new Date(formData.date).toLocaleDateString('en-US', {
@@ -683,7 +714,12 @@ export function useAppLogic() {
     const h12 = h % 12 || 12;
     const formattedTime = `${h12}:${minutes} ${ampm}`;
 
-    const message = `Hello *${formData.contact.name}*, looking forward to our meeting at *${formData.address}* on *${formattedDate}* at *${formattedTime}*. *Reply OK to confirm.*`;
+    const templateToUse = reschedulingId ? rescheduleTemplate : messageTemplate;
+    const message = templateToUse
+      .replace(/{name}/g, formData.contact.name || 'there')
+      .replace(/{location}/g, formData.address || 'the location')
+      .replace(/{date}/g, formattedDate)
+      .replace(/{time}/g, formattedTime);
 
     const encodedMessage = encodeURIComponent(message);
 
@@ -740,6 +776,35 @@ export function useAppLogic() {
     const nextHistory = history.filter(appt => appt.id !== id);
     setHistory(nextHistory);
     localStorage.setItem('appointmentHistory', JSON.stringify(nextHistory));
+  };
+
+  const updateAppointmentNotes = (id: string, notes: string) => {
+    const nextHistory = history.map(appt => 
+      appt.id === id ? { ...appt, notes, updatedAt: Date.now() } : appt
+    );
+    setHistory(nextHistory);
+    localStorage.setItem('appointmentHistory', JSON.stringify(nextHistory));
+  };
+
+  const handleRebook = (appt: HistoricalAppointment) => {
+    const freshFormData = {
+      contact: appt.contact,
+      selectedPhoneNumber: appt.selectedPhoneNumber || appt.contact.phoneNumbers[0],
+      address: appt.address,
+      date: '',
+      time: '',
+      followUpEnabled: (appt as any).followUpEnabled ?? ((appt as any).reminderEnabled ?? true),
+      preMeetingEnabled: (appt as any).preMeetingEnabled ?? ((appt as any).reminderEnabled ?? true),
+      leadTime: appt.leadTime || '1 hour',
+      followUpTimer: appt.followUpTimer || '20s',
+      preMeetingTimer: appt.preMeetingTimer || '30 mins'
+    };
+
+    setFormData(freshFormData);
+    setReschedulingId(null);
+    localStorage.removeItem('reschedulingId');
+    localStorage.removeItem('rescheduleFormData');
+    setCurrentPage('schedule');
   };
 
   const handleFollowUp = (appt: HistoricalAppointment) => {
@@ -925,7 +990,15 @@ export function useAppLogic() {
     handleSendReminder,
     handleReschedule,
     reschedulingId,
-    setReschedulingId
+    setReschedulingId,
+    selectedNotesAppt,
+    setSelectedNotesAppt,
+    updateAppointmentNotes,
+    handleRebook,
+    messageTemplate,
+    setMessageTemplate,
+    rescheduleTemplate,
+    setRescheduleTemplate
   };
 
 

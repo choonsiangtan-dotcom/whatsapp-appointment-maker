@@ -9,6 +9,8 @@ interface ContactHistoryGroupProps {
   onFollowUp: (appointment: HistoricalAppointment) => void;
   onReschedule: (appointment: HistoricalAppointment) => void;
   onReminder: (appointment: HistoricalAppointment) => void;
+  onRebook: (appointment: HistoricalAppointment) => void;
+  onEditNotes: (appointment: HistoricalAppointment) => void;
 }
 
 const ContactHistoryGroup: React.FC<ContactHistoryGroupProps> = ({ 
@@ -17,7 +19,9 @@ const ContactHistoryGroup: React.FC<ContactHistoryGroupProps> = ({
   onDelete, 
   onFollowUp, 
   onReschedule,
-  onReminder
+  onReminder,
+  onRebook,
+  onEditNotes
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isArchiveExpanded, setIsArchiveExpanded] = useState(false);
@@ -46,19 +50,19 @@ const ContactHistoryGroup: React.FC<ContactHistoryGroupProps> = ({
   const getStatusConfig = (status: AppointmentStatus) => {
     switch (status) {
       case 'SENT':
-        return { bg: 'bg-[#eaedff]', text: 'text-[#6b7a76]', border: 'border-l-[#6b7a76]', label: 'SENT', pulse: '' };
+        return { bg: 'bg-[#eaedff]', text: 'text-[#6b7a76]', label: 'SENT', pulse: '' };
       case 'CONFIRMED':
-        return { bg: 'bg-[#d1fae5]', text: 'text-[#065f46]', border: 'border-l-[#065f46]', label: 'CONFIRMED', pulse: '' };
+        return { bg: 'bg-[#d1fae5]', text: 'text-[#065f46]', label: 'CONFIRMED', pulse: '' };
       case 'RESCHEDULED':
-        return { bg: 'bg-[#fffbeb]', text: 'text-[#b45309]', border: 'border-l-[#b45309]', label: 'RESCHEDULED', pulse: 'animate-bounce-subtle' };
+        return { bg: 'bg-[#fffbeb]', text: 'text-[#b45309]', label: 'RESCHEDULED', pulse: '' };
       case 'NO-SHOW':
-        return { bg: 'bg-[#fee2e2]', text: 'text-[#991b1b]', border: 'border-l-[#991b1b]', label: 'NO-SHOW', pulse: '' };
+        return { bg: 'bg-[#fee2e2]', text: 'text-[#991b1b]', label: 'NO-SHOW', pulse: '' };
       case 'PENDING':
-        return { bg: 'bg-[#ffedd5]', text: 'text-[#9a3412]', border: 'border-l-[#f59e0b]', label: 'PENDING', pulse: 'status-pulse-amber' };
+        return { bg: 'bg-[#ffedd5]', text: 'text-[#9a3412]', label: 'PENDING', pulse: 'animate-pulse' };
       case 'CANCELLED':
-        return { bg: 'bg-slate-100', text: 'text-slate-500', border: 'border-l-slate-300', label: 'CANCELLED', pulse: '' };
+        return { bg: 'bg-slate-100', text: 'text-slate-500', label: 'CANCELLED', pulse: '' };
       default:
-        return { bg: 'bg-slate-100', text: 'text-slate-500', border: 'border-l-slate-300', label: status, pulse: '' };
+        return { bg: 'bg-slate-100', text: 'text-slate-500', label: status, pulse: '' };
     }
   };
 
@@ -119,7 +123,7 @@ const ContactHistoryGroup: React.FC<ContactHistoryGroupProps> = ({
   };
 
   return (
-    <div className={`bg-white rounded-2xl ambient-shadow border border-slate-100 border-l-[6px] ${config.border} mb-3 overflow-hidden transition-all duration-300`}>
+    <div className="bg-white rounded-2xl border border-slate-200/60 mb-3 overflow-hidden transition-all duration-300">
       {/* Primary Card (Collapsed view header) */}
       <div 
         className="p-3 cursor-pointer flex items-center gap-3 active:bg-slate-50 transition-colors"
@@ -129,7 +133,7 @@ const ContactHistoryGroup: React.FC<ContactHistoryGroupProps> = ({
           {contact.avatar.startsWith('http') ? (
             <img src={contact.avatar} alt="" className="w-full h-full object-cover" />
           ) : (
-            <span className="text-[14px] font-bold text-[#64748B]">
+            <span className="txt-title text-[#64748B]">
               {contact.name.charAt(0).toUpperCase()}
             </span>
           )}
@@ -139,7 +143,7 @@ const ContactHistoryGroup: React.FC<ContactHistoryGroupProps> = ({
           {/* Top Row: Name (60%) and Actions (40%) */}
           <div className="flex items-start justify-between mb-1.5">
             <div className="max-w-[60%] flex-1">
-              <h3 className="text-[16px] font-bold text-[#131b2e] truncate" style={{ fontFamily: 'Manrope, sans-serif' }}>
+              <h3 className="txt-title font-bold text-[#131b2e] truncate">
                 {contact.name}
               </h3>
             </div>
@@ -171,11 +175,11 @@ const ContactHistoryGroup: React.FC<ContactHistoryGroupProps> = ({
               )}
               <div className="flex items-center gap-1">
                 {activeConflictCount > 1 && (
-                  <span className="px-1 py-0.5 rounded bg-red-50 text-red-600 text-[8px] font-bold border border-red-100 uppercase tracking-tighter">
+                  <span className="px-1 py-0.5 rounded bg-red-50 text-[8px] font-bold border border-red-100 txt-label-caps text-red-600">
                     {activeConflictCount}
                   </span>
                 )}
-                <span className={`px-2 py-0.5 rounded-full text-[9px] font-extrabold tracking-wider ${config.bg} ${config.text} ${config.pulse}`}>
+                <span className={`px-2 py-0.5 rounded-full txt-label-caps text-[9px] ${config.bg} ${config.text} ${config.pulse}`}>
                   {config.label}
                 </span>
               </div>
@@ -184,12 +188,12 @@ const ContactHistoryGroup: React.FC<ContactHistoryGroupProps> = ({
 
           {/* Bottom Row: Next Date and Expand indicator */}
           <div className="flex items-center justify-between">
-            <p className="text-[12px] text-[#6b7a76] font-medium truncate flex-1 mr-4" style={{ fontFamily: 'Inter, sans-serif' }}>
+            <p className="txt-caption font-medium text-[#6b7a76] truncate flex-1 mr-4">
               Next: {formatDate(nextAppt.date)}, {formatTime(nextAppt.time)}
             </p>
             
             <div className="flex items-center gap-1 text-[#006b5f] bg-slate-50/80 px-1.5 py-0.5 rounded-md flex-shrink-0 border border-slate-100">
-              <span className="text-[10px] font-bold whitespace-nowrap">{appointments.length} {appointments.length > 1 ? 'Appts' : 'Appt'}</span>
+              <span className="txt-caption font-bold text-[#006b5f] whitespace-nowrap">{appointments.length} {appointments.length > 1 ? 'Appts' : 'Appt'}</span>
               <span className={`material-symbols-outlined text-[16px] transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}>
                 expand_more
               </span>
@@ -202,8 +206,8 @@ const ContactHistoryGroup: React.FC<ContactHistoryGroupProps> = ({
       <div 
         className={`transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'} overflow-hidden`}
       >
-        <div className="p-3 pt-0 border-t border-slate-50 bg-[#f8fafc]/50">
-          <div className="pl-6 border-l-2 border-[#bacac5]/30 ml-4 py-2 space-y-0 relative">
+        <div className="px-2 pb-3 pt-0 border-t border-slate-50 bg-[#f8fafc]/50">
+          <div className="pl-4 border-l-2 border-[#bacac5]/30 ml-2 py-2 space-y-0 relative">
             {/* Active Thread */}
             <div className="absolute left-[-5px] top-4 w-2 h-2 rounded-full bg-[#bacac5]"></div>
             
@@ -216,6 +220,8 @@ const ContactHistoryGroup: React.FC<ContactHistoryGroupProps> = ({
                 onFollowUp={onFollowUp}
                 onReschedule={onReschedule}
                 onReminder={onReminder}
+                onRebook={onRebook}
+                onEditNotes={onEditNotes}
                 isThreadItem={true}
               />
             ))}
@@ -230,7 +236,7 @@ const ContactHistoryGroup: React.FC<ContactHistoryGroupProps> = ({
                   }}
                   className="flex items-center gap-2 py-2 text-[#64748B] hover:text-[#131b2e] transition-colors"
                 >
-                  <span className="text-[10px] font-bold uppercase tracking-widest">Archives ({sortedArchived.length})</span>
+                  <span className="txt-label-caps text-[10px] text-[#64748B]">Archives ({sortedArchived.length})</span>
                   <span className={`material-symbols-outlined text-[14px] transition-transform ${isArchiveExpanded ? 'rotate-180' : ''}`}>
                     expand_more
                   </span>
@@ -246,6 +252,8 @@ const ContactHistoryGroup: React.FC<ContactHistoryGroupProps> = ({
                       onFollowUp={onFollowUp}
                       onReschedule={onReschedule}
                       onReminder={onReminder}
+                      onRebook={onRebook}
+                      onEditNotes={onEditNotes}
                       isThreadItem={true}
                     />
                   ))}

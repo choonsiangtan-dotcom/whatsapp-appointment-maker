@@ -36,25 +36,29 @@ const InputField: React.FC<InputFieldProps> = ({
           {icon}
         </span>
         <input
-          className="w-full h-10 pl-10 pr-3 bg-[#f2f3ff] border border-[#bacac5]/30 rounded-[10px] focus:ring-2 focus:ring-[#006b5f] focus:border-[#006b5f] outline-none transition-all placeholder:text-[#6b7a76]/50 text-[14px] text-[#131b2e]"
-          style={{ fontFamily: 'Inter, sans-serif' }}
+          className="w-full h-10 pl-10 pr-3 bg-slate-50 dark:bg-slate-900/30 border border-slate-200/60 dark:border-slate-800/60 rounded-[10px] focus:ring-2 focus:ring-[#006b5f]/30 focus:border-[#006b5f] outline-none transition-all placeholder:text-[#6b7a76]/40 txt-secondary text-[#131b2e] dark:text-slate-100"
           placeholder={placeholder}
           type={type || "text"}
           value={value}
           onChange={onChange}
           onBlur={() => setTimeout(() => setIsFocused(false), 200)}
           onFocus={() => setIsFocused(true)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.currentTarget.blur();
+            }
+          }}
         />
       </div>
 
       {/* Suggestions Dropdown */}
       {isFocused && suggestions.length > 0 && (
-        <div className="absolute left-0 right-0 top-full mt-2 bg-white border border-[#bacac5]/30 rounded-[16px] shadow-lg shadow-[#006b5f]/5 z-20 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+        <div className="absolute left-0 right-0 top-full mt-2 bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/80 rounded-[16px] shadow-lg shadow-slate-200/20 dark:shadow-none z-20 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
           {suggestions.map((s, i) => (
             <button
               key={i}
               onMouseDown={() => onSuggestionClick?.(s)}
-              className="w-full flex items-center px-4 py-3 hover:bg-[#f2f3ff] text-left text-sm text-[#131b2e] transition-colors border-b last:border-b-0 border-[#bacac5]/20"
+              className="w-full flex items-center px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 text-left text-sm text-[#131b2e] dark:text-slate-200 transition-colors border-b last:border-b-0 border-slate-100 dark:border-slate-800/50"
             >
               <span className="material-symbols-outlined text-[#006b5f] mr-3 text-[18px]">{suggestionIcon}</span>
               <span className="truncate">{s}</span>
