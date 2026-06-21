@@ -11,11 +11,14 @@ const Layout: React.FC<LayoutProps> = ({ children, currentPage, onPageChange, mo
   return (
     <div className="min-h-screen flex items-center justify-center p-0 md:p-4 bg-[#faf8ff]">
       {/* Phone Frame */}
-      <div className="relative w-full max-w-[390px] h-screen md:h-[844px] bg-[#faf8ff] md:rounded-[2.5rem] md:shadow-xl overflow-hidden transition-all duration-500">
+      <div className="relative w-full max-w-[390px] h-screen md:h-[844px] bg-[#faf8ff] md:rounded-[2.5rem] md:shadow-xl overflow-hidden transition-all duration-500 flex flex-col">
 
         {/* ── Top App Bar ── */}
-        <header className="absolute top-0 left-0 right-0 z-50 h-14 flex items-center justify-between px-4 bg-white/90 backdrop-blur-md border-b border-[#bacac5]/20 shadow-[0_1px_8px_rgba(0,107,95,0.06)]"
-          style={{ paddingTop: 'env(safe-area-inset-top)' }}
+        <header className="relative z-50 flex-shrink-0 flex items-center justify-between px-4 bg-white border-b border-[#bacac5]/20 shadow-[0_1px_8px_rgba(0,107,95,0.06)]"
+          style={{ 
+            paddingTop: 'env(safe-area-inset-top)',
+            height: 'calc(3.5rem + env(safe-area-inset-top))'
+          }}
         >
           {/* Logo group */}
           <div className="flex items-center gap-2">
@@ -40,7 +43,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentPage, onPageChange, mo
 
         {/* ── Scrollable Content ── */}
         <div
-          className="relative h-full flex flex-col pt-[60px] pb-[70px] px-4 overflow-y-auto overflow-x-hidden hide-scrollbar"
+          className="relative flex-1 pt-3 pb-[70px] px-4 overflow-y-auto overflow-x-hidden hide-scrollbar"
         >
           {children}
         </div>

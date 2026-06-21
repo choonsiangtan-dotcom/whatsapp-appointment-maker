@@ -350,7 +350,7 @@ const HistoryCard: React.FC<HistoryCardProps> = ({
 
       {/* Main Content Card */}
       <div 
-        className={`relative z-10 w-full ${isThreadItem ? 'bg-slate-50 pl-4 pr-3 pt-3 pb-4' : 'bg-white p-3'} transition-transform duration-300 ease-out border border-slate-100 ${isThreadItem ? 'rounded-xl' : 'rounded-2xl'} ${isSwiped ? '-translate-x-[60%]' : 'translate-x-0'}`}
+        className={`relative z-10 w-full ${isThreadItem ? 'bg-slate-50 pl-4 pr-3 pt-2.5 pb-2.5' : 'bg-white p-3'} transition-transform duration-300 ease-out border border-slate-100 ${isThreadItem ? 'rounded-xl' : 'rounded-2xl'} ${isSwiped ? '-translate-x-[60%]' : 'translate-x-0'}`}
 
         onTouchStart={(e) => {
           const touch = e.touches[0];
@@ -367,7 +367,7 @@ const HistoryCard: React.FC<HistoryCardProps> = ({
           if (isSwiped) setIsSwiped(false);
         }}
       >
-        <div className="flex flex-col gap-2.5">
+        <div className="flex flex-col gap-2">
           {/* Row 1: Info and Status Badge */}
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-start gap-3 flex-1 min-w-0">
@@ -406,69 +406,71 @@ const HistoryCard: React.FC<HistoryCardProps> = ({
             </span>
           </div>
 
-          {/* Row 2: Action Buttons */}
-          <div className="flex flex-wrap gap-2 justify-end">
-            {isPast ? (
-              <button 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onRebook(appointment);
-                }}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-[#006b5f] text-white rounded-lg txt-label-caps shadow-sm active:scale-95 hover:bg-[#00574d] transition-all whitespace-nowrap"
-              >
-                <span className="material-symbols-outlined text-[14px]">add</span>
-                REBOOK
-              </button>
-            ) : appointment.status === 'PENDING' ? (
-              <button 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onFollowUp(appointment);
-                }}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-[#a93349] text-white rounded-lg txt-label-caps shadow-sm active:scale-95 hover:bg-[#8f283b] transition-all whitespace-nowrap"
-              >
-                <span className="material-symbols-outlined text-[14px]">send</span>
-                FOLLOW UP
-              </button>
-            ) : appointment.status === 'CONFIRMED' ? (
-              <div className="flex gap-2">
+          {/* Row 2: Action Buttons (Only for non-thread view, thread view uses inline action row) */}
+          {!isThreadItem && (
+            <div className="flex flex-wrap gap-2 justify-end">
+              {isPast ? (
                 <button 
                   onClick={(e) => {
                     e.stopPropagation();
-                    onReminder(appointment);
+                    onRebook(appointment);
                   }}
-                  className="flex items-center gap-1.5 px-2.5 py-1.5 bg-[#006b5f] text-white rounded-lg txt-label-caps shadow-sm active:scale-95 hover:bg-[#00574d] transition-all whitespace-nowrap"
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-[#006b5f] text-white rounded-lg txt-label-caps shadow-sm active:scale-95 hover:bg-[#00574d] transition-all whitespace-nowrap"
                 >
-                  <span className="material-symbols-outlined text-[13px]">notifications_active</span>
-                  REMIND
+                  <span className="material-symbols-outlined text-[14px]">add</span>
+                  REBOOK
                 </button>
+              ) : appointment.status === 'PENDING' ? (
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onFollowUp(appointment);
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-[#a93349] text-white rounded-lg txt-label-caps shadow-sm active:scale-95 hover:bg-[#8f283b] transition-all whitespace-nowrap"
+                >
+                  <span className="material-symbols-outlined text-[14px]">send</span>
+                  FOLLOW UP
+                </button>
+              ) : appointment.status === 'CONFIRMED' ? (
+                <div className="flex gap-2">
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onReminder(appointment);
+                    }}
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 bg-[#006b5f] text-white rounded-lg txt-label-caps shadow-sm active:scale-95 hover:bg-[#00574d] transition-all whitespace-nowrap"
+                  >
+                    <span className="material-symbols-outlined text-[13px]">notifications_active</span>
+                    REMIND
+                  </button>
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onReschedule(appointment);
+                    }}
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-lg txt-label-caps shadow-sm active:scale-95 hover:bg-slate-200 transition-all whitespace-nowrap"
+                  >
+                    Reschedule
+                  </button>
+                </div>
+              ) : (
                 <button 
                   onClick={(e) => {
                     e.stopPropagation();
                     onReschedule(appointment);
                   }}
-                  className="flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-lg txt-label-caps shadow-sm active:scale-95 hover:bg-slate-200 transition-all whitespace-nowrap"
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 bg-[#006b5f] text-white rounded-lg txt-label-caps shadow-sm active:scale-95 hover:bg-[#00574d] transition-all whitespace-nowrap"
                 >
+                  <span className="material-symbols-outlined text-[14px]">calendar_today</span>
                   Reschedule
                 </button>
-              </div>
-            ) : (
-              <button 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onReschedule(appointment);
-                }}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 bg-[#006b5f] text-white rounded-lg txt-label-caps shadow-sm active:scale-95 hover:bg-[#00574d] transition-all whitespace-nowrap"
-              >
-                <span className="material-symbols-outlined text-[14px]">calendar_today</span>
-                Reschedule
-              </button>
-            )}
-          </div>
+              )}
+            </div>
+          )}
         </div>
 
-        {/* Footer Actions */}
-        <div className="mt-3 pt-3 border-t border-slate-50 flex items-center justify-start min-h-[48px]">
+        {/* Footer Actions (or Merged Actions for timeline view) */}
+        <div className={`mt-2 pt-2 border-t border-slate-50 flex items-center justify-between ${isThreadItem ? 'min-h-[36px]' : 'min-h-[48px]'}`}>
           {confirmDelete ? (
             <div className="flex items-center justify-between w-full py-1">
               <span className="txt-caption font-bold text-[#f43f5e] flex items-center gap-1.5">
@@ -499,7 +501,8 @@ const HistoryCard: React.FC<HistoryCardProps> = ({
             </div>
           ) : (
             <>
-              <div className="flex items-center flex-shrink-0 gap-4">
+              {/* Left group: Notes & Delete Icons */}
+              <div className="flex items-center flex-shrink-0 gap-1">
                 <button 
                   onClick={(e) => {
                     e.stopPropagation();
@@ -510,7 +513,7 @@ const HistoryCard: React.FC<HistoryCardProps> = ({
                     }
                   }}
                   aria-label={isPast ? 'Notes' : 'Edit'}
-                  className={`flex items-center justify-center text-[#006b5f] hover:bg-[#006b5f]/5 rounded-xl transition-all ${isThreadItem ? 'w-12 h-12 ml-0' : 'px-3 -ml-3 gap-1.5 min-h-[48px]'}`}
+                  className={`flex items-center justify-center text-[#006b5f] hover:bg-[#006b5f]/5 rounded-xl transition-all ${isThreadItem ? 'w-8 h-8' : 'px-3 -ml-3 gap-1.5 min-h-[48px]'}`}
                 >
                   <span className="material-symbols-outlined text-[18px]">{isPast ? 'description' : 'edit_note'}</span>
                   {!isThreadItem && (isPast ? 'Notes' : 'Edit')}
@@ -522,49 +525,113 @@ const HistoryCard: React.FC<HistoryCardProps> = ({
                     setConfirmDelete(true);
                   }}
                   aria-label="Delete"
-                  className="text-[#f43f5e] hover:brightness-110 transition-colors w-12 h-12 flex items-center justify-center hover:bg-rose-50 rounded-xl"
+                  className={`text-[#f43f5e] hover:brightness-110 transition-colors flex items-center justify-center hover:bg-rose-50 rounded-xl ${isThreadItem ? 'w-8 h-8' : 'w-12 h-12'}`}
                 >
                   <span className="material-symbols-outlined text-[18px]">delete</span>
                 </button>
               </div>
               
-              {isPast ? (
-                <div 
-                  className={`${isThreadItem ? 'ml-4 mr-0 px-2 py-0.5 text-[10px]' : 'ml-6 mr-0 px-2.5 py-1'} txt-label-caps text-[#5F6368] flex items-center gap-1 bg-[#F1F3F4] rounded-full border border-slate-200/50 shadow-sm whitespace-nowrap flex-shrink-0`} 
-                >
-                  <span className="material-symbols-outlined text-[12px] text-[#5F6368]">done</span>
-                  {appointment.status === 'CONFIRMED' ? 'Completed' : (isThreadItem ? 'Past' : 'Past Event')}
-                </div>
-              ) : (
-                <>
-                  {appointment.status === 'PENDING' && (
-                    <div 
-                      className={`${isThreadItem ? 'ml-4 mr-0 px-2 py-0.5 text-[10px]' : 'ml-6 mr-0 px-2.5 py-1'} txt-label-caps text-[#9a3412] flex items-center gap-1 bg-[#ffedd5] rounded-full border border-[#9a3412]/10 shadow-sm animate-pulse whitespace-nowrap flex-shrink-0`} 
-                    >
-                      <span className="material-symbols-outlined text-[12px]">schedule</span>
-                      {isThreadItem ? 'Pend: ' : 'Pending: '}{formatElapsedTime(appointment.sentAt)}
-                    </div>
-                  )}
+              {/* Right group: Action Buttons (scaled down) + Status Countdown Pill */}
+              <div className="flex items-center gap-1.5 ml-auto">
+                {isThreadItem && (
+                  <div className="flex items-center gap-1.5">
+                    {isPast ? (
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onRebook(appointment);
+                        }}
+                        className="flex items-center gap-1 px-2 py-1 bg-[#006b5f] text-white rounded-md text-[9px] font-bold tracking-wider uppercase transition-all whitespace-nowrap"
+                      >
+                        <span className="material-symbols-outlined text-[11px]">add</span>
+                        REBOOK
+                      </button>
+                    ) : appointment.status === 'PENDING' ? (
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onFollowUp(appointment);
+                        }}
+                        className="flex items-center gap-1 px-2 py-1 bg-[#a93349] text-white rounded-md text-[9px] font-bold tracking-wider uppercase transition-all whitespace-nowrap"
+                      >
+                        <span className="material-symbols-outlined text-[11px]">send</span>
+                        FOLLOW UP
+                      </button>
+                    ) : appointment.status === 'CONFIRMED' ? (
+                      <div className="flex gap-1">
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onReminder(appointment);
+                          }}
+                          className="flex items-center gap-1 px-2 py-1 bg-[#006b5f] text-white rounded-md text-[9px] font-bold tracking-wider uppercase transition-all whitespace-nowrap"
+                        >
+                          <span className="material-symbols-outlined text-[11px]">notifications_active</span>
+                          REMIND
+                        </button>
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onReschedule(appointment);
+                          }}
+                          className="px-2 py-1 bg-slate-100 text-slate-700 border border-slate-200 rounded-md text-[9px] font-bold transition-all whitespace-nowrap"
+                        >
+                          Reschedule
+                        </button>
+                      </div>
+                    ) : (
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onReschedule(appointment);
+                        }}
+                        className="flex items-center gap-1 px-2 py-1 bg-[#006b5f] text-white rounded-md text-[9px] font-bold tracking-wider uppercase transition-all whitespace-nowrap"
+                      >
+                        <span className="material-symbols-outlined text-[11px]">calendar_today</span>
+                        Reschedule
+                      </button>
+                    )}
+                  </div>
+                )}
 
-                  {appointment.status === 'SENT' && (
-                    <div 
-                      className={`${isThreadItem ? 'ml-4 mr-0 px-2 py-0.5 text-[10px]' : 'ml-6 mr-0 px-2.5 py-1'} txt-label-caps text-[#3c4a46] flex items-center gap-1 bg-[#eaedff] rounded-full border border-[#eaedff]/20 shadow-sm whitespace-nowrap flex-shrink-0`} 
-                    >
-                      <span className="material-symbols-outlined text-[12px]">hourglass_empty</span>
-                      {isThreadItem ? 'Wait: ' : 'Waiting: '}{formatElapsedTime(appointment.sentAt)}
-                    </div>
-                  )}
+                {isPast ? (
+                  <div 
+                    className={`${isThreadItem ? 'px-2 py-0.5 text-[9px]' : 'ml-6 mr-0 px-2.5 py-1 text-[10px]'} txt-label-caps text-[#5F6368] flex items-center gap-1 bg-[#F1F3F4] rounded-full border border-slate-200/50 shadow-sm whitespace-nowrap flex-shrink-0`} 
+                  >
+                    <span className="material-symbols-outlined text-[12px] text-[#5F6368]">done</span>
+                    {appointment.status === 'CONFIRMED' ? 'Completed' : (isThreadItem ? 'Past' : 'Past Event')}
+                  </div>
+                ) : (
+                  <>
+                    {appointment.status === 'PENDING' && (
+                      <div 
+                        className={`${isThreadItem ? 'px-2 py-0.5 text-[9px]' : 'ml-6 mr-0 px-2.5 py-1 text-[10px]'} txt-label-caps text-[#9a3412] flex items-center gap-1 bg-[#ffedd5] rounded-full border border-[#9a3412]/10 shadow-sm animate-pulse whitespace-nowrap flex-shrink-0`} 
+                      >
+                        <span className="material-symbols-outlined text-[12px]">schedule</span>
+                        {isThreadItem ? 'Pend: ' : 'Pending: '}{formatElapsedTime(appointment.sentAt)}
+                      </div>
+                    )}
 
-                  {appointment.status === 'CONFIRMED' && (
-                    <div 
-                      className={`${isThreadItem ? 'ml-4 mr-0 px-2 py-0.5 text-[10px]' : 'ml-6 mr-0 px-2.5 py-1'} txt-label-caps text-[#065f46] flex items-center gap-1 bg-[#d1fae5] rounded-full border border-[#065f46]/10 shadow-sm whitespace-nowrap flex-shrink-0`} 
-                    >
-                      <span className="material-symbols-outlined text-[12px]">alarm</span>
-                      {isThreadItem ? 'In: ' : 'Meeting in: '}{formatCountdown(appointment.date, appointment.time)}
-                    </div>
-                  )}
-                </>
-              )}
+                    {appointment.status === 'SENT' && (
+                      <div 
+                        className={`${isThreadItem ? 'px-2 py-0.5 text-[9px]' : 'ml-6 mr-0 px-2.5 py-1 text-[10px]'} txt-label-caps text-[#3c4a46] flex items-center gap-1 bg-[#eaedff] rounded-full border border-[#eaedff]/20 shadow-sm whitespace-nowrap flex-shrink-0`} 
+                      >
+                        <span className="material-symbols-outlined text-[12px]">hourglass_empty</span>
+                        {isThreadItem ? 'Wait: ' : 'Waiting: '}{formatElapsedTime(appointment.sentAt)}
+                      </div>
+                    )}
+
+                    {appointment.status === 'CONFIRMED' && (
+                      <div 
+                        className={`${isThreadItem ? 'px-2 py-0.5 text-[9px]' : 'ml-6 mr-0 px-2.5 py-1 text-[10px]'} txt-label-caps text-[#065f46] flex items-center gap-1 bg-[#d1fae5] rounded-full border border-[#065f46]/10 shadow-sm whitespace-nowrap flex-shrink-0`} 
+                      >
+                        <span className="material-symbols-outlined text-[12px]">alarm</span>
+                        {isThreadItem ? 'In: ' : 'Meeting in: '}{formatCountdown(appointment.date, appointment.time)}
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
             </>
           )}
         </div>
