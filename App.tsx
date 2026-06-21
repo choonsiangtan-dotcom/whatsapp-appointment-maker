@@ -14,6 +14,7 @@ import ReminderModal from './components/ReminderModal';
 import NotesModal from './components/NotesModal';
 import { useNotificationPermission } from './hooks/useNotificationPermission';
 import TimePickerModal from './components/TimePickerModal';
+import ClientHistoryActivity from './components/ClientHistoryActivity';
 
 const App: React.FC = () => {
   const { 
@@ -74,6 +75,22 @@ const App: React.FC = () => {
     rescheduleTemplate,
     setRescheduleTemplate
   } = useAppLogic();
+
+  const [selectedClientHistoryContact, setSelectedClientHistoryContact] = React.useState<any | null>(null);
+
+  const handleRebookWrapped = (appt: any) => {
+    setSelectedClientHistoryContact(null);
+    handleRebook(appt);
+  };
+
+  const handleRescheduleWrapped = (appt: any) => {
+    setSelectedClientHistoryContact(null);
+    handleReschedule(appt);
+  };
+
+  React.useEffect(() => {
+    setSelectedClientHistoryContact(null);
+  }, [currentPage]);
 
   const [isEditingTemplate, setIsEditingTemplate] = React.useState(false);
   const [tempTemplate, setTempTemplate] = React.useState('');
@@ -426,6 +443,21 @@ const App: React.FC = () => {
               }}
             />
           )}
+
+          {selectedClientHistoryContact && (
+            <ClientHistoryActivity
+              contact={selectedClientHistoryContact}
+              appointments={history.filter(appt => appt.contact.id === selectedClientHistoryContact.id)}
+              onClose={() => setSelectedClientHistoryContact(null)}
+              onUpdateStatus={updateAppointmentStatus}
+              onDelete={deleteAppointment}
+              onFollowUp={handleFollowUp}
+              onReschedule={handleRescheduleWrapped}
+              onReminder={handleReminder}
+              onRebook={handleRebookWrapped}
+              onEditNotes={setSelectedNotesAppt}
+            />
+          )}
         </>
       }
     >
@@ -752,10 +784,11 @@ const App: React.FC = () => {
           onUpdateStatus={updateAppointmentStatus} 
           onDelete={deleteAppointment} 
           onFollowUp={handleFollowUp}
-          onReschedule={handleReschedule}
+          onReschedule={handleRescheduleWrapped}
           onReminder={handleReminder}
-          onRebook={handleRebook}
+          onRebook={handleRebookWrapped}
           onEditNotes={setSelectedNotesAppt}
+          onOpenClientHistory={(contact) => setSelectedClientHistoryContact(contact)}
         />
 
       ) : (

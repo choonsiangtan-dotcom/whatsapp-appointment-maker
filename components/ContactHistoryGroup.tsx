@@ -10,7 +10,8 @@ interface ContactHistoryGroupProps {
   onReschedule: (appointment: HistoricalAppointment) => void;
   onReminder: (appointment: HistoricalAppointment) => void;
   onRebook: (appointment: HistoricalAppointment) => void;
-  onEditNotes: (appointment: HistoricalAppointment) => void;
+    onEditNotes: (appointment: HistoricalAppointment) => void;
+  onOpenClientHistory: (contact: any) => void;
 }
 
 const ContactHistoryGroup: React.FC<ContactHistoryGroupProps> = ({ 
@@ -21,10 +22,10 @@ const ContactHistoryGroup: React.FC<ContactHistoryGroupProps> = ({
   onReschedule,
   onReminder,
   onRebook,
-  onEditNotes
+  onEditNotes,
+  onOpenClientHistory
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [isArchiveExpanded, setIsArchiveExpanded] = useState(false);
 
   // If no appointments, render nothing
   if (appointments.length === 0) return null;
@@ -228,36 +229,18 @@ const ContactHistoryGroup: React.FC<ContactHistoryGroupProps> = ({
 
             {/* Archives Section */}
             {sortedArchived.length > 0 && (
-              <div className="mt-4">
+              <div className="mt-4 pt-3 border-t border-slate-200/60 flex justify-between items-center mr-2">
+                <span className="txt-label-caps text-[10px] text-[#64748B] font-bold">Archives ({sortedArchived.length})</span>
                 <button 
                   onClick={(e) => {
                     e.stopPropagation();
-                    setIsArchiveExpanded(!isArchiveExpanded);
+                    onOpenClientHistory(contact);
                   }}
-                  className="flex items-center gap-2 py-2 text-[#64748B] hover:text-[#131b2e] transition-colors"
+                  className="flex items-center gap-0.5 text-[10px] font-bold text-[#006b5f] hover:text-[#00574d] active:scale-95 transition-all txt-label-caps"
                 >
-                  <span className="txt-label-caps text-[10px] text-[#64748B]">Archives ({sortedArchived.length})</span>
-                  <span className={`material-symbols-outlined text-[14px] transition-transform ${isArchiveExpanded ? 'rotate-180' : ''}`}>
-                    expand_more
-                  </span>
+                  <span>VIEW ALL</span>
+                  <span className="material-symbols-outlined text-[13px] font-bold">arrow_forward</span>
                 </button>
-                
-                <div className={`transition-all duration-300 overflow-hidden ${isArchiveExpanded ? 'max-h-[1000px] opacity-100 mt-2' : 'max-h-0 opacity-0'}`}>
-                  {sortedArchived.map((appt) => (
-                    <HistoryCard 
-                      key={appt.id} 
-                      appointment={appt} 
-                      onUpdateStatus={onUpdateStatus}
-                      onDelete={onDelete}
-                      onFollowUp={onFollowUp}
-                      onReschedule={onReschedule}
-                      onReminder={onReminder}
-                      onRebook={onRebook}
-                      onEditNotes={onEditNotes}
-                      isThreadItem={true}
-                    />
-                  ))}
-                </div>
               </div>
             )}
           </div>
