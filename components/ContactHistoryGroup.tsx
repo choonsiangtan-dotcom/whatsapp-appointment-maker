@@ -141,15 +141,15 @@ const ContactHistoryGroup: React.FC<ContactHistoryGroupProps> = ({
         </div>
 
         <div className="flex-1 min-w-0">
-          {/* Top Row: Name (60%) and Actions (40%) */}
-          <div className="flex items-start justify-between mb-1.5">
-            <div className="max-w-[60%] flex-1">
-              <h3 className="txt-title font-bold text-[#131b2e] truncate">
+          {/* Top Row: Name and Actions/Status */}
+          <div className="flex items-start justify-between gap-2 mb-1.5">
+            <div className="flex-1 min-w-0">
+              <h3 className="text-[14px] font-bold text-[#131b2e] leading-snug break-words">
                 {contact.name}
               </h3>
             </div>
             
-            <div className="flex items-center gap-1.5 flex-shrink-0 ml-2">
+            <div className="flex items-center gap-1.5 flex-shrink-0">
               {pendingAppt && (
                 <button 
                   onClick={(e) => {
