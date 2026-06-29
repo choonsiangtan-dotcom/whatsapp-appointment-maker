@@ -133,7 +133,7 @@ const App: React.FC = () => {
       }
       setLongPressedSlot(item);
       longPressTimerRef.current = null;
-    }, 2000);
+    }, 600);
   };
 
   const cancelLongPress = () => {
