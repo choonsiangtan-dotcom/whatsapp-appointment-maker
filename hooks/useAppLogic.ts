@@ -877,6 +877,12 @@ export function useAppLogic() {
     localStorage.setItem('appointmentHistory', JSON.stringify(nextHistory));
   };
 
+  const deleteAppointmentsForClient = (contactId: string) => {
+    const nextHistory = history.filter(appt => appt.contact.id !== contactId);
+    setHistory(nextHistory);
+    localStorage.setItem('appointmentHistory', JSON.stringify(nextHistory));
+  };
+
   const updateAppointmentNotes = (id: string, notes: string) => {
     const nextHistory = history.map(appt => 
       appt.id === id ? { ...appt, notes, updatedAt: Date.now() } : appt
@@ -1081,6 +1087,7 @@ export function useAppLogic() {
     history,
     updateAppointmentStatus,
     deleteAppointment,
+    deleteAppointmentsForClient,
     selectedFollowUp,
     setSelectedFollowUp,
     handleFollowUp,

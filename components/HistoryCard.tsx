@@ -29,6 +29,8 @@ const HistoryCard: React.FC<HistoryCardProps> = ({
   const [isSwiped, setIsSwiped] = useState(false);
   const [now, setNow] = useState(Date.now());
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const isPast = (() => {
     try {
@@ -62,7 +64,7 @@ const HistoryCard: React.FC<HistoryCardProps> = ({
       case 'PENDING':
         return { bg: 'bg-[#ffedd5]', text: 'text-[#9a3412]', label: 'PENDING', pulse: 'status-pulse-amber' };
       case 'CANCELLED':
-        return { bg: 'bg-slate-100', text: 'text-slate-500', label: 'CANCELLED', pulse: '' };
+        return { bg: 'bg-[#fee2e2] dark:bg-red-950/35', text: 'text-[#dc2626] dark:text-red-400', label: 'CANCELLED', pulse: '' };
       default:
         return { bg: 'bg-slate-100', text: 'text-slate-500', label: status, pulse: '' };
     }
@@ -143,125 +145,179 @@ const HistoryCard: React.FC<HistoryCardProps> = ({
 
   if (isCompactTimeline) {
     return (
-      <div className="relative overflow-hidden rounded-2xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900 shadow-sm">
+      <>
         <div 
-          className="relative z-10 w-full bg-white dark:bg-slate-900 p-4"
-          onClick={() => {
-            if (isSwiped) setIsSwiped(false);
-          }}
+          className={`relative overflow-hidden rounded-2xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900 shadow-sm transition-all duration-300 ${
+            isDeleting ? 'opacity-0 -translate-x-full max-h-0 py-0 my-0 border-none scale-95' : 'max-h-[300px]'
+          }`}
         >
-          <div className="flex flex-col gap-2.5">
-            {/* ROW 1: Header Row & Notes Anchor */}
-            <div className="flex items-start justify-between">
-              <div className="flex-1 min-w-0 pr-2">
-                <span className="text-[15px] font-bold text-[#006b5f] dark:text-teal-400 leading-tight block">
-                  {formatDate(appointment.date)}, {formatTime(appointment.time)}
-                </span>
-                <span className="text-[13px] text-slate-500 dark:text-slate-400 font-normal leading-normal block mt-0.5 truncate">
-                  {appointment.address}
-                </span>
-              </div>
-              
-              {/* Notes Button Anchor */}
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onEditNotes(appointment);
-                }}
-                className="flex items-center gap-1 text-[#006b5f] dark:text-teal-400 hover:opacity-80 transition-all flex-shrink-0 pt-0.5"
-                aria-label="Notes"
-              >
-                <span className="material-symbols-outlined text-[16px] font-semibold">description</span>
-                <span className="text-[13px] font-bold font-sans">Notes</span>
-              </button>
-            </div>
-
-            {/* ROW 2: Dedicated Pill Status Badge */}
-            <div className="flex">
-              {(() => {
-                const isCompleted = appointment.status === 'CONFIRMED' && isPast;
-                if (isCompleted) {
-                  return (
-                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-teal-50 dark:bg-teal-950/20 text-[#006b5f] dark:text-teal-400 border border-teal-100/50 dark:border-teal-900/30 flex-shrink-0">
-                      <span className="material-symbols-outlined text-[14px] font-bold">check_circle</span>
-                      <span className="text-[11px] font-bold tracking-wide uppercase">COMPLETED</span>
-                    </div>
-                  );
-                }
+          <div 
+            className="relative z-10 w-full bg-white dark:bg-slate-900 p-4"
+            onClick={() => {
+              if (isSwiped) setIsSwiped(false);
+            }}
+          >
+            <div className="flex flex-col gap-2.5">
+              {/* ROW 1: Header Row & Notes Anchor */}
+              <div className="flex items-start justify-between">
+                <div className="flex-1 min-w-0 pr-2">
+                  <span className="text-[15px] font-bold text-[#006b5f] dark:text-teal-400 leading-tight block">
+                    {formatDate(appointment.date)}, {formatTime(appointment.time)}
+                  </span>
+                  <span className="text-[13px] text-slate-500 dark:text-slate-400 font-normal leading-normal block mt-0.5 truncate">
+                    {appointment.address}
+                  </span>
+                </div>
                 
-                if (appointment.status === 'CONFIRMED') {
+                {/* Notes Button Anchor */}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onEditNotes(appointment);
+                  }}
+                  className="flex items-center gap-1 text-[#006b5f] dark:text-teal-400 hover:opacity-80 transition-all flex-shrink-0 pt-0.5"
+                  aria-label="Notes"
+                >
+                  <span className="material-symbols-outlined text-[16px] font-semibold">description</span>
+                  <span className="text-[13px] font-bold font-sans">Notes</span>
+                </button>
+              </div>
+
+              {/* ROW 2: Dedicated Pill Status Badge */}
+              <div className="flex">
+                {(() => {
+                  const isCompleted = appointment.status === 'CONFIRMED' && isPast;
+                  if (isCompleted) {
+                    return (
+                      <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-teal-50 dark:bg-teal-950/20 text-[#006b5f] dark:text-teal-400 border border-teal-100/50 dark:border-teal-900/30 flex-shrink-0">
+                        <span className="material-symbols-outlined text-[14px] font-bold">check_circle</span>
+                        <span className="text-[11px] font-bold tracking-wide uppercase">COMPLETED</span>
+                      </div>
+                    );
+                  }
+                  
+                  if (appointment.status === 'CONFIRMED') {
+                    return (
+                      <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-teal-50 dark:bg-teal-950/20 text-[#006b5f] dark:text-teal-400 border border-teal-100/50 dark:border-teal-900/30 flex-shrink-0">
+                        <span className="material-symbols-outlined text-[14px] font-bold">check_circle</span>
+                        <span className="text-[11px] font-bold tracking-wide uppercase">CONFIRMED</span>
+                      </div>
+                    );
+                  }
+
+                  if (appointment.status === 'CANCELLED') {
+                    return (
+                      <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#fee2e2] dark:bg-red-950/35 text-[#dc2626] dark:text-red-400 border border-red-100/50 dark:border-red-900/30 flex-shrink-0">
+                        <span className="material-symbols-outlined text-[14px] font-bold">cancel</span>
+                        <span className="text-[11px] font-bold tracking-wide uppercase">CANCELLED</span>
+                      </div>
+                    );
+                  }
+
+                  // Fallbacks for other statuses
                   return (
-                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-teal-50 dark:bg-teal-950/20 text-[#006b5f] dark:text-teal-400 border border-teal-100/50 dark:border-teal-900/30 flex-shrink-0">
-                      <span className="material-symbols-outlined text-[14px] font-bold">check_circle</span>
-                      <span className="text-[11px] font-bold tracking-wide uppercase">CONFIRMED</span>
+                    <div className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full ${config.bg} ${config.text} border border-slate-200/50 flex-shrink-0`}>
+                      <span className="text-[11px] font-bold tracking-wide uppercase">{config.label}</span>
                     </div>
                   );
-                }
+                })()}
+              </div>
 
-                if (appointment.status === 'CANCELLED') {
-                  return (
-                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-150 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200/50 dark:border-slate-700/50 flex-shrink-0">
-                      <span className="material-symbols-outlined text-[14px] font-bold">cancel</span>
-                      <span className="text-[11px] font-bold tracking-wide uppercase">CANCELLED</span>
-                    </div>
-                  );
-                }
+              {/* ROW 3: Expanded Two-Button Action Matrix */}
+              <div className="flex gap-2.5 mt-2 pt-3 border-t border-slate-50 dark:border-slate-800/40">
+                {/* Left Column Button: REBOOK */}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onRebook(appointment);
+                  }}
+                  className="flex-1 h-10 bg-[#006b5f] text-white rounded-full font-bold text-[13px] flex items-center justify-center gap-1 hover:bg-[#005c52] active:scale-[0.98] transition-all font-sans"
+                >
+                  <span className="material-symbols-outlined text-[16px] font-semibold">add</span>
+                  <span>REBOOK</span>
+                </button>
 
-                // Fallbacks for other statuses
-                return (
-                  <div className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full ${config.bg} ${config.text} border border-slate-200/50 flex-shrink-0`}>
-                    <span className="text-[11px] font-bold tracking-wide uppercase">{config.label}</span>
-                  </div>
-                );
-              })()}
-            </div>
+                {/* Right Column Button: State-Dependent CTA */}
+                {(() => {
+                  if (appointment.status === 'CANCELLED') {
+                    return (
+                      <button
+                        type="button"
+                        disabled
+                        className="flex-1 h-10 bg-slate-100 dark:bg-slate-800/80 text-slate-400 dark:text-slate-500 rounded-full font-bold text-[13px] flex items-center justify-center gap-1.5 opacity-90 disabled:opacity-100 font-sans"
+                      >
+                        <span className="material-symbols-outlined text-[16px]">block</span>
+                        <span>CANCELLED</span>
+                      </button>
+                    );
+                  } else {
+                    return (
+                      <button
+                        type="button"
+                        disabled
+                        className="flex-1 h-10 bg-slate-100 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 rounded-full font-bold text-[13px] flex items-center justify-center gap-1.5 opacity-90 disabled:opacity-100 font-sans"
+                      >
+                        <span className="material-symbols-outlined text-[16px] font-bold">check</span>
+                        <span>COMPLETED</span>
+                      </button>
+                    );
+                  }
+                })()}
 
-            {/* ROW 3: Expanded Two-Button Action Matrix */}
-            <div className="flex gap-2.5 mt-2 pt-3 border-t border-slate-50 dark:border-slate-800/40">
-              {/* Left Column Button: REBOOK */}
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onRebook(appointment);
-                }}
-                className="flex-1 h-10 bg-[#006b5f] text-white rounded-full font-bold text-[13px] flex items-center justify-center gap-1 hover:bg-[#005c52] active:scale-[0.98] transition-all font-sans"
-              >
-                <span className="material-symbols-outlined text-[16px] font-semibold">add</span>
-                <span>REBOOK</span>
-              </button>
-
-              {/* Right Column Button: State-Dependent CTA */}
-              {(() => {
-                if (appointment.status === 'CANCELLED') {
-                  return (
-                    <button
-                      type="button"
-                      disabled
-                      className="flex-1 h-10 bg-slate-100 dark:bg-slate-800/80 text-slate-400 dark:text-slate-500 rounded-full font-bold text-[13px] flex items-center justify-center gap-1.5 opacity-90 disabled:opacity-100 font-sans"
-                    >
-                      <span className="material-symbols-outlined text-[16px]">block</span>
-                      <span>CANCELLED</span>
-                    </button>
-                  );
-                } else {
-                  return (
-                    <button
-                      type="button"
-                      disabled
-                      className="flex-1 h-10 bg-slate-100 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 rounded-full font-bold text-[13px] flex items-center justify-center gap-1.5 opacity-90 disabled:opacity-100 font-sans"
-                    >
-                      <span className="material-symbols-outlined text-[16px] font-bold">check</span>
-                      <span>COMPLETED</span>
-                    </button>
-                  );
-                }
-              })()}
+                {/* Individual Delete Button */}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowDeleteConfirm(true);
+                  }}
+                  className="w-10 h-10 rounded-full bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 flex items-center justify-center hover:bg-rose-100 transition-colors flex-shrink-0 active:scale-95"
+                  aria-label="Delete Record"
+                >
+                  <span className="material-symbols-outlined text-[20px]">delete</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+
+        {showDeleteConfirm && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[#131b2e]/60 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className="bg-white rounded-[2rem] w-full max-w-sm p-6 shadow-2xl border border-slate-100 animate-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
+              <h3 className="text-[17px] font-extrabold text-[#131b2e] mb-2 font-display">Delete Record?</h3>
+              <p className="text-[13px] text-slate-500 leading-relaxed font-sans mb-6 font-normal">
+                Are you sure you want to delete this specific appointment record? This action cannot be undone.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowDeleteConfirm(false);
+                  }}
+                  className="flex-1 py-3 rounded-full font-bold text-slate-500 hover:bg-slate-50 active:scale-98 transition-all text-[13px] font-display border border-slate-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowDeleteConfirm(false);
+                    setIsDeleting(true);
+                    setTimeout(() => {
+                      onDelete(appointment.id);
+                    }, 300);
+                  }}
+                  className="flex-1 py-3 rounded-full font-bold bg-rose-50 text-rose-600 hover:bg-rose-100 active:scale-[0.98] transition-all text-[13px] font-display"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </>
     );
   }
 
@@ -320,7 +376,7 @@ const HistoryCard: React.FC<HistoryCardProps> = ({
 
                 if (appointment.status === 'CANCELLED') {
                   return (
-                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200/50 dark:border-slate-700/50 flex-shrink-0">
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#fee2e2] dark:bg-red-950/35 text-[#dc2626] dark:text-red-400 border border-red-100/50 dark:border-red-900/30 flex-shrink-0">
                       <span className="material-symbols-outlined text-[14px] font-bold">cancel</span>
                       <span className="text-[10px] font-bold tracking-wide uppercase">CANCELLED</span>
                     </div>
