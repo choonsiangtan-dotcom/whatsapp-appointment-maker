@@ -12,16 +12,19 @@ const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
   className = ''
 }) => {
   return (
-    <div
+    <button
+      type="button"
       onClick={onChange}
-      className={`relative inline-flex h-6 w-12 items-center rounded-full transition-colors duration-300 cursor-pointer shadow-inner flex-shrink-0 ${
-        enabled ? 'bg-[#006b5f]' : 'bg-[#bacac5]/40'
+      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 cursor-pointer focus:outline-none flex-shrink-0 ${
+        enabled 
+          ? 'bg-[#006b5f] dark:bg-[#006b5f]' 
+          : 'bg-slate-200 dark:bg-slate-800'
       } ${className}`}
     >
-      <div className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform duration-300 ${
-        enabled ? 'translate-x-[26px]' : 'translate-x-1'
+      <span className={`inline-block h-[18px] w-[18px] transform rounded-full bg-white shadow-sm transition-transform duration-200 ease-out ${
+        enabled ? 'translate-x-[23px]' : 'translate-x-[3px]'
       }`} />
-    </div>
+    </button>
   );
 };
 

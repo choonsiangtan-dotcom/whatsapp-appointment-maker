@@ -1079,7 +1079,11 @@ const App: React.FC = () => {
                                     value={formData.followUpTimer}
                                     onChange={(e) => handleFieldChange('followUpTimer', e.target.value)}
                                     disabled={!formData.followUpEnabled}
-                                    className={`appearance-none bg-transparent border-b ${formData.followUpEnabled ? 'border-[#006b5f] text-[#006b5f]' : 'border-slate-300 text-slate-400'} font-bold px-1 py-0.5 outline-none cursor-pointer pr-5 disabled:cursor-not-allowed`}
+                                    className={`appearance-none bg-white dark:bg-slate-900 border ${
+                                      formData.followUpEnabled 
+                                        ? 'border-slate-200 dark:border-slate-700 text-[#006b5f] dark:text-teal-400' 
+                                        : 'border-slate-200/50 dark:border-slate-800/50 text-slate-400'
+                                    } font-bold rounded-[8px] h-12 px-3 pr-8 focus:outline-none focus:border-[#006b5f]/50 cursor-pointer disabled:cursor-not-allowed transition-all text-xs`}
                                   >
                                     <option value="20s">20s (Test)</option>
                                     <option value="15 mins">15 Mins</option>
@@ -1087,7 +1091,7 @@ const App: React.FC = () => {
                                     <option value="1 hour">1 Hour</option>
                                     <option value="2 hours">2 Hours</option>
                                   </select>
-                                  <span className={`material-symbols-outlined absolute right-0 top-1/2 -translate-y-1/2 text-[14px] pointer-events-none ${formData.followUpEnabled ? 'text-[#006b5f]' : 'text-slate-400'}`}>arrow_drop_down</span>
+                                  <span className={`material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 text-[18px] pointer-events-none ${formData.followUpEnabled ? 'text-[#006b5f] dark:text-teal-400' : 'text-slate-400'}`}>arrow_drop_down</span>
                                 </div>
                               </div>
                               <ToggleSwitch
@@ -1107,7 +1111,11 @@ const App: React.FC = () => {
                                     value={formData.preMeetingTimer}
                                     onChange={(e) => handleFieldChange('preMeetingTimer', e.target.value)}
                                     disabled={!formData.preMeetingEnabled}
-                                    className={`appearance-none bg-transparent border-b ${formData.preMeetingEnabled ? 'border-[#006b5f] text-[#006b5f]' : 'border-slate-300 text-slate-400'} font-bold px-1 py-0.5 outline-none cursor-pointer pr-5 disabled:cursor-not-allowed`}
+                                    className={`appearance-none bg-white dark:bg-slate-900 border ${
+                                      formData.preMeetingEnabled 
+                                        ? 'border-slate-200 dark:border-slate-700 text-[#006b5f] dark:text-teal-400' 
+                                        : 'border-slate-200/50 dark:border-slate-800/50 text-slate-400'
+                                    } font-bold rounded-[8px] h-12 px-3 pr-8 focus:outline-none focus:border-[#006b5f]/50 cursor-pointer disabled:cursor-not-allowed transition-all text-xs`}
                                   >
                                     {(() => {
                                       const allOptions = [
@@ -1133,7 +1141,7 @@ const App: React.FC = () => {
                                       });
                                     })()}
                                   </select>
-                                  <span className={`material-symbols-outlined absolute right-0 top-1/2 -translate-y-1/2 text-[14px] pointer-events-none ${formData.preMeetingEnabled ? 'text-[#006b5f]' : 'text-slate-400'}`}>arrow_drop_down</span>
+                                  <span className={`material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 text-[18px] pointer-events-none ${formData.preMeetingEnabled ? 'text-[#006b5f] dark:text-teal-400' : 'text-slate-400'}`}>arrow_drop_down</span>
                                 </div>
                               </div>
                               <ToggleSwitch
@@ -1149,19 +1157,11 @@ const App: React.FC = () => {
                 </div>
 
                 {/* Persistent Navigation Buttons */}
-                <div className="flex gap-3 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setCurrentStep(1)}
-                    className="flex-1 h-11 border border-slate-200 text-slate-600 dark:border-slate-700 dark:text-slate-300 rounded-[12px] font-bold text-sm flex items-center justify-center gap-2 active:scale-[0.98] transition-all font-display hover:bg-slate-50 dark:hover:bg-slate-800"
-                  >
-                    <span className="material-symbols-outlined text-[18px]">arrow_back</span>
-                    Back
-                  </button>
+                <div className="pt-2 pb-[80px]">
                   <button
                     type="button"
                     onClick={() => setCurrentStep(3)}
-                    className="flex-1 h-11 bg-[#006b5f] text-white rounded-[12px] font-bold text-sm flex items-center justify-center gap-2 active:scale-[0.98] transition-all font-display shadow-lg shadow-[#006b5f]/10 hover:bg-[#005c52]"
+                    className="w-full h-12 bg-[#006b5f] text-white rounded-[12px] font-bold text-sm flex items-center justify-center gap-2 active:scale-[0.98] transition-all font-display shadow-lg shadow-[#006b5f]/10 hover:bg-[#005c52]"
                   >
                     Continue
                     <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
@@ -1455,7 +1455,7 @@ const App: React.FC = () => {
                     <select
                       value={defaultFollowUpTimer}
                       onChange={(e) => setDefaultFollowUpTimer(e.target.value)}
-                      className="appearance-none bg-slate-50 border border-slate-100 rounded-xl px-3 py-1.5 text-[13px] font-bold text-[#006b5f] pr-8 focus:outline-none focus:border-[#006b5f]/50 cursor-pointer"
+                      className="appearance-none bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[#006b5f] dark:text-teal-400 font-bold rounded-[8px] h-12 px-3 pr-8 focus:outline-none focus:border-[#006b5f]/50 cursor-pointer transition-all text-xs"
                     >
                       <option value="20s">20s (Test)</option>
                       <option value="15 mins">15 Mins</option>
@@ -1463,7 +1463,7 @@ const App: React.FC = () => {
                       <option value="1 hour">1 Hour</option>
                       <option value="2 hours">2 Hours</option>
                     </select>
-                    <span className="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 text-[16px] pointer-events-none text-slate-400">arrow_drop_down</span>
+                    <span className="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 text-[18px] pointer-events-none text-slate-400">arrow_drop_down</span>
                   </div>
                 </div>
 
@@ -1477,7 +1477,7 @@ const App: React.FC = () => {
                     <select
                       value={defaultPreMeetingTimer}
                       onChange={(e) => setDefaultPreMeetingTimer(e.target.value)}
-                      className="appearance-none bg-slate-50 border border-slate-100 rounded-xl px-3 py-1.5 text-[13px] font-bold text-[#006b5f] pr-8 focus:outline-none focus:border-[#006b5f]/50 cursor-pointer"
+                      className="appearance-none bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[#006b5f] dark:text-teal-400 font-bold rounded-[8px] h-12 px-3 pr-8 focus:outline-none focus:border-[#006b5f]/50 cursor-pointer transition-all text-xs"
                     >
                       <option value="20s">20s (Test)</option>
                       <option value="15 mins">15 Mins</option>
@@ -1485,7 +1485,7 @@ const App: React.FC = () => {
                       <option value="1 hour">1 Hour</option>
                       <option value="1 day">1 Day</option>
                     </select>
-                    <span className="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 text-[16px] pointer-events-none text-slate-400">arrow_drop_down</span>
+                    <span className="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 text-[18px] pointer-events-none text-slate-400">arrow_drop_down</span>
                   </div>
                 </div>
               </div>
