@@ -1073,16 +1073,16 @@ const App: React.FC = () => {
                 </div>
 
                 {/* Persistent Navigation Buttons */}
-                <div className="flex flex-col gap-2 pb-[76px] px-0 mt-auto">
+                <div className="flex flex-col gap-2 pb-[76px] px-0 mt-auto flex-shrink-0">
                   <button
                     type="button"
                     onClick={() => setCurrentStep(3)}
-                    className="w-full h-12 bg-[#006b5f] text-white rounded-[8px] font-bold text-sm flex items-center justify-center gap-2 active:scale-[0.98] transition-all font-display shadow-lg shadow-[#006b5f]/10 hover:bg-[#005c52]"
+                    className="w-full h-12 bg-[#006b5f] hover:bg-[#005c52] text-white rounded-[8px] font-bold text-[15px] flex items-center justify-center gap-2 active:scale-[0.98] transition-all font-display shadow-md shadow-[#006b5f]/15 flex-shrink-0"
                   >
                     Continue
                     <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
                   </button>
-                  <div className="w-full h-12 pointer-events-none opacity-0" />
+                  <div className="w-full h-12 min-h-[48px] flex-shrink-0 pointer-events-none opacity-0" />
                 </div>
               </div>
 
@@ -1305,10 +1305,10 @@ const App: React.FC = () => {
                 </div>
 
                 {/* 2. BUTTON ROW BLOCK */}
-                <div className="flex flex-col gap-2 pb-[76px] px-0 mt-auto">
+                <div className="flex flex-col gap-2 pb-[76px] px-0 mt-auto flex-shrink-0">
                   <button
                     onClick={handleSend}
-                    className="w-full h-12 bg-[#006b5f] hover:bg-[#005c52] text-white rounded-[8px] font-bold text-[15px] flex items-center justify-center gap-2 active:scale-[0.98] transition-all font-display shadow-md shadow-[#006b5f]/15"
+                    className="w-full h-12 bg-[#006b5f] hover:bg-[#005c52] text-white rounded-[8px] font-bold text-[15px] flex items-center justify-center gap-2 active:scale-[0.98] transition-all font-display shadow-md shadow-[#006b5f]/15 flex-shrink-0"
                   >
                     <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>
                       rocket_launch
@@ -1319,7 +1319,7 @@ const App: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setCurrentStep(2)}
-                    className="w-full h-12 border border-slate-200 bg-white text-slate-500 hover:text-slate-700 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-400 dark:hover:text-slate-200 rounded-[8px] font-bold text-xs flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all font-display"
+                    className="w-full h-12 border border-slate-200 bg-white text-slate-500 hover:text-slate-700 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-400 dark:hover:text-slate-200 rounded-[8px] font-bold text-xs flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all font-display flex-shrink-0"
                   >
                     <span className="material-symbols-outlined text-[14px]">arrow_back</span>
                     Back to Schedule Configuration
