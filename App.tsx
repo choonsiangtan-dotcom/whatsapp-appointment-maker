@@ -857,7 +857,7 @@ const App: React.FC = () => {
 
               {/* STEP 2: SCHEDULE CONFIGURATION PAGE */}
               <div className="w-1/3 flex-shrink-0 px-1 h-full flex flex-col justify-between">
-                <div className="bg-white rounded-xl ambient-shadow p-3.5 space-y-2.5 border border-slate-100 dark:bg-slate-900 dark:border-slate-800/80">
+                <div className="bg-white rounded-xl ambient-shadow p-4 space-y-4 border border-slate-100 dark:bg-slate-900 dark:border-slate-800/80">
                   
                   {/* Selected Contact Indicator */}
                   <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-900/50 px-2.5 py-1.5 rounded-xl border border-slate-100 dark:border-slate-800/60">
@@ -900,7 +900,7 @@ const App: React.FC = () => {
                   </div>
 
                   {/* Section 3: DATE and TIME */}
-                  <div className="space-y-2.5">
+                  <div className="space-y-4">
                     {/* Date Section */}
                     <div className="space-y-1">
                       <div className="flex items-center justify-between mb-0.5">
@@ -934,7 +934,7 @@ const App: React.FC = () => {
                                 key={item.value}
                                 onClick={(e) => dateDrag.handleItemClick(e, () => handleFieldChange('date', item.value))}
                                 style={{ width: `${itemWidth}px`, flexShrink: 0 }}
-                                className={`snap-start rounded-2xl flex flex-col justify-center items-center py-2.5 border transition-all duration-200 cursor-pointer ${
+                                className={`snap-start rounded-2xl flex flex-col justify-center items-center py-3 border transition-all duration-200 cursor-pointer ${
                                   isSelected
                                     ? 'bg-[#006b5f] text-white shadow-md shadow-[#006b5f]/20 border-[#006b5f] scale-[1.03]'
                                     : 'bg-teal-50/30 text-teal-800 border-teal-100/50 hover:bg-teal-50/70 dark:bg-teal-950/10 dark:text-teal-300 dark:border-teal-900/30 dark:hover:bg-teal-950/20'
@@ -957,7 +957,7 @@ const App: React.FC = () => {
                           <div
                             onClick={triggerCustomDatePicker}
                             style={{ width: `${itemWidth}px`, flexShrink: 0 }}
-                            className="snap-start rounded-2xl flex flex-col justify-center items-center py-2.5 border bg-slate-50/50 border-slate-200/60 dark:bg-slate-900/30 dark:border-slate-800/60 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 cursor-pointer transition-colors"
+                            className="snap-start rounded-2xl flex flex-col justify-center items-center py-3 border bg-slate-50/50 border-slate-200/60 dark:bg-slate-900/30 dark:border-slate-800/60 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 cursor-pointer transition-colors"
                           >
                             <span className="material-symbols-outlined text-[18px]">calendar_month</span>
                             <span className="text-[9px] font-bold mt-1 tracking-wider uppercase">More</span>
@@ -1042,15 +1042,14 @@ const App: React.FC = () => {
                               onTouchEnd={cancelLongPress}
                               onTouchMove={handleTouchMove}
                               style={{ width: `${itemWidth}px`, flexShrink: 0 }}
-                              className={`snap-start py-1.5 rounded-xl flex items-center justify-center border transition-all duration-200 cursor-pointer select-none active:scale-[0.98] ${
+                              className={`snap-start py-2.5 rounded-xl flex items-center justify-center border transition-all duration-200 cursor-pointer select-none active:scale-[0.98] ${
                                 isSelected
                                   ? 'bg-[#006b5f] text-white shadow-md shadow-[#006b5f]/20 border-[#006b5f] scale-[1.03]'
                                   : 'bg-teal-50/30 text-teal-800 border-teal-100/50 hover:bg-teal-50/70 dark:bg-teal-950/10 dark:text-teal-300 dark:border-teal-900/30 dark:hover:bg-teal-950/20'
                               }`}
                             >
                               <span 
-                                className="text-[12px] font-bold tracking-tight whitespace-nowrap truncate block w-full text-center"
-                                style={{ display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}
+                                className="text-[12px] font-bold tracking-tight whitespace-nowrap text-center px-0.5 w-full"
                               >
                                 {item.label}
                               </span>
@@ -1062,132 +1061,9 @@ const App: React.FC = () => {
                         <div
                           onClick={() => setShowTimePicker(true)}
                           style={{ width: `${itemWidth}px`, flexShrink: 0 }}
-                          className="snap-start py-1.5 rounded-xl flex items-center justify-center border bg-slate-50/50 border-slate-200/60 dark:bg-slate-900/30 dark:border-slate-800/60 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 cursor-pointer transition-colors"
+                          className="snap-start py-2.5 rounded-xl flex items-center justify-center border bg-slate-50/50 border-slate-200/60 dark:bg-slate-900/30 dark:border-slate-800/60 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 cursor-pointer transition-colors"
                         >
                           <span className="material-symbols-outlined text-[18px] leading-none">more_time</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Section 4: AUTOMATIC REMINDERS */}
-                  <div>
-                    <div className="bg-slate-50/50 dark:bg-slate-900/20 border border-slate-200/40 dark:border-slate-800/50 rounded-xl p-2.5 space-y-2 relative transition-all duration-300">
-                      {/* TabLayout */}
-                      <div className="bg-slate-100/80 dark:bg-slate-900/60 p-1 rounded-xl flex items-center gap-1">
-                        <button
-                          type="button"
-                          onClick={() => setActiveTab('followUp')}
-                          className={`flex-1 py-1 rounded-lg text-[12px] font-bold transition-all duration-200 flex items-center justify-center gap-1 ${
-                            activeTab === 'followUp'
-                              ? 'bg-white dark:bg-slate-800 text-[#006b5f] shadow-sm'
-                              : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300'
-                          }`}
-                        >
-                          <span className="material-symbols-outlined text-[15px]">update</span>
-                          <span>Follow-Up</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setActiveTab('preMeeting')}
-                          className={`flex-1 py-1 rounded-lg text-[12px] font-bold transition-all duration-200 flex items-center justify-center gap-1 ${
-                            activeTab === 'preMeeting'
-                              ? 'bg-white dark:bg-slate-800 text-[#006b5f] shadow-sm'
-                              : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300'
-                          }`}
-                        >
-                          <span className="material-symbols-outlined text-[15px]">event_available</span>
-                          <span className="flex items-center gap-0.5 whitespace-nowrap">Pre-Meeting 👑</span>
-                        </button>
-                      </div>
-
-                      {/* ViewPager2 container */}
-                      <div className="overflow-hidden w-full relative">
-                        <div
-                          className="flex transition-transform duration-300 ease-out"
-                          style={{ transform: `translateX(-${activeTab === 'followUp' ? '0' : '100'}%)` }}
-                        >
-                          {/* Page 1: Follow-Up */}
-                          <div className="w-full flex-shrink-0">
-                            <div className="flex items-center justify-between min-h-[40px]">
-                              <div className={`flex items-center justify-between flex-1 gap-2 text-[13px] transition-opacity duration-200 ${formData.followUpEnabled ? 'text-slate-700 dark:text-slate-300 font-medium' : 'text-slate-400 dark:text-slate-600'}`}>
-                                <span>Nudge if no reply within:</span>
-                                <div className="relative inline-block w-28">
-                                  <select
-                                    value={formData.followUpTimer}
-                                    onChange={(e) => handleFieldChange('followUpTimer', e.target.value)}
-                                    disabled={!formData.followUpEnabled}
-                                    className={`w-full appearance-none bg-white dark:bg-slate-900 border ${
-                                      formData.followUpEnabled 
-                                        ? 'border-slate-200 dark:border-slate-700 text-[#006b5f] dark:text-teal-400' 
-                                        : 'border-slate-200/50 dark:border-slate-800/50 text-slate-400'
-                                    } font-bold rounded-[8px] h-8 px-2 pr-7 focus:outline-none focus:border-[#006b5f]/50 cursor-pointer disabled:cursor-not-allowed transition-all text-[11px]`}
-                                  >
-                                    <option value="20s">20s (Test)</option>
-                                    <option value="15 mins">15 Mins</option>
-                                    <option value="30 mins">30 Mins</option>
-                                    <option value="1 hour">1 Hour</option>
-                                    <option value="2 hours">2 Hours</option>
-                                  </select>
-                                  <span className={`material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-[16px] pointer-events-none ${formData.followUpEnabled ? 'text-[#006b5f] dark:text-teal-400' : 'text-slate-400'}`}>arrow_drop_down</span>
-                                </div>
-                              </div>
-                              <ToggleSwitch
-                                enabled={formData.followUpEnabled}
-                                onChange={() => handleFieldChange('followUpEnabled', !formData.followUpEnabled)}
-                              />
-                            </div>
-                          </div>
-
-                          {/* Page 2: Pre-Meeting */}
-                          <div className="w-full flex-shrink-0">
-                            <div className="flex items-center justify-between min-h-[40px]">
-                              <div className={`flex items-center justify-between flex-1 gap-2 text-[13px] transition-opacity duration-200 ${formData.preMeetingEnabled ? 'text-slate-700 dark:text-slate-300 font-medium' : 'text-slate-400 dark:text-slate-600'}`}>
-                                <span>Send reminder before:</span>
-                                <div className="relative inline-block w-28">
-                                  <select
-                                    value={formData.preMeetingTimer}
-                                    onChange={(e) => handleFieldChange('preMeetingTimer', e.target.value)}
-                                    disabled={!formData.preMeetingEnabled}
-                                    className={`w-full appearance-none bg-white dark:bg-slate-900 border ${
-                                      formData.preMeetingEnabled 
-                                        ? 'border-slate-200 dark:border-slate-700 text-[#006b5f] dark:text-teal-400' 
-                                        : 'border-slate-200/50 dark:border-slate-800/50 text-slate-400'
-                                    } font-bold rounded-[8px] h-8 px-2 pr-7 focus:outline-none focus:border-[#006b5f]/50 cursor-pointer disabled:cursor-not-allowed transition-all text-[11px]`}
-                                  >
-                                    {(() => {
-                                      const allOptions = [
-                                        { label: '20s (Test)', value: '20s', ms: 20 * 1000 },
-                                        { label: '15 Mins', value: '15 mins', ms: 15 * 60 * 1000 },
-                                        { label: '30 Mins', value: '30 mins', ms: 30 * 60 * 1000 },
-                                        { label: '1 Hour', value: '1 hour', ms: 60 * 60 * 1000 },
-                                        { label: '1 Day', value: '1 day', ms: 24 * 60 * 60 * 1000 }
-                                      ];
-                                      let diff = Infinity;
-                                      if (formData.date && formData.time) {
-                                        const [year, month, day] = formData.date.split('-').map(Number);
-                                        const [hours, minutes] = formData.time.split(':').map(Number);
-                                        diff = new Date(year, month - 1, day, hours, minutes).getTime() - Date.now();
-                                      }
-                                      return allOptions.map(opt => {
-                                        const isDisabled = diff > 0 && diff <= opt.ms;
-                                        return (
-                                          <option key={opt.value} value={opt.value} disabled={isDisabled}>
-                                            {opt.label}
-                                          </option>
-                                        );
-                                      });
-                                    })()}
-                                  </select>
-                                  <span className={`material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-[16px] pointer-events-none ${formData.preMeetingEnabled ? 'text-[#006b5f] dark:text-teal-400' : 'text-slate-400'}`}>arrow_drop_down</span>
-                                </div>
-                              </div>
-                              <ToggleSwitch
-                                enabled={formData.preMeetingEnabled}
-                                onChange={() => handleFieldChange('preMeetingEnabled', !formData.preMeetingEnabled)}
-                              />
-                            </div>
-                          </div>
                         </div>
                       </div>
                     </div>
@@ -1216,14 +1092,14 @@ const App: React.FC = () => {
                   </label>
                   
                   {/* Expanded & Padded Preview Card (wrapContentHeight) */}
-                  <div className="bg-white rounded-xl ambient-shadow p-4 border border-slate-100 dark:bg-slate-900 dark:border-slate-800/80 w-full h-auto">
-                    <div className="bg-slate-50/70 dark:bg-slate-900/40 border border-slate-200/50 dark:border-slate-800/80 rounded-xl p-4 relative overflow-hidden flex flex-col h-auto">
+                  <div className="bg-white rounded-xl ambient-shadow p-3 border border-slate-100 dark:bg-slate-900 dark:border-slate-800/80 w-full h-auto">
+                    <div className="bg-slate-50/70 dark:bg-slate-900/40 border border-slate-200/50 dark:border-slate-800/80 rounded-xl p-3 relative overflow-hidden flex flex-col h-auto">
                       {isEditingTemplate ? (
                         <div className="space-y-3 relative z-10 w-full flex flex-col">
                           <textarea
                             value={tempTemplate}
                             onChange={(e) => setTempTemplate(e.target.value)}
-                            className="w-full h-32 p-3 text-[13px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-[#006b5f] font-sans resize-none"
+                            className="w-full h-24 p-3 text-[13px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-[#006b5f] font-sans resize-none"
                             placeholder="Write your message template..."
                           />
                           
@@ -1299,6 +1175,130 @@ const App: React.FC = () => {
                       )}
                     </div>
                   </div>
+
+                  {/* Reminder Type Tabs & Nudge Row Container */}
+                  <div className="mt-3 bg-slate-50/50 dark:bg-slate-900/20 border border-slate-200/40 dark:border-slate-800/50 rounded-xl p-2.5 space-y-2 relative transition-all duration-300">
+                    {/* TabLayout without 👑 icon or premium overlays */}
+                    <div className="bg-slate-100/80 dark:bg-slate-900/60 p-1 rounded-xl flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab('followUp')}
+                        className={`flex-1 py-1 rounded-lg text-[12px] font-bold transition-all duration-200 flex items-center justify-center gap-1 ${
+                          activeTab === 'followUp'
+                            ? 'bg-white dark:bg-slate-800 text-[#006b5f] shadow-sm'
+                            : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300'
+                        }`}
+                      >
+                        <span className="material-symbols-outlined text-[15px]">update</span>
+                        <span>Follow-Up</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab('preMeeting')}
+                        className={`flex-1 py-1 rounded-lg text-[12px] font-bold transition-all duration-200 flex items-center justify-center gap-1 ${
+                          activeTab === 'preMeeting'
+                            ? 'bg-white dark:bg-slate-800 text-[#006b5f] shadow-sm'
+                            : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300'
+                        }`}
+                      >
+                        <span className="material-symbols-outlined text-[15px]">event_available</span>
+                        <span>Pre-Meeting</span>
+                      </button>
+                    </div>
+
+                    {/* ViewPager2 container */}
+                    <div className="overflow-hidden w-full relative">
+                      <div
+                        className="flex transition-transform duration-300 ease-out"
+                        style={{ transform: `translateX(-${activeTab === 'followUp' ? '0' : '100'}%)` }}
+                      >
+                        {/* Page 1: Follow-Up */}
+                        <div className="w-full flex-shrink-0">
+                          <div className="flex items-center justify-between min-h-[36px]">
+                            <div className={`flex items-center justify-between flex-1 gap-2 text-[12.5px] transition-opacity duration-200 ${formData.followUpEnabled ? 'text-slate-700 dark:text-slate-300 font-medium' : 'text-slate-400 dark:text-slate-600'}`}>
+                              <span>Nudge if no reply within:</span>
+                              <div className="relative inline-block w-28">
+                                <select
+                                  value={formData.followUpTimer}
+                                  onChange={(e) => handleFieldChange('followUpTimer', e.target.value)}
+                                  disabled={!formData.followUpEnabled}
+                                  className={`w-full appearance-none bg-white dark:bg-slate-900 border ${
+                                    formData.followUpEnabled 
+                                      ? 'border-slate-200 dark:border-slate-700 text-[#006b5f] dark:text-teal-400' 
+                                      : 'border-slate-200/50 dark:border-slate-800/50 text-slate-400'
+                                  } font-bold rounded-[8px] h-8 px-2 pr-7 focus:outline-none focus:border-[#006b5f]/50 cursor-pointer disabled:cursor-not-allowed transition-all text-[11px]`}
+                                >
+                                  <option value="20s">20s (Test)</option>
+                                  <option value="15 mins">15 Mins</option>
+                                  <option value="30 mins">30 Mins</option>
+                                  <option value="1 hour">1 Hour</option>
+                                  <option value="2 hours">2 Hours</option>
+                                </select>
+                                <span className={`material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-[16px] pointer-events-none ${formData.followUpEnabled ? 'text-[#006b5f] dark:text-teal-400' : 'text-slate-400'}`}>arrow_drop_down</span>
+                              </div>
+                            </div>
+                            <ToggleSwitch
+                              enabled={formData.followUpEnabled}
+                              onChange={() => handleFieldChange('followUpEnabled', !formData.followUpEnabled)}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Page 2: Pre-Meeting */}
+                        <div className="w-full flex-shrink-0">
+                          <div className="flex items-center justify-between min-h-[36px]">
+                            <div className={`flex items-center justify-between flex-1 gap-2 text-[12.5px] transition-opacity duration-200 ${formData.preMeetingEnabled ? 'text-slate-700 dark:text-slate-300 font-medium' : 'text-slate-400 dark:text-slate-600'}`}>
+                              <span>Send reminder before:</span>
+                              <div className="relative inline-block w-28">
+                                <select
+                                  value={formData.preMeetingTimer}
+                                  onChange={(e) => handleFieldChange('preMeetingTimer', e.target.value)}
+                                  disabled={!formData.preMeetingEnabled}
+                                  className={`w-full appearance-none bg-white dark:bg-slate-900 border ${
+                                    formData.preMeetingEnabled 
+                                      ? 'border-slate-200 dark:border-slate-700 text-[#006b5f] dark:text-teal-400' 
+                                      : 'border-slate-200/50 dark:border-slate-800/50 text-slate-400'
+                                  } font-bold rounded-[8px] h-8 px-2 pr-7 focus:outline-none focus:border-[#006b5f]/50 cursor-pointer disabled:cursor-not-allowed transition-all text-[11px]`}
+                                >
+                                  {(() => {
+                                    const allOptions = [
+                                      { label: '20s (Test)', value: '20s', ms: 20 * 1000 },
+                                      { label: '15 Mins', value: '15 mins', ms: 15 * 60 * 1000 },
+                                      { label: '30 Mins', value: '30 mins', ms: 30 * 60 * 1000 },
+                                      { label: '1 Hour', value: '1 hour', ms: 60 * 60 * 1000 },
+                                      { label: '1 Day', value: '1 day', ms: 24 * 60 * 60 * 1000 }
+                                    ];
+                                    let diff = Infinity;
+                                    if (formData.date && formData.time) {
+                                      const [year, month, day] = formData.date.split('-').map(Number);
+                                      const [hours, minutes] = formData.time.split(':').map(Number);
+                                      diff = new Date(year, month - 1, day, hours, minutes).getTime() - Date.now();
+                                    }
+                                    return allOptions.map(opt => {
+                                      const isDisabled = diff > 0 && diff <= opt.ms;
+                                      return (
+                                        <option key={opt.value} value={opt.value} disabled={isDisabled}>
+                                          {opt.label}
+                                        </option>
+                                      );
+                                    });
+                                  })()}
+                                </select>
+                                <span className={`material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-[16px] pointer-events-none ${formData.preMeetingEnabled ? 'text-[#006b5f] dark:text-teal-400' : 'text-slate-400'}`}>arrow_drop_down</span>
+                              </div>
+                            </div>
+                            <ToggleSwitch
+                              enabled={formData.preMeetingEnabled}
+                              onChange={() => handleFieldChange('preMeetingEnabled', !formData.preMeetingEnabled)}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Flexible Spacer */}
+                  <div className="flex-1 min-h-0" />
                 </div>
 
                 {/* 3. STICKY BUTTON ROW BLOCK (Forced to stay inside the phone frame, with safety clearance padding from bottom main tabs bar) */}
