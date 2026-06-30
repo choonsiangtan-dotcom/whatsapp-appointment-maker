@@ -857,7 +857,8 @@ const App: React.FC = () => {
 
               {/* STEP 2: SCHEDULE CONFIGURATION PAGE */}
               <div className="w-1/3 flex-shrink-0 px-0 h-full flex flex-col justify-between">
-                <div className="bg-white rounded-xl ambient-shadow p-4 space-y-4 border border-slate-100 dark:bg-slate-900 dark:border-slate-800/80">
+                <div className="flex-1 flex flex-col min-h-0 overflow-y-auto no-scrollbar">
+                  <div className="bg-white rounded-xl ambient-shadow p-4 space-y-4 border border-slate-100 dark:bg-slate-900 dark:border-slate-800/80">
                   
                   {/* Selected Contact Indicator */}
                   <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-900/50 px-2.5 py-1.5 rounded-xl border border-slate-100 dark:border-slate-800/60">
@@ -1069,9 +1070,10 @@ const App: React.FC = () => {
                     </div>
                   </div>
                 </div>
+                </div>
 
                 {/* Persistent Navigation Buttons */}
-                <div className="pt-1 pb-[76px]">
+                <div className="flex flex-col gap-2 pb-[76px] px-0 mt-auto">
                   <button
                     type="button"
                     onClick={() => setCurrentStep(3)}
@@ -1080,13 +1082,14 @@ const App: React.FC = () => {
                     Continue
                     <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
                   </button>
+                  <div className="w-full h-12 pointer-events-none opacity-0" />
                 </div>
               </div>
 
               {/* STEP 3: MESSAGE PREVIEW & SEND PAGE */}
-              <div className="w-1/3 flex-shrink-0 flex flex-col justify-between h-full px-0">
-                {/* 2. CARD WRAPPER CONTAINER (Occupies only the remaining top space) */}
-                <div className="flex-1 flex flex-col min-h-0">
+              <div className="w-1/3 flex-shrink-0 px-0 h-full flex flex-col justify-between">
+                {/* 1. UPPER CONTENT SCROLL CONTAINER */}
+                <div className="flex-1 flex flex-col min-h-0 overflow-y-auto no-scrollbar">
                   <label className={`label-caps tracking-wider block mb-2 ${reschedulingId ? 'text-amber-600 dark:text-amber-500 font-bold' : ''}`}>
                     {reschedulingId ? 'Reschedule Message Preview' : 'Message Preview'}
                   </label>
@@ -1299,8 +1302,10 @@ const App: React.FC = () => {
 
                   {/* Flexible Spacer */}
                   <div className="flex-1 min-h-0" />
-                           {/* 3. STICKY BUTTON ROW BLOCK (Forced to stay inside the phone frame, with safety clearance padding from bottom main tabs bar) */}
-                <div className="flex flex-col gap-2 pb-5 px-0 mt-auto">
+                </div>
+
+                {/* 2. BUTTON ROW BLOCK */}
+                <div className="flex flex-col gap-2 pb-[76px] px-0 mt-auto">
                   <button
                     onClick={handleSend}
                     className="w-full h-12 bg-[#006b5f] hover:bg-[#005c52] text-white rounded-[8px] font-bold text-[15px] flex items-center justify-center gap-2 active:scale-[0.98] transition-all font-display shadow-md shadow-[#006b5f]/15"
@@ -1319,7 +1324,6 @@ const App: React.FC = () => {
                     <span className="material-symbols-outlined text-[14px]">arrow_back</span>
                     Back to Schedule Configuration
                   </button>
-                </div>
                 </div>
               </div>
             </div>
