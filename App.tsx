@@ -110,8 +110,8 @@ const App: React.FC = () => {
     }
   }, [currentStep, currentPage]);
 
-  const totalSideMargins = 32; // 16px left + 16px right of form card padding
-  const itemWidth = (screenWidth - totalSideMargins) / 5.2;
+  const totalHorizontalGaps = 64; // 32px margins + 32px gaps (4 gaps of 8px)
+  const itemWidth = (screenWidth - totalHorizontalGaps) / 4.2;
 
   const [timePeriod, setTimePeriod] = React.useState<'AM' | 'PM'>(() => {
     const currentHour = new Date().getHours();
@@ -744,7 +744,7 @@ const App: React.FC = () => {
               style={{ transform: `translateX(-${(currentStep - 1) * 33.333}%)` }}
             >
               {/* STEP 1: CONTACT SELECTION PAGE */}
-              <div className="w-1/3 flex-shrink-0 px-1 space-y-4">
+              <div className="w-1/3 flex-shrink-0 px-0 space-y-4">
                 <section className="space-y-3">
                   <div className="flex items-center justify-between px-1">
                     <h2 className="label-caps tracking-wider">Select Contact</h2>
@@ -856,7 +856,7 @@ const App: React.FC = () => {
               </div>
 
               {/* STEP 2: SCHEDULE CONFIGURATION PAGE */}
-              <div className="w-1/3 flex-shrink-0 px-1 h-full flex flex-col justify-between">
+              <div className="w-1/3 flex-shrink-0 px-0 h-full flex flex-col justify-between">
                 <div className="bg-white rounded-xl ambient-shadow p-4 space-y-4 border border-slate-100 dark:bg-slate-900 dark:border-slate-800/80">
                   
                   {/* Selected Contact Indicator */}
@@ -934,7 +934,7 @@ const App: React.FC = () => {
                                 key={item.value}
                                 onClick={(e) => dateDrag.handleItemClick(e, () => handleFieldChange('date', item.value))}
                                 style={{ width: `${itemWidth}px`, flexShrink: 0 }}
-                                className={`snap-start rounded-2xl flex flex-col justify-center items-center py-3 border transition-all duration-200 cursor-pointer ${
+                                className={`snap-start rounded-2xl flex flex-col justify-center items-center py-3 px-2 border transition-all duration-200 cursor-pointer ${
                                   isSelected
                                     ? 'bg-[#006b5f] text-white shadow-md shadow-[#006b5f]/20 border-[#006b5f] scale-[1.03]'
                                     : 'bg-teal-50/30 text-teal-800 border-teal-100/50 hover:bg-teal-50/70 dark:bg-teal-950/10 dark:text-teal-300 dark:border-teal-900/30 dark:hover:bg-teal-950/20'
@@ -957,7 +957,7 @@ const App: React.FC = () => {
                           <div
                             onClick={triggerCustomDatePicker}
                             style={{ width: `${itemWidth}px`, flexShrink: 0 }}
-                            className="snap-start rounded-2xl flex flex-col justify-center items-center py-3 border bg-slate-50/50 border-slate-200/60 dark:bg-slate-900/30 dark:border-slate-800/60 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 cursor-pointer transition-colors"
+                            className="snap-start rounded-2xl flex flex-col justify-center items-center py-3 px-2 border bg-slate-50/50 border-slate-200/60 dark:bg-slate-900/30 dark:border-slate-800/60 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 cursor-pointer transition-colors"
                           >
                             <span className="material-symbols-outlined text-[18px]">calendar_month</span>
                             <span className="text-[9px] font-bold mt-1 tracking-wider uppercase">More</span>
@@ -1042,14 +1042,14 @@ const App: React.FC = () => {
                               onTouchEnd={cancelLongPress}
                               onTouchMove={handleTouchMove}
                               style={{ width: `${itemWidth}px`, flexShrink: 0 }}
-                              className={`snap-start py-2.5 rounded-xl flex items-center justify-center border transition-all duration-200 cursor-pointer select-none active:scale-[0.98] ${
+                              className={`snap-start py-2.5 px-2 rounded-xl flex items-center justify-center border transition-all duration-200 cursor-pointer select-none active:scale-[0.98] ${
                                 isSelected
                                   ? 'bg-[#006b5f] text-white shadow-md shadow-[#006b5f]/20 border-[#006b5f] scale-[1.03]'
                                   : 'bg-teal-50/30 text-teal-800 border-teal-100/50 hover:bg-teal-50/70 dark:bg-teal-950/10 dark:text-teal-300 dark:border-teal-900/30 dark:hover:bg-teal-950/20'
                               }`}
                             >
                               <span 
-                                className="text-[12px] font-bold tracking-tight whitespace-nowrap text-center px-0.5 w-full"
+                                className="text-[12px] font-bold tracking-tight whitespace-nowrap text-center w-full"
                               >
                                 {item.label}
                               </span>
@@ -1061,7 +1061,7 @@ const App: React.FC = () => {
                         <div
                           onClick={() => setShowTimePicker(true)}
                           style={{ width: `${itemWidth}px`, flexShrink: 0 }}
-                          className="snap-start py-2.5 rounded-xl flex items-center justify-center border bg-slate-50/50 border-slate-200/60 dark:bg-slate-900/30 dark:border-slate-800/60 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 cursor-pointer transition-colors"
+                          className="snap-start py-2.5 px-2 rounded-xl flex items-center justify-center border bg-slate-50/50 border-slate-200/60 dark:bg-slate-900/30 dark:border-slate-800/60 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 cursor-pointer transition-colors"
                         >
                           <span className="material-symbols-outlined text-[18px] leading-none">more_time</span>
                         </div>
@@ -1075,7 +1075,7 @@ const App: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setCurrentStep(3)}
-                    className="w-full h-12 bg-[#006b5f] text-white rounded-[12px] font-bold text-sm flex items-center justify-center gap-2 active:scale-[0.98] transition-all font-display shadow-lg shadow-[#006b5f]/10 hover:bg-[#005c52]"
+                    className="w-full h-12 bg-[#006b5f] text-white rounded-[8px] font-bold text-sm flex items-center justify-center gap-2 active:scale-[0.98] transition-all font-display shadow-lg shadow-[#006b5f]/10 hover:bg-[#005c52]"
                   >
                     Continue
                     <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
@@ -1299,13 +1299,11 @@ const App: React.FC = () => {
 
                   {/* Flexible Spacer */}
                   <div className="flex-1 min-h-0" />
-                </div>
-
-                {/* 3. STICKY BUTTON ROW BLOCK (Forced to stay inside the phone frame, with safety clearance padding from bottom main tabs bar) */}
-                <div className="flex flex-col gap-2 pb-3 px-0 mt-auto">
+                           {/* 3. STICKY BUTTON ROW BLOCK (Forced to stay inside the phone frame, with safety clearance padding from bottom main tabs bar) */}
+                <div className="flex flex-col gap-2 pb-5 px-0 mt-auto">
                   <button
                     onClick={handleSend}
-                    className="w-full h-12 bg-[#006b5f] hover:bg-[#005c52] text-white rounded-[12px] font-bold text-[15px] flex items-center justify-center gap-2 active:scale-[0.98] transition-all font-display shadow-md shadow-[#006b5f]/15"
+                    className="w-full h-12 bg-[#006b5f] hover:bg-[#005c52] text-white rounded-[8px] font-bold text-[15px] flex items-center justify-center gap-2 active:scale-[0.98] transition-all font-display shadow-md shadow-[#006b5f]/15"
                   >
                     <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>
                       rocket_launch
@@ -1316,11 +1314,12 @@ const App: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setCurrentStep(2)}
-                    className="w-full h-12 border border-slate-200 bg-white text-slate-500 hover:text-slate-700 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-400 dark:hover:text-slate-200 rounded-[12px] font-bold text-xs flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all font-display"
+                    className="w-full h-12 border border-slate-200 bg-white text-slate-500 hover:text-slate-700 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-400 dark:hover:text-slate-200 rounded-[8px] font-bold text-xs flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all font-display"
                   >
                     <span className="material-symbols-outlined text-[14px]">arrow_back</span>
                     Back to Schedule Configuration
                   </button>
+                </div>
                 </div>
               </div>
             </div>
