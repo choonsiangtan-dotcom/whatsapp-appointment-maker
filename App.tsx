@@ -671,7 +671,7 @@ const App: React.FC = () => {
       }
     >
       {currentPage === 'schedule' ? (
-        <div className={`w-full ${currentStep === 3 ? 'flex-1 min-h-0 flex flex-col gap-4 overflow-hidden' : 'space-y-4'}`}>
+        <div className="w-full flex-1 flex flex-col justify-between min-h-0 overflow-hidden">
           {reschedulingId && (
             <div className="flex items-center justify-between bg-teal-50 border border-teal-200/50 rounded-xl p-3 text-[#006b5f] text-[13px] shadow-sm animate-pulse">
               <div className="flex items-center gap-2">
@@ -738,9 +738,9 @@ const App: React.FC = () => {
           </div>
 
           {/* 3-Step Slider Container */}
-          <div className={`overflow-hidden w-full relative ${currentStep === 3 ? 'flex-1 min-h-0 flex flex-col' : ''}`}>
+          <div className="flex-1 w-full relative min-h-0 overflow-hidden flex flex-col">
             <div 
-              className={`flex w-[300%] transition-transform duration-300 ease-in-out ${currentStep === 3 ? 'flex-1 min-h-0' : ''}`}
+              className="flex w-[300%] h-full transition-transform duration-300 ease-in-out"
               style={{ transform: `translateX(-${(currentStep - 1) * 33.333}%)` }}
             >
               {/* STEP 1: CONTACT SELECTION PAGE */}
@@ -856,11 +856,11 @@ const App: React.FC = () => {
               </div>
 
               {/* STEP 2: SCHEDULE CONFIGURATION PAGE */}
-              <div className="w-1/3 flex-shrink-0 px-1 space-y-4">
-                <div className="bg-white rounded-xl ambient-shadow p-4 space-y-4 border border-slate-100 dark:bg-slate-900 dark:border-slate-800/80">
+              <div className="w-1/3 flex-shrink-0 px-1 h-full flex flex-col justify-between">
+                <div className="bg-white rounded-xl ambient-shadow p-3.5 space-y-2.5 border border-slate-100 dark:bg-slate-900 dark:border-slate-800/80">
                   
                   {/* Selected Contact Indicator */}
-                  <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-900/50 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800/60">
+                  <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-900/50 px-2.5 py-1.5 rounded-xl border border-slate-100 dark:border-slate-800/60">
                     <img
                       src={formData.contact.avatar}
                       alt={formData.contact.name}
@@ -870,8 +870,8 @@ const App: React.FC = () => {
                       }}
                     />
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Scheduling for</p>
-                      <h3 className="font-semibold text-sm text-[#131b2e] dark:text-slate-100 truncate">
+                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Scheduling for</p>
+                      <h3 className="font-semibold text-sm text-[#131b2e] dark:text-slate-100 truncate leading-tight">
                         {formData.contact.name}
                       </h3>
                     </div>
@@ -884,8 +884,8 @@ const App: React.FC = () => {
                   </div>
 
                   {/* Section 2: LOCATION */}
-                  <div className="space-y-1.5">
-                    <label className="label-caps tracking-wider block">Location</label>
+                  <div className="space-y-1">
+                    <label className="label-caps tracking-wider block text-[10px] mb-0.5">Location</label>
                     <InputField
                       label="Location"
                       icon="location_on"
@@ -900,12 +900,12 @@ const App: React.FC = () => {
                   </div>
 
                   {/* Section 3: DATE and TIME */}
-                  <div className="space-y-4">
+                  <div className="space-y-2.5">
                     {/* Date Section */}
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <label className="label-caps tracking-wider block">Date</label>
-                        <span className="text-[12px] text-slate-500 font-semibold dark:text-slate-400">
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between mb-0.5">
+                        <label className="label-caps tracking-wider block text-[10px]">Date</label>
+                        <span className="text-[11px] text-slate-500 font-semibold dark:text-slate-400">
                           {formData.date ? formData.date.split('-').reverse().join('/') : 'None selected'}
                         </span>
                       </div>
@@ -967,7 +967,7 @@ const App: React.FC = () => {
                     </div>
 
                     {/* AM / PM Toggle Bar */}
-                    <div className="flex justify-center my-1">
+                    <div className="flex justify-center my-0.5">
                       <div className="bg-slate-100 dark:bg-slate-900/60 p-0.5 rounded-[12px] flex w-full max-w-[280px] border border-slate-200/50 dark:border-slate-800/40 relative">
                         {/* Active background slider indicator */}
                         <div 
@@ -1007,10 +1007,10 @@ const App: React.FC = () => {
                     </div>
 
                     {/* Time Slot Section */}
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <label className="label-caps tracking-wider block">Time</label>
-                        <span className="text-[12px] text-slate-500 font-semibold dark:text-slate-400">
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between mb-0.5">
+                        <label className="label-caps tracking-wider block text-[10px]">Time</label>
+                        <span className="text-[11px] text-slate-500 font-semibold dark:text-slate-400">
                           {formData.time ? (
                             (() => {
                               const [h, m] = formData.time.split(':');
@@ -1042,13 +1042,16 @@ const App: React.FC = () => {
                               onTouchEnd={cancelLongPress}
                               onTouchMove={handleTouchMove}
                               style={{ width: `${itemWidth}px`, flexShrink: 0 }}
-                              className={`snap-start h-10 rounded-xl flex items-center justify-center border transition-all duration-200 cursor-pointer select-none active:scale-[0.98] ${
+                              className={`snap-start py-1.5 rounded-xl flex items-center justify-center border transition-all duration-200 cursor-pointer select-none active:scale-[0.98] ${
                                 isSelected
                                   ? 'bg-[#006b5f] text-white shadow-md shadow-[#006b5f]/20 border-[#006b5f] scale-[1.03]'
                                   : 'bg-teal-50/30 text-teal-800 border-teal-100/50 hover:bg-teal-50/70 dark:bg-teal-950/10 dark:text-teal-300 dark:border-teal-900/30 dark:hover:bg-teal-950/20'
                               }`}
                             >
-                              <span className="text-[11px] font-bold tracking-tight">
+                              <span 
+                                className="text-[12px] font-bold tracking-tight whitespace-nowrap truncate block w-full text-center"
+                                style={{ display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}
+                              >
                                 {item.label}
                               </span>
                             </div>
@@ -1059,42 +1062,42 @@ const App: React.FC = () => {
                         <div
                           onClick={() => setShowTimePicker(true)}
                           style={{ width: `${itemWidth}px`, flexShrink: 0 }}
-                          className="snap-start h-10 rounded-xl flex items-center justify-center border bg-slate-50/50 border-slate-200/60 dark:bg-slate-900/30 dark:border-slate-800/60 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 cursor-pointer transition-colors"
+                          className="snap-start py-1.5 rounded-xl flex items-center justify-center border bg-slate-50/50 border-slate-200/60 dark:bg-slate-900/30 dark:border-slate-800/60 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 cursor-pointer transition-colors"
                         >
-                          <span className="material-symbols-outlined text-[18px]">more_time</span>
+                          <span className="material-symbols-outlined text-[18px] leading-none">more_time</span>
                         </div>
                       </div>
                     </div>
                   </div>
 
                   {/* Section 4: AUTOMATIC REMINDERS */}
-                  <div className="pt-1">
-                    <div className="bg-slate-50/50 dark:bg-slate-900/20 border border-slate-200/40 dark:border-slate-800/50 rounded-xl p-[12px] space-y-3 relative transition-all duration-300">
+                  <div>
+                    <div className="bg-slate-50/50 dark:bg-slate-900/20 border border-slate-200/40 dark:border-slate-800/50 rounded-xl p-2.5 space-y-2 relative transition-all duration-300">
                       {/* TabLayout */}
                       <div className="bg-slate-100/80 dark:bg-slate-900/60 p-1 rounded-xl flex items-center gap-1">
                         <button
                           type="button"
                           onClick={() => setActiveTab('followUp')}
-                          className={`flex-1 py-1.5 rounded-lg text-[13px] font-bold transition-all duration-200 flex items-center justify-center gap-1.5 ${
+                          className={`flex-1 py-1 rounded-lg text-[12px] font-bold transition-all duration-200 flex items-center justify-center gap-1 ${
                             activeTab === 'followUp'
                               ? 'bg-white dark:bg-slate-800 text-[#006b5f] shadow-sm'
                               : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300'
                           }`}
                         >
-                          <span className="material-symbols-outlined text-[16px]">update</span>
+                          <span className="material-symbols-outlined text-[15px]">update</span>
                           <span>Follow-Up</span>
                         </button>
                         <button
                           type="button"
                           onClick={() => setActiveTab('preMeeting')}
-                          className={`flex-1 py-1.5 rounded-lg text-[13px] font-bold transition-all duration-200 flex items-center justify-center gap-1.5 ${
+                          className={`flex-1 py-1 rounded-lg text-[12px] font-bold transition-all duration-200 flex items-center justify-center gap-1 ${
                             activeTab === 'preMeeting'
                               ? 'bg-white dark:bg-slate-800 text-[#006b5f] shadow-sm'
                               : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300'
                           }`}
                         >
-                          <span className="material-symbols-outlined text-[16px]">event_available</span>
-                          <span>Pre-Meeting</span>
+                          <span className="material-symbols-outlined text-[15px]">event_available</span>
+                          <span className="flex items-center gap-0.5 whitespace-nowrap">Pre-Meeting 👑</span>
                         </button>
                       </div>
 
@@ -1107,18 +1110,18 @@ const App: React.FC = () => {
                           {/* Page 1: Follow-Up */}
                           <div className="w-full flex-shrink-0">
                             <div className="flex items-center justify-between min-h-[40px]">
-                              <div className={`flex items-center gap-2 text-[13px] transition-opacity duration-200 ${formData.followUpEnabled ? 'text-slate-700 dark:text-slate-300 font-medium' : 'text-slate-400 dark:text-slate-600'}`}>
+                              <div className={`flex items-center justify-between flex-1 gap-2 text-[13px] transition-opacity duration-200 ${formData.followUpEnabled ? 'text-slate-700 dark:text-slate-300 font-medium' : 'text-slate-400 dark:text-slate-600'}`}>
                                 <span>Nudge if no reply within:</span>
-                                <div className="relative inline-block">
+                                <div className="relative inline-block w-28">
                                   <select
                                     value={formData.followUpTimer}
                                     onChange={(e) => handleFieldChange('followUpTimer', e.target.value)}
                                     disabled={!formData.followUpEnabled}
-                                    className={`appearance-none bg-white dark:bg-slate-900 border ${
+                                    className={`w-full appearance-none bg-white dark:bg-slate-900 border ${
                                       formData.followUpEnabled 
                                         ? 'border-slate-200 dark:border-slate-700 text-[#006b5f] dark:text-teal-400' 
                                         : 'border-slate-200/50 dark:border-slate-800/50 text-slate-400'
-                                    } font-bold rounded-[8px] h-12 px-3 pr-8 focus:outline-none focus:border-[#006b5f]/50 cursor-pointer disabled:cursor-not-allowed transition-all text-xs`}
+                                    } font-bold rounded-[8px] h-8 px-2 pr-7 focus:outline-none focus:border-[#006b5f]/50 cursor-pointer disabled:cursor-not-allowed transition-all text-[11px]`}
                                   >
                                     <option value="20s">20s (Test)</option>
                                     <option value="15 mins">15 Mins</option>
@@ -1126,7 +1129,7 @@ const App: React.FC = () => {
                                     <option value="1 hour">1 Hour</option>
                                     <option value="2 hours">2 Hours</option>
                                   </select>
-                                  <span className={`material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 text-[18px] pointer-events-none ${formData.followUpEnabled ? 'text-[#006b5f] dark:text-teal-400' : 'text-slate-400'}`}>arrow_drop_down</span>
+                                  <span className={`material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-[16px] pointer-events-none ${formData.followUpEnabled ? 'text-[#006b5f] dark:text-teal-400' : 'text-slate-400'}`}>arrow_drop_down</span>
                                 </div>
                               </div>
                               <ToggleSwitch
@@ -1139,18 +1142,18 @@ const App: React.FC = () => {
                           {/* Page 2: Pre-Meeting */}
                           <div className="w-full flex-shrink-0">
                             <div className="flex items-center justify-between min-h-[40px]">
-                              <div className={`flex items-center gap-2 text-[13px] transition-opacity duration-200 ${formData.preMeetingEnabled ? 'text-slate-700 dark:text-slate-300 font-medium' : 'text-slate-400 dark:text-slate-600'}`}>
+                              <div className={`flex items-center justify-between flex-1 gap-2 text-[13px] transition-opacity duration-200 ${formData.preMeetingEnabled ? 'text-slate-700 dark:text-slate-300 font-medium' : 'text-slate-400 dark:text-slate-600'}`}>
                                 <span>Send reminder before:</span>
-                                <div className="relative inline-block">
+                                <div className="relative inline-block w-28">
                                   <select
                                     value={formData.preMeetingTimer}
                                     onChange={(e) => handleFieldChange('preMeetingTimer', e.target.value)}
                                     disabled={!formData.preMeetingEnabled}
-                                    className={`appearance-none bg-white dark:bg-slate-900 border ${
+                                    className={`w-full appearance-none bg-white dark:bg-slate-900 border ${
                                       formData.preMeetingEnabled 
                                         ? 'border-slate-200 dark:border-slate-700 text-[#006b5f] dark:text-teal-400' 
                                         : 'border-slate-200/50 dark:border-slate-800/50 text-slate-400'
-                                    } font-bold rounded-[8px] h-12 px-3 pr-8 focus:outline-none focus:border-[#006b5f]/50 cursor-pointer disabled:cursor-not-allowed transition-all text-xs`}
+                                    } font-bold rounded-[8px] h-8 px-2 pr-7 focus:outline-none focus:border-[#006b5f]/50 cursor-pointer disabled:cursor-not-allowed transition-all text-[11px]`}
                                   >
                                     {(() => {
                                       const allOptions = [
@@ -1176,7 +1179,7 @@ const App: React.FC = () => {
                                       });
                                     })()}
                                   </select>
-                                  <span className={`material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 text-[18px] pointer-events-none ${formData.preMeetingEnabled ? 'text-[#006b5f] dark:text-teal-400' : 'text-slate-400'}`}>arrow_drop_down</span>
+                                  <span className={`material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-[16px] pointer-events-none ${formData.preMeetingEnabled ? 'text-[#006b5f] dark:text-teal-400' : 'text-slate-400'}`}>arrow_drop_down</span>
                                 </div>
                               </div>
                               <ToggleSwitch
@@ -1192,7 +1195,7 @@ const App: React.FC = () => {
                 </div>
 
                 {/* Persistent Navigation Buttons */}
-                <div className="pt-2 pb-[80px]">
+                <div className="pt-1 pb-[76px]">
                   <button
                     type="button"
                     onClick={() => setCurrentStep(3)}
