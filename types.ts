@@ -17,6 +17,7 @@ export interface HistoricalAppointment extends AppointmentData {
   sentAt: number; // timestamp
   updatedAt: number; // timestamp
   syncSuccessful?: boolean;
+  isArchived?: boolean;
 }
 
 export interface AppointmentData {

@@ -6,9 +6,10 @@ interface ClientHistoryActivityProps {
   contact: Contact;
   appointments: HistoricalAppointment[];
   onClose: () => void;
-  onUpdateStatus: (id: string, status: AppointmentStatus) => void;
+  onUpdateStatus: (id: string, status: AppointmentStatus, forcePast?: boolean) => void;
   onDelete: (id: string) => void;
   onDeleteAll: () => void;
+  onUnarchive: (id: string) => void;
   onFollowUp: (appointment: HistoricalAppointment) => void;
   onReschedule: (appointment: HistoricalAppointment) => void;
   onReminder: (appointment: HistoricalAppointment) => void;
@@ -23,6 +24,7 @@ const ClientHistoryActivity: React.FC<ClientHistoryActivityProps> = ({
   onUpdateStatus,
   onDelete,
   onDeleteAll,
+  onUnarchive,
   onFollowUp,
   onReschedule,
   onReminder,
@@ -76,7 +78,7 @@ const ClientHistoryActivity: React.FC<ClientHistoryActivityProps> = ({
           </button>
           <div className="flex-1">
             <h1 className="text-[16px] font-extrabold text-[#131b2e] font-display">
-              Client Timeline
+              Archived History
             </h1>
           </div>
         </header>
@@ -98,7 +100,7 @@ const ClientHistoryActivity: React.FC<ClientHistoryActivityProps> = ({
                 {contact.name}
               </h2>
               <p className="text-[12px] text-[#6b7a76] mt-0.5 font-normal font-sans">
-                Appointment lifecycle and history
+                Archived appointments list
               </p>
             </div>
           </div>
@@ -124,6 +126,7 @@ const ClientHistoryActivity: React.FC<ClientHistoryActivityProps> = ({
                 appointment={appt}
                 onUpdateStatus={onUpdateStatus}
                 onDelete={onDelete}
+                onUnarchive={onUnarchive}
                 onFollowUp={onFollowUp}
                 onReschedule={onReschedule}
                 onReminder={onReminder}

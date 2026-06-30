@@ -57,6 +57,7 @@ const App: React.FC = () => {
     updateAppointmentStatus,
     deleteAppointment,
     deleteAppointmentsForClient,
+    unarchiveAppointment,
     selectedFollowUp,
     setSelectedFollowUp,
     handleFollowUp,
@@ -94,6 +95,20 @@ const App: React.FC = () => {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  React.useEffect(() => {
+    const container = document.getElementById('main-scroll-container');
+    if (container) {
+      container.scrollTop = 0;
+      if (currentStep === 3 && currentPage === 'schedule') {
+        container.style.overflowY = 'hidden';
+        container.classList.add('flex', 'flex-col');
+      } else {
+        container.style.overflowY = 'auto';
+        container.classList.remove('flex', 'flex-col');
+      }
+    }
+  }, [currentStep, currentPage]);
 
   const totalSideMargins = 32; // 16px left + 16px right of form card padding
   const itemWidth = (screenWidth - totalSideMargins) / 5.2;
@@ -622,11 +637,29 @@ const App: React.FC = () => {
           {selectedClientHistoryContact && (
             <ClientHistoryActivity
               contact={selectedClientHistoryContact}
-              appointments={history.filter(appt => appt.contact.id === selectedClientHistoryContact.id)}
+              appointments={(() => {
+                const now = Date.now();
+                return history.filter(appt => {
+                  if (appt.contact.id !== selectedClientHistoryContact.id) return false;
+                  if (appt.isArchived === true) return true;
+                  if (appt.isArchived === false) return false;
+                  try {
+                    const [year, month, day] = appt.date.split('-').map(Number);
+                    const [hours, minutes] = appt.time.split(':').map(Number);
+                    const apptTime = new Date(year, month - 1, day, hours, minutes).getTime();
+                    const passed = apptTime < now;
+                    const isArchivableStatus = appt.status === 'CONFIRMED' || appt.status === 'NO-SHOW';
+                    return passed && isArchivableStatus;
+                  } catch (e) {
+                    return false;
+                  }
+                });
+              })()}
               onClose={() => setSelectedClientHistoryContact(null)}
               onUpdateStatus={updateAppointmentStatus}
               onDelete={deleteAppointment}
               onDeleteAll={() => deleteAppointmentsForClient(selectedClientHistoryContact.id)}
+              onUnarchive={unarchiveAppointment}
               onFollowUp={handleFollowUp}
               onReschedule={handleRescheduleWrapped}
               onReminder={handleReminder}
@@ -638,7 +671,7 @@ const App: React.FC = () => {
       }
     >
       {currentPage === 'schedule' ? (
-        <div className="w-full space-y-4">
+        <div className={`w-full ${currentStep === 3 ? 'flex-1 min-h-0 flex flex-col gap-4 overflow-hidden' : 'space-y-4'}`}>
           {reschedulingId && (
             <div className="flex items-center justify-between bg-teal-50 border border-teal-200/50 rounded-xl p-3 text-[#006b5f] text-[13px] shadow-sm animate-pulse">
               <div className="flex items-center gap-2">
@@ -705,9 +738,9 @@ const App: React.FC = () => {
           </div>
 
           {/* 3-Step Slider Container */}
-          <div className="overflow-hidden w-full relative">
+          <div className={`overflow-hidden w-full relative ${currentStep === 3 ? 'flex-1 min-h-0 flex flex-col' : ''}`}>
             <div 
-              className="flex w-[300%] transition-transform duration-300 ease-in-out"
+              className={`flex w-[300%] transition-transform duration-300 ease-in-out ${currentStep === 3 ? 'flex-1 min-h-0' : ''}`}
               style={{ transform: `translateX(-${(currentStep - 1) * 33.333}%)` }}
             >
               {/* STEP 1: CONTACT SELECTION PAGE */}
@@ -1172,112 +1205,115 @@ const App: React.FC = () => {
               </div>
 
               {/* STEP 3: MESSAGE PREVIEW & SEND PAGE */}
-              <div className="w-1/3 flex-shrink-0 px-1 space-y-4">
-                <section className="space-y-3 bg-white rounded-xl ambient-shadow p-4 border border-slate-100 dark:bg-slate-900 dark:border-slate-800/80">
-                  <label className={`label-caps tracking-wider block ${reschedulingId ? 'text-amber-600 dark:text-amber-500 font-bold' : ''}`}>
+              <div className="w-1/3 flex-shrink-0 flex flex-col justify-between h-full px-0">
+                {/* 2. CARD WRAPPER CONTAINER (Occupies only the remaining top space) */}
+                <div className="flex-1 flex flex-col min-h-0">
+                  <label className={`label-caps tracking-wider block mb-2 ${reschedulingId ? 'text-amber-600 dark:text-amber-500 font-bold' : ''}`}>
                     {reschedulingId ? 'Reschedule Message Preview' : 'Message Preview'}
                   </label>
                   
-                  {/* Expanded & Padded Preview Card */}
-                  <div className="bg-slate-50/70 dark:bg-slate-900/40 border border-slate-200/50 dark:border-slate-800/80 rounded-xl p-5 min-h-[180px] relative overflow-hidden flex flex-col justify-between">
-                    {isEditingTemplate ? (
-                      <div className="space-y-3 relative z-10 w-full">
-                        <textarea
-                          value={tempTemplate}
-                          onChange={(e) => setTempTemplate(e.target.value)}
-                          className="w-full h-32 p-3 text-[13px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-[#006b5f] font-sans"
-                          placeholder="Write your message template..."
-                        />
-                        
-                        {/* Helper Pills */}
-                        <div className="flex flex-wrap gap-1.5 items-center">
-                          <span className="text-[11px] text-slate-400 dark:text-slate-500 mr-1">Insert:</span>
-                          {[
-                            { label: 'Name', placeholder: '{name}' },
-                            { label: 'Location', placeholder: '{location}' },
-                            { label: 'Date', placeholder: '{date}' },
-                            { label: 'Time', placeholder: '{time}' }
-                          ].map((pill) => (
+                  {/* Expanded & Padded Preview Card (wrapContentHeight) */}
+                  <div className="bg-white rounded-xl ambient-shadow p-4 border border-slate-100 dark:bg-slate-900 dark:border-slate-800/80 w-full h-auto">
+                    <div className="bg-slate-50/70 dark:bg-slate-900/40 border border-slate-200/50 dark:border-slate-800/80 rounded-xl p-4 relative overflow-hidden flex flex-col h-auto">
+                      {isEditingTemplate ? (
+                        <div className="space-y-3 relative z-10 w-full flex flex-col">
+                          <textarea
+                            value={tempTemplate}
+                            onChange={(e) => setTempTemplate(e.target.value)}
+                            className="w-full h-32 p-3 text-[13px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-[#006b5f] font-sans resize-none"
+                            placeholder="Write your message template..."
+                          />
+                          
+                          {/* Helper Pills */}
+                          <div className="flex flex-wrap gap-1.5 items-center">
+                            <span className="text-[11px] text-slate-400 dark:text-slate-500 mr-1">Insert:</span>
+                            {[
+                              { label: 'Name', placeholder: '{name}' },
+                              { label: 'Location', placeholder: '{location}' },
+                              { label: 'Date', placeholder: '{date}' },
+                              { label: 'Time', placeholder: '{time}' }
+                            ].map((pill) => (
+                              <button
+                                key={pill.placeholder}
+                                type="button"
+                                onClick={() => {
+                                  setTempTemplate(prev => prev + pill.placeholder);
+                                }}
+                                className="px-2 py-0.5 text-[11px] bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-md border border-slate-200/50 dark:border-slate-700 transition-colors font-mono"
+                              >
+                                {pill.label}
+                              </button>
+                            ))}
+                          </div>
+
+                          {/* Actions */}
+                          <div className="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800/60">
                             <button
-                              key={pill.placeholder}
                               type="button"
                               onClick={() => {
-                                setTempTemplate(prev => prev + pill.placeholder);
+                                setIsEditingTemplate(false);
                               }}
-                              className="px-2 py-0.5 text-[11px] bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-md border border-slate-200/50 dark:border-slate-700 transition-colors font-mono"
+                              className="px-3 py-1 text-[11px] font-bold text-slate-500 hover:text-slate-700 transition-colors"
                             >
-                              {pill.label}
+                              Cancel
                             </button>
-                          ))}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (reschedulingId) {
+                                  setRescheduleTemplate(tempTemplate);
+                                } else {
+                                  setMessageTemplate(tempTemplate);
+                                }
+                                setIsEditingTemplate(false);
+                              }}
+                              className="px-3 py-1 text-[11px] font-bold bg-[#006b5f] hover:bg-[#005247] text-white rounded-md transition-colors"
+                            >
+                              Save
+                            </button>
+                          </div>
                         </div>
-
-                        {/* Actions */}
-                        <div className="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800/60">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setIsEditingTemplate(false);
-                            }}
-                            className="px-3 py-1 text-[11px] font-bold text-slate-500 hover:text-slate-700 transition-colors"
-                          >
-                            Cancel
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (reschedulingId) {
-                                setRescheduleTemplate(tempTemplate);
-                              } else {
-                                setMessageTemplate(tempTemplate);
-                              }
-                              setIsEditingTemplate(false);
-                            }}
-                            className="px-3 py-1 text-[11px] font-bold bg-[#006b5f] hover:bg-[#005247] text-white rounded-md transition-colors"
-                          >
-                            Save
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <>
-                        <div className="space-y-1.5 relative z-10">
-                          <p className="txt-secondary text-slate-700 dark:text-slate-300 leading-relaxed text-sm">
-                            {renderFormattedMessage(getParsedMessage())}
-                          </p>
-                        </div>
-                        <div className="mt-4 flex justify-end">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setTempTemplate(reschedulingId ? rescheduleTemplate : messageTemplate);
-                              setIsEditingTemplate(true);
-                            }}
-                            className="flex items-center gap-1 text-[#006b5f] text-xs font-bold font-display hover:underline"
-                          >
-                            <span className="material-symbols-outlined text-[14px]">edit</span> Edit Text
-                          </button>
-                        </div>
-                      </>
-                    )}
+                      ) : (
+                        <>
+                          <div className="space-y-1.5 relative z-10">
+                            <p className="txt-secondary text-slate-700 dark:text-slate-300 leading-relaxed text-sm">
+                              {renderFormattedMessage(getParsedMessage())}
+                            </p>
+                          </div>
+                          <div className="mt-3 flex justify-end">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setTempTemplate(reschedulingId ? rescheduleTemplate : messageTemplate);
+                                setIsEditingTemplate(true);
+                              }}
+                              className="flex items-center gap-1 text-[#006b5f] text-xs font-bold font-display hover:underline"
+                            >
+                              <span className="material-symbols-outlined text-[14px]">edit</span> Edit Text
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </div>
                   </div>
-                </section>
+                </div>
 
-                {/* Final Primary Sending CTA and Back Button */}
-                <div className="flex flex-col gap-2.5 pt-2">
+                {/* 3. STICKY BUTTON ROW BLOCK (Forced to stay inside the phone frame, with safety clearance padding from bottom main tabs bar) */}
+                <div className="flex flex-col gap-2 pb-3 px-0 mt-auto">
                   <button
                     onClick={handleSend}
-                    className="w-full h-12 bg-[#006b5f] hover:bg-[#005c52] text-white rounded-[12px] font-bold text-[16px] flex items-center justify-center gap-2 active:scale-[0.98] transition-all font-display shadow-lg shadow-[#006b5f]/20"
+                    className="w-full h-12 bg-[#006b5f] hover:bg-[#005c52] text-white rounded-[12px] font-bold text-[15px] flex items-center justify-center gap-2 active:scale-[0.98] transition-all font-display shadow-md shadow-[#006b5f]/15"
                   >
-                    <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>
+                    <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>
                       rocket_launch
                     </span>
-                    <span>{reschedulingId ? '🚀 UPDATE & SEND VIA WHATSAPP' : '🚀 SEND VIA WHATSAPP'}</span>
+                    <span>{reschedulingId ? '🚀🚀 UPDATE & SEND VIA WHATSAPP' : '🚀🚀 SEND VIA WHATSAPP'}</span>
                   </button>
                   
                   <button
                     type="button"
                     onClick={() => setCurrentStep(2)}
-                    className="w-full h-10 border border-slate-200 text-slate-500 hover:text-slate-700 dark:border-slate-800 dark:text-slate-400 dark:hover:text-slate-200 rounded-[10px] font-bold text-xs flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all font-display"
+                    className="w-full h-12 border border-slate-200 bg-white text-slate-500 hover:text-slate-700 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-400 dark:hover:text-slate-200 rounded-[12px] font-bold text-xs flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all font-display"
                   >
                     <span className="material-symbols-outlined text-[14px]">arrow_back</span>
                     Back to Schedule Configuration

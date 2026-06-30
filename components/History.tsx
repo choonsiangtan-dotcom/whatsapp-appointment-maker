@@ -6,7 +6,7 @@ import HistorySummary from './HistorySummary';
 
 interface HistoryProps {
   history: HistoricalAppointment[];
-  onUpdateStatus: (id: string, status: AppointmentStatus) => void;
+  onUpdateStatus: (id: string, status: AppointmentStatus, forcePast?: boolean) => void;
   onDelete: (id: string) => void;
   onFollowUp: (appointment: HistoricalAppointment) => void;
   onReschedule: (appointment: HistoricalAppointment) => void;

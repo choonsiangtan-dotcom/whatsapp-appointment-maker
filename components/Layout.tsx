@@ -43,7 +43,8 @@ const Layout: React.FC<LayoutProps> = ({ children, currentPage, onPageChange, mo
 
         {/* ── Scrollable Content ── */}
         <div
-          className="relative flex-1 pt-3 pb-[70px] px-4 overflow-y-auto overflow-x-hidden hide-scrollbar"
+          id="main-scroll-container"
+          className="relative flex-1 pt-4 pb-[70px] px-4 overflow-y-auto overflow-x-hidden hide-scrollbar"
         >
           {children}
         </div>

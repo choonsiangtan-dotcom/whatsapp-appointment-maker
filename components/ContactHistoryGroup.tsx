@@ -4,7 +4,7 @@ import HistoryCard from './HistoryCard';
 
 interface ContactHistoryGroupProps {
   appointments: HistoricalAppointment[];
-  onUpdateStatus: (id: string, status: AppointmentStatus) => void;
+  onUpdateStatus: (id: string, status: AppointmentStatus, forcePast?: boolean) => void;
   onDelete: (id: string) => void;
   onFollowUp: (appointment: HistoricalAppointment) => void;
   onReschedule: (appointment: HistoricalAppointment) => void;
@@ -72,9 +72,18 @@ const ContactHistoryGroup: React.FC<ContactHistoryGroupProps> = ({
   // Sorting & Archiving Logic
   const now = new Date();
   
+  const getAppointmentTimestamp = (dateStr: string, timeStr: string) => {
+    try {
+      const [year, month, day] = dateStr.split('-').map(Number);
+      const [hours, minutes] = timeStr.split(':').map(Number);
+      return new Date(year, month - 1, day, hours, minutes).getTime();
+    } catch (e) {
+      return 0;
+    }
+  };
+
   const isPast = (date: string, time: string) => {
-    const apptDate = new Date(`${date}T${time}`);
-    return apptDate < now;
+    return getAppointmentTimestamp(date, time) < now.getTime();
   };
 
   const activeItems: HistoricalAppointment[] = [];
@@ -84,7 +93,7 @@ const ContactHistoryGroup: React.FC<ContactHistoryGroupProps> = ({
     const passed = isPast(appt.date, appt.time);
     const isArchivableStatus = appt.status === 'CONFIRMED' || appt.status === 'NO-SHOW';
     
-    if (passed && isArchivableStatus) {
+    if (appt.isArchived === true || (passed && isArchivableStatus && appt.isArchived !== false)) {
       archivedItems.push(appt);
     } else {
       activeItems.push(appt);
@@ -96,15 +105,11 @@ const ContactHistoryGroup: React.FC<ContactHistoryGroupProps> = ({
   ).length;
 
   const sortedActive = [...activeItems].sort((a, b) => {
-    const aTime = new Date(`${a.date}T${a.time}`).getTime();
-    const bTime = new Date(`${b.date}T${b.time}`).getTime();
-    return bTime - aTime;
+    return getAppointmentTimestamp(b.date, b.time) - getAppointmentTimestamp(a.date, a.time);
   });
 
   const sortedArchived = [...archivedItems].sort((a, b) => {
-    const aTime = new Date(`${a.date}T${a.time}`).getTime();
-    const bTime = new Date(`${b.date}T${b.time}`).getTime();
-    return bTime - aTime;
+    return getAppointmentTimestamp(b.date, b.time) - getAppointmentTimestamp(a.date, a.time);
   });
   
   const nextAppt = sortedActive.length > 0 ? sortedActive[0] : sortedArchived[0];
@@ -229,17 +234,18 @@ const ContactHistoryGroup: React.FC<ContactHistoryGroupProps> = ({
 
             {/* Archives Section */}
             {sortedArchived.length > 0 && (
-              <div className="mt-4 pt-3 border-t border-slate-200/60 flex justify-between items-center mr-2">
-                <span className="txt-label-caps text-[10px] text-[#64748B] font-bold">Archives ({sortedArchived.length})</span>
+              <div className="w-full border-t border-slate-200/80 pt-3.5 mt-3.5 flex justify-between items-center pr-2 pb-1">
+                <span className="text-[12px] text-[#6b7a76] font-semibold tracking-wider font-display uppercase">
+                  ARCHIVES ({sortedArchived.length})
+                </span>
                 <button 
                   onClick={(e) => {
                     e.stopPropagation();
                     onOpenClientHistory(contact);
                   }}
-                  className="flex items-center gap-0.5 text-[10px] font-bold text-[#006b5f] hover:text-[#00574d] active:scale-95 transition-all txt-label-caps"
+                  className="flex items-center gap-0.5 text-[12px] font-bold text-[#006b5f] hover:text-[#00574d] active:scale-95 transition-all font-display"
                 >
-                  <span>VIEW ALL</span>
-                  <span className="material-symbols-outlined text-[13px] font-bold">arrow_forward</span>
+                  <span>VIEW ALL ➔</span>
                 </button>
               </div>
             )}

@@ -3,8 +3,9 @@ import { HistoricalAppointment, AppointmentStatus } from '../types';
 
 interface HistoryCardProps {
   appointment: HistoricalAppointment;
-  onUpdateStatus: (id: string, status: AppointmentStatus) => void;
+  onUpdateStatus: (id: string, status: AppointmentStatus, forcePast?: boolean) => void;
   onDelete: (id: string) => void;
+  onUnarchive?: (id: string) => void;
   onFollowUp: (appointment: HistoricalAppointment) => void;
   onReschedule: (appointment: HistoricalAppointment) => void;
   onReminder: (appointment: HistoricalAppointment) => void;
@@ -18,6 +19,7 @@ const HistoryCard: React.FC<HistoryCardProps> = ({
   appointment, 
   onUpdateStatus, 
   onDelete, 
+  onUnarchive,
   onFollowUp, 
   onReschedule, 
   onReminder, 
@@ -43,6 +45,8 @@ const HistoryCard: React.FC<HistoryCardProps> = ({
       return false;
     }
   })();
+
+  const isCurrentlyArchived = appointment.isArchived === true || (isPast && (appointment.status === 'CONFIRMED' || appointment.status === 'NO-SHOW') && appointment.isArchived !== false);
 
   useEffect(() => {
     if (appointment.status !== 'PENDING' && appointment.status !== 'SENT' && appointment.status !== 'CONFIRMED') return;
@@ -176,6 +180,50 @@ const HistoryCard: React.FC<HistoryCardProps> = ({
     </div>
   );
 
+  const deleteDialog = showDeleteConfirm && (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[#131b2e]/60 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-white rounded-[2rem] w-full max-w-sm p-6 shadow-2xl border border-slate-100 animate-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
+        <h3 className="text-[17px] font-extrabold text-[#131b2e] mb-2 font-display">
+          {isCurrentlyArchived ? 'Delete Record?' : 'Archive Record?'}
+        </h3>
+        <p className="text-[13px] text-slate-500 leading-relaxed font-sans mb-6 font-normal">
+          {isCurrentlyArchived 
+            ? 'Are you sure you want to permanently delete this specific appointment record? This action cannot be undone.'
+            : 'Are you sure you want to archive this specific appointment record? It will be moved to the client\'s archives.'}
+        </p>
+        <div className="flex gap-3">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowDeleteConfirm(false);
+            }}
+            className="flex-1 py-3 rounded-full font-bold text-slate-500 hover:bg-slate-50 active:scale-98 transition-all text-[13px] font-display border border-slate-200"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowDeleteConfirm(false);
+              setIsDeleting(true);
+              setTimeout(() => {
+                onDelete(appointment.id);
+              }, 300);
+            }}
+            className={`flex-1 py-3 rounded-full font-bold active:scale-[0.98] transition-all text-[13px] font-display ${
+              isCurrentlyArchived 
+                ? 'bg-rose-50 text-rose-600 hover:bg-rose-100' 
+                : 'bg-teal-50 text-teal-600 hover:bg-teal-100'
+            }`}
+          >
+            {isCurrentlyArchived ? 'Delete' : 'Archive'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+
   if (isCompactTimeline) {
     return (
       <>
@@ -258,60 +306,56 @@ const HistoryCard: React.FC<HistoryCardProps> = ({
               </div>
 
               {/* ROW 3: Expanded Two-Button Action Matrix */}
-              <div className="flex gap-2.5 mt-2 pt-3 border-t border-slate-50 dark:border-slate-800/40">
-                {/* Left Column Button: REBOOK */}
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onRebook(appointment);
-                  }}
-                  className="flex-1 h-10 bg-[#006b5f] text-white rounded-full font-bold text-[13px] flex items-center justify-center gap-1 hover:bg-[#005c52] active:scale-[0.98] transition-all font-sans"
-                >
-                  <span className="material-symbols-outlined text-[16px] font-semibold">add</span>
-                  <span>REBOOK</span>
-                </button>
+              <div className="flex gap-2 mt-2 pt-3 border-t border-slate-50 dark:border-slate-800/40 items-center justify-between w-full">
+                <div className="flex flex-1 gap-2 min-w-0">
+                  {/* Left Column Button: REBOOK */}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onRebook(appointment);
+                    }}
+                    className="flex-1 h-10 bg-[#006b5f] text-white rounded-full font-bold text-[13px] flex items-center justify-center gap-1 hover:bg-[#005c52] active:scale-[0.98] transition-all font-sans min-w-0"
+                  >
+                    <span className="material-symbols-outlined text-[16px] font-semibold">add</span>
+                    <span className="truncate">REBOOK</span>
+                  </button>
 
-                {/* Right Column Button: State-Dependent CTA */}
-                {(() => {
-                  if (appointment.status === 'PENDING') {
-                    return (
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setShowCancelConfirm(true);
-                        }}
-                        className="flex-1 h-10 bg-slate-100 dark:bg-slate-800/80 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-full font-bold text-[13px] flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all font-sans"
-                      >
-                        <span className="material-symbols-outlined text-[16px] font-bold">close</span>
-                        <span>CANCEL</span>
-                      </button>
-                    );
-                  } else if (appointment.status === 'CANCELLED') {
-                    return (
-                      <button
-                        type="button"
-                        disabled
-                        className="flex-1 h-10 bg-slate-100 dark:bg-slate-800/80 text-slate-450 dark:text-slate-500 rounded-full font-bold text-[13px] flex items-center justify-center gap-1.5 opacity-90 disabled:opacity-100 font-sans"
-                      >
-                        <span className="material-symbols-outlined text-[16px]">block</span>
-                        <span>CANCELLED</span>
-                      </button>
-                    );
-                  } else {
-                    return (
-                      <button
-                        type="button"
-                        disabled
-                        className="flex-1 h-10 bg-slate-100 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 rounded-full font-bold text-[13px] flex items-center justify-center gap-1.5 opacity-90 disabled:opacity-100 font-sans"
-                      >
-                        <span className="material-symbols-outlined text-[16px] font-bold">check</span>
-                        <span>COMPLETED</span>
-                      </button>
-                    );
-                  }
-                })()}
+                  {/* Right Column Button: State-Dependent CTA */}
+                  {(() => {
+                    const isCompleted = appointment.status === 'CONFIRMED' && isPast;
+                    if (appointment.status === 'PENDING') {
+                      return (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowCancelConfirm(true);
+                          }}
+                          className="flex-1 h-10 bg-slate-100 dark:bg-slate-800/80 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-full font-bold text-[13px] flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all font-sans min-w-0"
+                        >
+                          <span className="material-symbols-outlined text-[16px] font-bold">close</span>
+                          <span className="truncate">CANCEL</span>
+                        </button>
+                      );
+                    } else if (appointment.status === 'CONFIRMED' && !isCompleted) {
+                      return (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onUpdateStatus(appointment.id, 'CONFIRMED', true);
+                          }}
+                          className="flex-1 h-10 bg-teal-50 dark:bg-teal-950/20 hover:bg-teal-100 dark:hover:bg-teal-900/30 text-[#006b5f] dark:text-teal-400 rounded-full font-bold text-[13px] flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all font-sans min-w-0 border border-teal-100/50 dark:border-teal-900/30"
+                        >
+                          <span className="material-symbols-outlined text-[16px] font-bold">check</span>
+                          <span className="truncate">COMPLETE</span>
+                        </button>
+                      );
+                    }
+                    return null;
+                  })()}
+                </div>
 
                 {/* Individual Delete Button */}
                 <button
@@ -330,40 +374,7 @@ const HistoryCard: React.FC<HistoryCardProps> = ({
           </div>
         </div>
 
-        {showDeleteConfirm && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[#131b2e]/60 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="bg-white rounded-[2rem] w-full max-w-sm p-6 shadow-2xl border border-slate-100 animate-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
-              <h3 className="text-[17px] font-extrabold text-[#131b2e] mb-2 font-display">Delete Record?</h3>
-              <p className="text-[13px] text-slate-500 leading-relaxed font-sans mb-6 font-normal">
-                Are you sure you want to delete this specific appointment record? This action cannot be undone.
-              </p>
-              <div className="flex gap-3">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowDeleteConfirm(false);
-                  }}
-                  className="flex-1 py-3 rounded-full font-bold text-slate-500 hover:bg-slate-50 active:scale-98 transition-all text-[13px] font-display border border-slate-200"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowDeleteConfirm(false);
-                    setIsDeleting(true);
-                    setTimeout(() => {
-                      onDelete(appointment.id);
-                    }, 300);
-                  }}
-                  className="flex-1 py-3 rounded-full font-bold bg-rose-50 text-rose-600 hover:bg-rose-100 active:scale-[0.98] transition-all text-[13px] font-display"
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+        {deleteDialog}
         {cancelDialog}
       </>
     );
@@ -372,7 +383,9 @@ const HistoryCard: React.FC<HistoryCardProps> = ({
   if (isThreadItem) {
     return (
       <>
-        <div className="relative overflow-hidden rounded-xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900 shadow-sm mt-2 first:mt-0 mr-2">
+        <div className={`relative overflow-hidden rounded-xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900 shadow-sm mt-2 first:mt-0 mr-2 transition-all duration-300 ${
+          isDeleting ? 'opacity-0 -translate-x-full max-h-0 py-0 my-0 border-none scale-95' : 'max-h-[300px]'
+        }`}>
           <div className="relative z-10 w-full p-3.5">
             <div className="flex flex-col gap-2.5">
               {/* ROW 1: Header Row & Notes Anchor */}
@@ -442,64 +455,90 @@ const HistoryCard: React.FC<HistoryCardProps> = ({
               </div>
 
               {/* ROW 3: Expanded Two-Button Action Matrix */}
-              <div className="flex gap-2 mt-2 pt-3 border-t border-slate-50 dark:border-slate-800/40">
-                {/* Left Column Button: REBOOK */}
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onRebook(appointment);
-                  }}
-                  className="flex-1 h-10 bg-[#006b5f] text-white rounded-full font-bold text-[13px] flex items-center justify-center gap-1 hover:bg-[#005c52] active:scale-[0.98] transition-all font-sans"
-                >
-                  <span className="material-symbols-outlined text-[16px] font-semibold">add</span>
-                  <span>REBOOK</span>
-                </button>
+              <div className="flex gap-2 mt-2 pt-3 border-t border-slate-50 dark:border-slate-800/40 items-center justify-between w-full">
+                <div className="flex flex-1 gap-2 min-w-0">
+                  {/* Left Column Button: REBOOK */}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onRebook(appointment);
+                    }}
+                    className="flex-1 h-10 bg-[#006b5f] text-white rounded-full font-bold text-[13px] flex items-center justify-center gap-1 hover:bg-[#005c52] active:scale-[0.98] transition-all font-sans min-w-0"
+                  >
+                    <span className="material-symbols-outlined text-[16px] font-semibold">add</span>
+                    <span className="truncate">REBOOK</span>
+                  </button>
 
-                {/* Right Column Button: State-Dependent CTA */}
-                {(() => {
-                  if (appointment.status === 'PENDING') {
-                    return (
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setShowCancelConfirm(true);
-                        }}
-                        className="flex-1 h-10 bg-slate-100 dark:bg-slate-800/80 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-full font-bold text-[13px] flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all font-sans"
-                      >
-                        <span className="material-symbols-outlined text-[16px] font-bold">close</span>
-                        <span>CANCEL</span>
-                      </button>
-                    );
-                  } else if (appointment.status === 'CANCELLED') {
-                    return (
-                      <button
-                        type="button"
-                        disabled
-                        className="flex-1 h-10 bg-slate-100 dark:bg-slate-800/80 text-slate-400 dark:text-slate-500 rounded-full font-bold text-[13px] flex items-center justify-center gap-1.5 opacity-90 disabled:opacity-100 font-sans"
-                      >
-                        <span className="material-symbols-outlined text-[16px]">block</span>
-                        <span>CANCELLED</span>
-                      </button>
-                    );
-                  } else {
-                    return (
-                      <button
-                        type="button"
-                        disabled
-                        className="flex-1 h-10 bg-slate-100 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 rounded-full font-bold text-[13px] flex items-center justify-center gap-1.5 opacity-90 disabled:opacity-100 font-sans"
-                      >
-                        <span className="material-symbols-outlined text-[16px] font-bold">check</span>
-                        <span>COMPLETED</span>
-                      </button>
-                    );
-                  }
-                })()}
+                  {/* Right Column Button: State-Dependent CTA */}
+                  {(() => {
+                    const isCompleted = appointment.status === 'CONFIRMED' && isPast;
+                    if (appointment.status === 'PENDING') {
+                      return (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowCancelConfirm(true);
+                          }}
+                          className="flex-1 h-10 bg-slate-100 dark:bg-slate-800/80 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-full font-bold text-[13px] flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all font-sans min-w-0"
+                        >
+                          <span className="material-symbols-outlined text-[16px] font-bold">close</span>
+                          <span className="truncate">CANCEL</span>
+                        </button>
+                      );
+                    } else if (appointment.status === 'CONFIRMED' && !isCompleted) {
+                      return (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onUpdateStatus(appointment.id, 'CONFIRMED', true);
+                          }}
+                          className="flex-1 h-10 bg-teal-50 dark:bg-teal-950/20 hover:bg-teal-100 dark:hover:bg-teal-900/30 text-[#006b5f] dark:text-teal-400 rounded-full font-bold text-[13px] flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all font-sans min-w-0 border border-teal-100/50 dark:border-teal-900/30"
+                        >
+                          <span className="material-symbols-outlined text-[16px] font-bold">check</span>
+                          <span className="truncate">COMPLETE</span>
+                        </button>
+                      );
+                    }
+                    return null;
+                  })()}
+                </div>
+
+                {/* Individual Delete / Unarchive Action */}
+                <div className="flex gap-1.5 flex-shrink-0">
+                  {isCurrentlyArchived && onUnarchive && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onUnarchive(appointment.id);
+                      }}
+                      className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 flex items-center justify-center hover:bg-slate-200 transition-colors active:scale-95"
+                      aria-label="Unarchive Record"
+                      title="Unarchive"
+                    >
+                      <span className="material-symbols-outlined text-[20px]">unarchive</span>
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowDeleteConfirm(true);
+                    }}
+                    className="w-10 h-10 rounded-full bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 flex items-center justify-center hover:bg-rose-100 transition-colors active:scale-95"
+                    aria-label="Delete Record"
+                  >
+                    <span className="material-symbols-outlined text-[20px]">delete</span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
         </div>
+        {deleteDialog}
         {cancelDialog}
       </>
     );
