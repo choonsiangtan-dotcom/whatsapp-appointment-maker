@@ -37,6 +37,33 @@ const HistoryCard: React.FC<HistoryCardProps> = ({
   const [showArchiveConfirm, setShowArchiveConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [showContextMenu, setShowContextMenu] = useState(false);
+  const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(null);
+
+  const startLongPress = (e: React.MouseEvent | React.TouchEvent) => {
+    if ((e.target as HTMLElement).closest('button') || (e.target as HTMLElement).closest('a')) return;
+    cancelLongPress();
+    const timer = setTimeout(() => {
+      setShowContextMenu(true);
+      if (window.navigator && window.navigator.vibrate) {
+        window.navigator.vibrate(50);
+      }
+    }, 600);
+    setLongPressTimer(timer);
+  };
+
+  const cancelLongPress = () => {
+    if (longPressTimer) {
+      clearTimeout(longPressTimer);
+      setLongPressTimer(null);
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (longPressTimer) clearTimeout(longPressTimer);
+    };
+  }, [longPressTimer]);
 
   const isPast = (() => {
     try {
@@ -256,6 +283,139 @@ const HistoryCard: React.FC<HistoryCardProps> = ({
     </div>
   );
 
+  const contextMenuModal = showContextMenu && (
+    <div 
+      className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200"
+      onClick={(e) => {
+        e.stopPropagation();
+        setShowContextMenu(false);
+      }}
+    >
+      <div 
+        className="bg-white rounded-t-[2rem] sm:rounded-[2rem] w-full max-w-sm p-6 shadow-2xl border-t sm:border border-slate-100 animate-in slide-in-from-bottom sm:zoom-in-95 duration-200"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-4 sm:hidden" />
+        <h3 className="text-[17px] font-extrabold text-[#131b2e] mb-4 font-display text-center sm:text-left">
+          Appointment Options
+        </h3>
+        
+        <div className="space-y-2">
+          {/* Notes Action */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowContextMenu(false);
+              onEditNotes(appointment);
+            }}
+            className="w-full py-3 px-4 rounded-xl font-bold text-slate-700 hover:bg-slate-50 active:scale-98 transition-all text-[14px] flex items-center gap-3"
+          >
+            <span className="material-symbols-outlined text-[20px] text-[#006b5f]">description</span>
+            <span>Edit Notes / Details</span>
+          </button>
+
+          {/* Follow Up */}
+          {appointment.status === 'PENDING' && onFollowUp && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowContextMenu(false);
+                onFollowUp(appointment);
+              }}
+              className="w-full py-3 px-4 rounded-xl font-bold text-slate-700 hover:bg-slate-50 active:scale-98 transition-all text-[14px] flex items-center gap-3"
+            >
+              <span className="material-symbols-outlined text-[20px] text-amber-500">campaign</span>
+              <span>Follow Up</span>
+            </button>
+          )}
+
+          {/* Remind */}
+          {appointment.status === 'CONFIRMED' && onReminder && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowContextMenu(false);
+                onReminder(appointment);
+              }}
+              className="w-full py-3 px-4 rounded-xl font-bold text-slate-700 hover:bg-slate-50 active:scale-98 transition-all text-[14px] flex items-center gap-3"
+            >
+              <span className="material-symbols-outlined text-[20px] text-teal-600">notifications_active</span>
+              <span>Send Reminder</span>
+            </button>
+          )}
+
+          {/* Reschedule */}
+          {!isPast && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowContextMenu(false);
+                onReschedule(appointment);
+              }}
+              className="w-full py-3 px-4 rounded-xl font-bold text-slate-700 hover:bg-slate-50 active:scale-98 transition-all text-[14px] flex items-center gap-3"
+            >
+              <span className="material-symbols-outlined text-[20px] text-[#006b5f]">calendar_today</span>
+              <span>Reschedule</span>
+            </button>
+          )}
+
+          {/* Archive / Unarchive */}
+          {isCurrentlyArchived && onUnarchive ? (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowContextMenu(false);
+                onUnarchive(appointment.id);
+              }}
+              className="w-full py-3 px-4 rounded-xl font-bold text-slate-700 hover:bg-slate-50 active:scale-98 transition-all text-[14px] flex items-center gap-3"
+            >
+              <span className="material-symbols-outlined text-[20px] text-[#006b5f]">unarchive</span>
+              <span>Unarchive Appointment</span>
+            </button>
+          ) : !isCurrentlyArchived && onArchive ? (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowContextMenu(false);
+                setShowArchiveConfirm(true);
+              }}
+              className="w-full py-3 px-4 rounded-xl font-bold text-slate-700 hover:bg-slate-50 active:scale-98 transition-all text-[14px] flex items-center gap-3"
+            >
+              <span className="material-symbols-outlined text-[20px] text-[#006b5f]">archive</span>
+              <span>Archive Appointment</span>
+            </button>
+          ) : null}
+
+          {/* Delete */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowContextMenu(false);
+              setShowDeleteConfirm(true);
+            }}
+            className="w-full py-3 px-4 rounded-xl font-bold text-rose-600 hover:bg-rose-50 active:scale-98 transition-all text-[14px] flex items-center gap-3"
+          >
+            <span className="material-symbols-outlined text-[20px] text-rose-500">delete</span>
+            <span>Delete Appointment</span>
+          </button>
+
+          {/* Cancel */}
+          <div className="pt-2 border-t border-slate-100">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowContextMenu(false);
+              }}
+              className="w-full py-3 rounded-full font-bold text-slate-500 hover:bg-slate-50 active:scale-98 transition-all text-[13px] font-display border border-slate-200 text-center"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
 
   if (isCompactTimeline) {
     return (
@@ -264,6 +424,12 @@ const HistoryCard: React.FC<HistoryCardProps> = ({
           className={`relative overflow-hidden rounded-2xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900 shadow-sm transition-all duration-300 ${
             isDeleting ? 'opacity-0 -translate-x-full max-h-0 py-0 my-0 border-none scale-95' : 'max-h-[300px]'
           }`}
+          onTouchStart={startLongPress}
+          onTouchMove={cancelLongPress}
+          onTouchEnd={cancelLongPress}
+          onMouseDown={startLongPress}
+          onMouseUp={cancelLongPress}
+          onMouseLeave={cancelLongPress}
         >
           <div 
             className="relative z-10 w-full bg-white dark:bg-slate-900 p-4"
@@ -283,18 +449,19 @@ const HistoryCard: React.FC<HistoryCardProps> = ({
                   </span>
                 </div>
                 
-                {/* Notes Button Anchor */}
+                {/* Notes Button Anchor -> Activates Context Menu */}
                 <button
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
-                    onEditNotes(appointment);
+                    setShowContextMenu(true);
                   }}
-                  className="flex items-center gap-1 text-[#006b5f] dark:text-teal-400 hover:opacity-80 transition-all flex-shrink-0 pt-0.5"
-                  aria-label="Notes"
+                  className="flex items-center gap-0.5 text-[#006b5f] dark:text-teal-400 hover:opacity-80 transition-all flex-shrink-0 pt-0.5"
+                  aria-label="More actions"
                 >
                   <span className="material-symbols-outlined text-[16px] font-semibold">description</span>
-                  <span className="text-[13px] font-bold font-sans">Notes</span>
+                  <span className="text-[13px] font-bold font-sans mr-1">Notes</span>
+                  <span className="material-symbols-outlined text-[16px]">more_vert</span>
                 </button>
               </div>
 
@@ -348,15 +515,18 @@ const HistoryCard: React.FC<HistoryCardProps> = ({
                       e.stopPropagation();
                       onRebook(appointment);
                     }}
-                    className="flex-1 h-10 bg-[#006b5f] text-white rounded-full font-bold text-[13px] flex items-center justify-center gap-1 hover:bg-[#005c52] active:scale-[0.98] transition-all font-sans min-w-0"
+                    className={`h-10 bg-[#006b5f] text-white rounded-full font-bold text-[13px] flex items-center justify-center gap-1.5 hover:bg-[#005c52] active:scale-[0.98] transition-all font-sans min-w-0 px-3 ${
+                      appointment.status === 'CANCELLED' || appointment.status === 'COMPLETED' || isPast
+                        ? 'w-full flex-1'
+                        : 'flex-1'
+                    }`}
                   >
                     <span className="material-symbols-outlined text-[16px] font-semibold">add</span>
                     <span className="truncate">REBOOK</span>
                   </button>
 
                   {/* Right Column Button: State-Dependent CTA */}
-                  {(() => {
-                    const isCompleted = appointment.status === 'CONFIRMED' && isPast;
+                  {!(appointment.status === 'CANCELLED' || appointment.status === 'COMPLETED' || isPast) && (() => {
                     if (appointment.status === 'PENDING') {
                       return (
                         <button
@@ -365,13 +535,14 @@ const HistoryCard: React.FC<HistoryCardProps> = ({
                             e.stopPropagation();
                             setShowCancelConfirm(true);
                           }}
-                          className="flex-1 h-10 bg-slate-100 dark:bg-slate-800/80 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-full font-bold text-[13px] flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all font-sans min-w-0"
+                          className="flex-1 h-10 bg-slate-100 dark:bg-slate-800/80 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-full font-bold text-[13px] flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all font-sans min-w-0 px-3"
                         >
                           <span className="material-symbols-outlined text-[16px] font-bold">close</span>
                           <span className="truncate">CANCEL</span>
                         </button>
                       );
-                    } else if (appointment.status === 'CONFIRMED' && !isCompleted) {
+                    }
+                    if (appointment.status === 'CONFIRMED') {
                       return (
                         <button
                           type="button"
@@ -379,7 +550,7 @@ const HistoryCard: React.FC<HistoryCardProps> = ({
                             e.stopPropagation();
                             onUpdateStatus(appointment.id, 'CONFIRMED', true);
                           }}
-                          className="flex-1 h-10 bg-teal-50 dark:bg-teal-950/20 hover:bg-teal-100 dark:hover:bg-teal-900/30 text-[#006b5f] dark:text-teal-400 rounded-full font-bold text-[13px] flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all font-sans min-w-0 border border-teal-100/50 dark:border-teal-900/30"
+                          className="flex-1 h-10 bg-slate-100 dark:bg-slate-800/80 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-full font-bold text-[13px] flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all font-sans min-w-0 px-3"
                         >
                           <span className="material-symbols-outlined text-[16px] font-bold">check</span>
                           <span className="truncate">COMPLETE</span>
@@ -389,46 +560,6 @@ const HistoryCard: React.FC<HistoryCardProps> = ({
                     return null;
                   })()}
                 </div>
-
-                {isCurrentlyArchived && onUnarchive ? (
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onUnarchive(appointment.id);
-                    }}
-                    className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 flex items-center justify-center hover:bg-slate-200 transition-colors active:scale-95 flex-shrink-0"
-                    aria-label="Unarchive Record"
-                    title="Unarchive"
-                  >
-                    <span className="material-symbols-outlined text-[20px]">unarchive</span>
-                  </button>
-                ) : !isCurrentlyArchived && onArchive ? (
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setShowArchiveConfirm(true);
-                    }}
-                    className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 flex items-center justify-center hover:bg-slate-200 transition-colors active:scale-95 flex-shrink-0"
-                    aria-label="Archive Record"
-                    title="Archive"
-                  >
-                    <span className="material-symbols-outlined text-[20px]">archive</span>
-                  </button>
-                ) : null}
-
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowDeleteConfirm(true);
-                  }}
-                  className="w-10 h-10 rounded-full bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 flex items-center justify-center hover:bg-rose-100 transition-colors flex-shrink-0 active:scale-95"
-                  aria-label="Delete Record"
-                >
-                  <span className="material-symbols-outlined text-[20px]">delete</span>
-                </button>
               </div>
             </div>
           </div>
@@ -437,6 +568,7 @@ const HistoryCard: React.FC<HistoryCardProps> = ({
         {deleteConfirmDialog}
         {archiveConfirmDialog}
         {cancelDialog}
+        {contextMenuModal}
       </>
     );
   }
@@ -444,9 +576,17 @@ const HistoryCard: React.FC<HistoryCardProps> = ({
   if (isThreadItem) {
     return (
       <>
-        <div className={`relative overflow-hidden rounded-xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900 shadow-sm mt-2 first:mt-0 mr-2 transition-all duration-300 ${
-          isDeleting ? 'opacity-0 -translate-x-full max-h-0 py-0 my-0 border-none scale-95' : 'max-h-[300px]'
-        }`}>
+        <div 
+          className={`relative overflow-hidden rounded-xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900 shadow-sm mt-2 first:mt-0 mr-2 transition-all duration-300 ${
+            isDeleting ? 'opacity-0 -translate-x-full max-h-0 py-0 my-0 border-none scale-95' : 'max-h-[300px]'
+          }`}
+          onTouchStart={startLongPress}
+          onTouchMove={cancelLongPress}
+          onTouchEnd={cancelLongPress}
+          onMouseDown={startLongPress}
+          onMouseUp={cancelLongPress}
+          onMouseLeave={cancelLongPress}
+        >
           <div className="relative z-10 w-full p-3.5">
             <div className="flex flex-col gap-2.5">
               {/* ROW 1: Header Row & Notes Anchor */}
@@ -460,18 +600,19 @@ const HistoryCard: React.FC<HistoryCardProps> = ({
                   </span>
                 </div>
                 
-                {/* Notes Button Anchor */}
+                {/* Notes Button Anchor -> Activates Context Menu */}
                 <button
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
-                    onEditNotes(appointment);
+                    setShowContextMenu(true);
                   }}
-                  className="flex items-center gap-1 text-[#006b5f] dark:text-teal-400 hover:opacity-80 transition-all flex-shrink-0 pt-0.5"
-                  aria-label="Notes"
+                  className="flex items-center gap-0.5 text-[#006b5f] dark:text-teal-400 hover:opacity-80 transition-all flex-shrink-0 pt-0.5"
+                  aria-label="More actions"
                 >
                   <span className="material-symbols-outlined text-[15px] font-semibold">description</span>
-                  <span className="text-[12px] font-bold font-sans">Notes</span>
+                  <span className="text-[12px] font-bold font-sans mr-1">Notes</span>
+                  <span className="material-symbols-outlined text-[15px]">more_vert</span>
                 </button>
               </div>
 
@@ -525,15 +666,18 @@ const HistoryCard: React.FC<HistoryCardProps> = ({
                       e.stopPropagation();
                       onRebook(appointment);
                     }}
-                    className="flex-1 h-10 bg-[#006b5f] text-white rounded-full font-bold text-[13px] flex items-center justify-center gap-1 hover:bg-[#005c52] active:scale-[0.98] transition-all font-sans min-w-0"
+                    className={`h-10 bg-[#006b5f] text-white rounded-full font-bold text-[13px] flex items-center justify-center gap-1.5 hover:bg-[#005c52] active:scale-[0.98] transition-all font-sans min-w-0 px-3 ${
+                      appointment.status === 'CANCELLED' || appointment.status === 'COMPLETED' || isPast
+                        ? 'w-full flex-1'
+                        : 'flex-1'
+                    }`}
                   >
                     <span className="material-symbols-outlined text-[16px] font-semibold">add</span>
                     <span className="truncate">REBOOK</span>
                   </button>
 
                   {/* Right Column Button: State-Dependent CTA */}
-                  {(() => {
-                    const isCompleted = appointment.status === 'CONFIRMED' && isPast;
+                  {!(appointment.status === 'CANCELLED' || appointment.status === 'COMPLETED' || isPast) && (() => {
                     if (appointment.status === 'PENDING') {
                       return (
                         <button
@@ -542,13 +686,14 @@ const HistoryCard: React.FC<HistoryCardProps> = ({
                             e.stopPropagation();
                             setShowCancelConfirm(true);
                           }}
-                          className="flex-1 h-10 bg-slate-100 dark:bg-slate-800/80 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-full font-bold text-[13px] flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all font-sans min-w-0"
+                          className="flex-1 h-10 bg-slate-100 dark:bg-slate-800/80 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-full font-bold text-[13px] flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all font-sans min-w-0 px-3"
                         >
                           <span className="material-symbols-outlined text-[16px] font-bold">close</span>
                           <span className="truncate">CANCEL</span>
                         </button>
                       );
-                    } else if (appointment.status === 'CONFIRMED' && !isCompleted) {
+                    }
+                    if (appointment.status === 'CONFIRMED') {
                       return (
                         <button
                           type="button"
@@ -556,7 +701,7 @@ const HistoryCard: React.FC<HistoryCardProps> = ({
                             e.stopPropagation();
                             onUpdateStatus(appointment.id, 'CONFIRMED', true);
                           }}
-                          className="flex-1 h-10 bg-teal-50 dark:bg-teal-950/20 hover:bg-teal-100 dark:hover:bg-teal-900/30 text-[#006b5f] dark:text-teal-400 rounded-full font-bold text-[13px] flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all font-sans min-w-0 border border-teal-100/50 dark:border-teal-900/30"
+                          className="flex-1 h-10 bg-slate-100 dark:bg-slate-800/80 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-full font-bold text-[13px] flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all font-sans min-w-0 px-3"
                         >
                           <span className="material-symbols-outlined text-[16px] font-bold">check</span>
                           <span className="truncate">COMPLETE</span>
@@ -566,48 +711,6 @@ const HistoryCard: React.FC<HistoryCardProps> = ({
                     return null;
                   })()}
                 </div>
-
-                {/* Individual Delete / Unarchive / Archive Action */}
-                <div className="flex gap-1.5 flex-shrink-0">
-                  {isCurrentlyArchived && onUnarchive ? (
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onUnarchive(appointment.id);
-                      }}
-                      className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 flex items-center justify-center hover:bg-slate-200 transition-colors active:scale-95"
-                      aria-label="Unarchive Record"
-                      title="Unarchive"
-                    >
-                      <span className="material-symbols-outlined text-[20px]">unarchive</span>
-                    </button>
-                  ) : !isCurrentlyArchived && onArchive ? (
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setShowArchiveConfirm(true);
-                      }}
-                      className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 flex items-center justify-center hover:bg-slate-200 transition-colors active:scale-95"
-                      aria-label="Archive Record"
-                      title="Archive"
-                    >
-                      <span className="material-symbols-outlined text-[20px]">archive</span>
-                    </button>
-                  ) : null}
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setShowDeleteConfirm(true);
-                    }}
-                    className="w-10 h-10 rounded-full bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 flex items-center justify-center hover:bg-rose-100 transition-colors active:scale-95"
-                    aria-label="Delete Record"
-                  >
-                    <span className="material-symbols-outlined text-[20px]">delete</span>
-                  </button>
-                </div>
               </div>
             </div>
           </div>
@@ -615,12 +718,13 @@ const HistoryCard: React.FC<HistoryCardProps> = ({
         {deleteConfirmDialog}
         {archiveConfirmDialog}
         {cancelDialog}
+        {contextMenuModal}
       </>
     );
   }
 
   return (
-    <div className={`relative overflow-hidden ${isThreadItem ? 'rounded-xl mt-2 first:mt-0' : 'rounded-2xl ambient-shadow'}`}>
+    <div className="relative overflow-hidden rounded-2xl ambient-shadow">
       {/* Swipe Actions Background */}
       <div className="absolute inset-0 flex justify-end">
         <button 
@@ -652,9 +756,9 @@ const HistoryCard: React.FC<HistoryCardProps> = ({
 
       {/* Main Content Card */}
       <div 
-        className={`relative z-10 w-full ${isThreadItem ? 'bg-slate-50 pl-4 pr-3 pt-2.5 pb-2.5' : 'bg-white p-3'} transition-transform duration-300 ease-out border border-slate-100 ${isThreadItem ? 'rounded-xl' : 'rounded-2xl'} ${isSwiped ? '-translate-x-[60%]' : 'translate-x-0'}`}
-
+        className={`relative z-10 w-full bg-white p-3 transition-transform duration-300 ease-out border border-slate-100 rounded-2xl ${isSwiped ? '-translate-x-[60%]' : 'translate-x-0'}`}
         onTouchStart={(e) => {
+          startLongPress(e);
           const touch = e.touches[0];
           const startX = touch.clientX;
           const handleTouchEnd = (ee: TouchEvent) => {
@@ -665,6 +769,11 @@ const HistoryCard: React.FC<HistoryCardProps> = ({
           };
           document.addEventListener('touchend', handleTouchEnd);
         }}
+        onTouchMove={cancelLongPress}
+        onTouchEnd={cancelLongPress}
+        onMouseDown={startLongPress}
+        onMouseUp={cancelLongPress}
+        onMouseLeave={cancelLongPress}
         onClick={() => {
           if (isSwiped) setIsSwiped(false);
         }}
@@ -673,26 +782,22 @@ const HistoryCard: React.FC<HistoryCardProps> = ({
           {/* Row 1: Info and Status Badge */}
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-start gap-3 flex-1 min-w-0">
-              {/* Avatar - Hidden in thread view */}
-              {!isThreadItem && (
-                <div className="w-11 h-11 rounded-full overflow-hidden bg-[#f1f5f9] flex items-center justify-center border-2 border-white shadow-sm flex-shrink-0">
-                  {appointment.contact.avatar.startsWith('http') ? (
-                    <img src={appointment.contact.avatar} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    <span className="txt-title text-[#64748B]">
-                      {appointment.contact.name.charAt(0).toUpperCase()}
-                    </span>
-                  )}
-                </div>
-              )}
+              {/* Avatar */}
+              <div className="w-11 h-11 rounded-full overflow-hidden bg-[#f1f5f9] flex items-center justify-center border-2 border-white shadow-sm flex-shrink-0">
+                {appointment.contact.avatar.startsWith('http') ? (
+                  <img src={appointment.contact.avatar} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="txt-title text-[#64748B]">
+                    {appointment.contact.name.charAt(0).toUpperCase()}
+                  </span>
+                )}
+              </div>
 
               {/* Info */}
               <div className="flex-1 min-w-0">
-                {!isThreadItem && (
-                  <h3 className="txt-title text-[#131b2e] truncate">
-                    {appointment.contact.name}
-                  </h3>
-                )}
+                <h3 className="txt-title text-[#131b2e] truncate">
+                  {appointment.contact.name}
+                </h3>
                 <p className="txt-body font-bold text-[#131b2e] whitespace-nowrap truncate">
                   {formatDate(appointment.date)}, {formatTime(appointment.time)}
                 </p>
@@ -708,71 +813,69 @@ const HistoryCard: React.FC<HistoryCardProps> = ({
             </span>
           </div>
 
-          {/* Row 2: Action Buttons (Only for non-thread view, thread view uses inline action row) */}
-          {!isThreadItem && (
-            <div className="flex flex-wrap gap-2 justify-end">
-              {isPast ? (
+          {/* Row 2: Action Buttons */}
+          <div className="flex flex-wrap gap-2 justify-end">
+            {isPast ? (
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRebook(appointment);
+                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-[#006b5f] text-white rounded-lg txt-label-caps shadow-sm active:scale-95 hover:bg-[#00574d] transition-all whitespace-nowrap"
+              >
+                <span className="material-symbols-outlined text-[14px]">add</span>
+                REBOOK
+              </button>
+            ) : appointment.status === 'PENDING' ? (
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onFollowUp(appointment);
+                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-[#a93349] text-white rounded-lg txt-label-caps shadow-sm active:scale-95 hover:bg-[#8f283b] transition-all whitespace-nowrap"
+              >
+                <span className="material-symbols-outlined text-[14px]">send</span>
+                FOLLOW UP
+              </button>
+            ) : appointment.status === 'CONFIRMED' ? (
+              <div className="flex gap-2">
                 <button 
                   onClick={(e) => {
                     e.stopPropagation();
-                    onRebook(appointment);
+                    onReminder(appointment);
                   }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-[#006b5f] text-white rounded-lg txt-label-caps shadow-sm active:scale-95 hover:bg-[#00574d] transition-all whitespace-nowrap"
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 bg-[#006b5f] text-white rounded-lg txt-label-caps shadow-sm active:scale-95 hover:bg-[#00574d] transition-all whitespace-nowrap"
                 >
-                  <span className="material-symbols-outlined text-[14px]">add</span>
-                  REBOOK
+                  <span className="material-symbols-outlined text-[13px]">notifications_active</span>
+                  REMIND
                 </button>
-              ) : appointment.status === 'PENDING' ? (
-                <button 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onFollowUp(appointment);
-                  }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-[#a93349] text-white rounded-lg txt-label-caps shadow-sm active:scale-95 hover:bg-[#8f283b] transition-all whitespace-nowrap"
-                >
-                  <span className="material-symbols-outlined text-[14px]">send</span>
-                  FOLLOW UP
-                </button>
-              ) : appointment.status === 'CONFIRMED' ? (
-                <div className="flex gap-2">
-                  <button 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onReminder(appointment);
-                    }}
-                    className="flex items-center gap-1.5 px-2.5 py-1.5 bg-[#006b5f] text-white rounded-lg txt-label-caps shadow-sm active:scale-95 hover:bg-[#00574d] transition-all whitespace-nowrap"
-                  >
-                    <span className="material-symbols-outlined text-[13px]">notifications_active</span>
-                    REMIND
-                  </button>
-                  <button 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onReschedule(appointment);
-                    }}
-                    className="flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-lg txt-label-caps shadow-sm active:scale-95 hover:bg-slate-200 transition-all whitespace-nowrap"
-                  >
-                    Reschedule
-                  </button>
-                </div>
-              ) : (
                 <button 
                   onClick={(e) => {
                     e.stopPropagation();
                     onReschedule(appointment);
                   }}
-                  className="flex items-center gap-1.5 px-2.5 py-1.5 bg-[#006b5f] text-white rounded-lg txt-label-caps shadow-sm active:scale-95 hover:bg-[#00574d] transition-all whitespace-nowrap"
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-lg txt-label-caps shadow-sm active:scale-95 hover:bg-slate-200 transition-all whitespace-nowrap"
                 >
-                  <span className="material-symbols-outlined text-[14px]">calendar_today</span>
                   Reschedule
                 </button>
-              )}
-            </div>
-          )}
+              </div>
+            ) : (
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onReschedule(appointment);
+                }}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 bg-[#006b5f] text-white rounded-lg txt-label-caps shadow-sm active:scale-95 hover:bg-[#00574d] transition-all whitespace-nowrap"
+              >
+                <span className="material-symbols-outlined text-[14px]">calendar_today</span>
+                Reschedule
+              </button>
+            )}
+          </div>
         </div>
 
-        {/* Footer Actions (or Merged Actions for timeline view) */}
-        <div className={`mt-2 pt-2 border-t border-slate-50 flex items-center justify-between ${isThreadItem ? 'min-h-[36px]' : 'min-h-[48px]'}`}>
+        {/* Footer Actions */}
+        <div className="mt-2 pt-2 border-t border-slate-50 flex items-center justify-between min-h-[48px]">
           {confirmDelete ? (
             <div className="flex items-center justify-between w-full py-1">
               <span className="txt-caption font-bold text-[#f43f5e] flex items-center gap-1.5">
@@ -803,158 +906,57 @@ const HistoryCard: React.FC<HistoryCardProps> = ({
             </div>
           ) : (
             <>
-              {/* Left group: Notes & Delete Icons */}
+              {/* Left group: Notes/Options Anchor -> opens Context Menu */}
               <div className="flex items-center flex-shrink-0 gap-1">
                 <button 
                   onClick={(e) => {
                     e.stopPropagation();
-                    if (isPast) {
-                      onEditNotes(appointment);
-                    } else {
-                      onReschedule(appointment);
-                    }
+                    setShowContextMenu(true);
                   }}
-                  aria-label={isPast ? 'Notes' : 'Edit'}
-                  className={`flex items-center justify-center text-[#006b5f] hover:bg-[#006b5f]/5 rounded-xl transition-all ${isThreadItem ? 'w-8 h-8' : 'px-3 -ml-3 gap-1.5 min-h-[48px]'}`}
+                  aria-label="More actions"
+                  className="flex items-center justify-center text-[#006b5f] hover:bg-[#006b5f]/5 rounded-xl transition-all px-3 -ml-3 gap-1.5 min-h-[48px]"
                 >
-                  <span className="material-symbols-outlined text-[18px]">{isPast ? 'description' : 'edit_note'}</span>
-                  {!isThreadItem && (isPast ? 'Notes' : 'Edit')}
-                </button>
-
-                {isCurrentlyArchived && onUnarchive ? (
-                  <button 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onUnarchive(appointment.id);
-                    }}
-                    aria-label="Unarchive"
-                    title="Unarchive"
-                    className={`text-[#006b5f] hover:brightness-110 transition-colors flex items-center justify-center hover:bg-teal-50 rounded-xl ${isThreadItem ? 'w-8 h-8' : 'w-12 h-12'}`}
-                  >
-                    <span className="material-symbols-outlined text-[18px]">unarchive</span>
-                  </button>
-                ) : !isCurrentlyArchived && onArchive ? (
-                  <button 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setShowArchiveConfirm(true);
-                    }}
-                    aria-label="Archive"
-                    title="Archive"
-                    className={`text-[#006b5f] hover:brightness-110 transition-colors flex items-center justify-center hover:bg-teal-50 rounded-xl ${isThreadItem ? 'w-8 h-8' : 'w-12 h-12'}`}
-                  >
-                    <span className="material-symbols-outlined text-[18px]">archive</span>
-                  </button>
-                ) : null}
-                
-                <button 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setConfirmDelete(true);
-                  }}
-                  aria-label="Delete"
-                  className={`text-[#f43f5e] hover:brightness-110 transition-colors flex items-center justify-center hover:bg-rose-50 rounded-xl ${isThreadItem ? 'w-8 h-8' : 'w-12 h-12'}`}
-                >
-                  <span className="material-symbols-outlined text-[18px]">delete</span>
+                  <span className="material-symbols-outlined text-[18px]">description</span>
+                  <span>Notes & Options</span>
+                  <span className="material-symbols-outlined text-[16px]">more_vert</span>
                 </button>
               </div>
               
-              {/* Right group: Action Buttons (scaled down) + Status Countdown Pill */}
+              {/* Right group: Countdown Pill or Status Pill */}
               <div className="flex items-center gap-1.5 ml-auto">
-                {isThreadItem && (
-                  <div className="flex items-center gap-1.5">
-                    {isPast ? (
-                      <button 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onRebook(appointment);
-                        }}
-                        className="flex items-center gap-1 px-2 py-1 bg-[#006b5f] text-white rounded-md text-[9px] font-bold tracking-wider uppercase transition-all whitespace-nowrap"
-                      >
-                        <span className="material-symbols-outlined text-[11px]">add</span>
-                        REBOOK
-                      </button>
-                    ) : appointment.status === 'PENDING' ? (
-                      <button 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onFollowUp(appointment);
-                        }}
-                        className="flex items-center gap-1 px-2 py-1 bg-[#a93349] text-white rounded-md text-[9px] font-bold tracking-wider uppercase transition-all whitespace-nowrap"
-                      >
-                        <span className="material-symbols-outlined text-[11px]">send</span>
-                        FOLLOW UP
-                      </button>
-                    ) : appointment.status === 'CONFIRMED' ? (
-                      <div className="flex gap-1">
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onReminder(appointment);
-                          }}
-                          className="flex items-center gap-1 px-2 py-1 bg-[#006b5f] text-white rounded-md text-[9px] font-bold tracking-wider uppercase transition-all whitespace-nowrap"
-                        >
-                          <span className="material-symbols-outlined text-[11px]">notifications_active</span>
-                          REMIND
-                        </button>
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onReschedule(appointment);
-                          }}
-                          className="px-2 py-1 bg-slate-100 text-slate-700 border border-slate-200 rounded-md text-[9px] font-bold transition-all whitespace-nowrap"
-                        >
-                          Reschedule
-                        </button>
-                      </div>
-                    ) : (
-                      <button 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onReschedule(appointment);
-                        }}
-                        className="flex items-center gap-1 px-2 py-1 bg-[#006b5f] text-white rounded-md text-[9px] font-bold tracking-wider uppercase transition-all whitespace-nowrap"
-                      >
-                        <span className="material-symbols-outlined text-[11px]">calendar_today</span>
-                        Reschedule
-                      </button>
-                    )}
-                  </div>
-                )}
-
                 {isPast ? (
                   <div 
-                    className={`${isThreadItem ? 'px-2 py-0.5 text-[9px]' : 'ml-6 mr-0 px-2.5 py-1 text-[10px]'} txt-label-caps text-[#5F6368] flex items-center gap-1 bg-[#F1F3F4] rounded-full border border-slate-200/50 shadow-sm whitespace-nowrap flex-shrink-0`} 
+                    className="ml-6 mr-0 px-2.5 py-1 text-[10px] txt-label-caps text-[#5F6368] flex items-center gap-1 bg-[#F1F3F4] rounded-full border border-slate-200/50 shadow-sm whitespace-nowrap flex-shrink-0" 
                   >
                     <span className="material-symbols-outlined text-[12px] text-[#5F6368]">done</span>
-                    {appointment.status === 'CONFIRMED' ? 'Completed' : (isThreadItem ? 'Past' : 'Past Event')}
+                    {appointment.status === 'CONFIRMED' ? 'Completed' : 'Past Event'}
                   </div>
                 ) : (
                   <>
                     {appointment.status === 'PENDING' && (
                       <div 
-                        className={`${isThreadItem ? 'px-2 py-0.5 text-[9px]' : 'ml-6 mr-0 px-2.5 py-1 text-[10px]'} txt-label-caps text-[#9a3412] flex items-center gap-1 bg-[#ffedd5] rounded-full border border-[#9a3412]/10 shadow-sm animate-pulse whitespace-nowrap flex-shrink-0`} 
+                        className="ml-6 mr-0 px-2.5 py-1 text-[10px] txt-label-caps text-[#9a3412] flex items-center gap-1 bg-[#ffedd5] rounded-full border border-[#9a3412]/10 shadow-sm animate-pulse whitespace-nowrap flex-shrink-0" 
                       >
                         <span className="material-symbols-outlined text-[12px]">schedule</span>
-                        {isThreadItem ? 'Pend: ' : 'Pending: '}{formatElapsedTime(appointment.sentAt)}
+                        Pending: {formatElapsedTime(appointment.sentAt)}
                       </div>
                     )}
 
                     {appointment.status === 'SENT' && (
                       <div 
-                        className={`${isThreadItem ? 'px-2 py-0.5 text-[9px]' : 'ml-6 mr-0 px-2.5 py-1 text-[10px]'} txt-label-caps text-[#3c4a46] flex items-center gap-1 bg-[#eaedff] rounded-full border border-[#eaedff]/20 shadow-sm whitespace-nowrap flex-shrink-0`} 
+                        className="ml-6 mr-0 px-2.5 py-1 text-[10px] txt-label-caps text-[#3c4a46] flex items-center gap-1 bg-[#eaedff] rounded-full border border-[#eaedff]/20 shadow-sm whitespace-nowrap flex-shrink-0" 
                       >
                         <span className="material-symbols-outlined text-[12px]">hourglass_empty</span>
-                        {isThreadItem ? 'Wait: ' : 'Waiting: '}{formatElapsedTime(appointment.sentAt)}
+                        Waiting: {formatElapsedTime(appointment.sentAt)}
                       </div>
                     )}
 
                     {appointment.status === 'CONFIRMED' && (
                       <div 
-                        className={`${isThreadItem ? 'px-2 py-0.5 text-[9px]' : 'ml-6 mr-0 px-2.5 py-1 text-[10px]'} txt-label-caps text-[#065f46] flex items-center gap-1 bg-[#d1fae5] rounded-full border border-[#065f46]/10 shadow-sm whitespace-nowrap flex-shrink-0`} 
+                        className="ml-6 mr-0 px-2.5 py-1 text-[10px] txt-label-caps text-[#065f46] flex items-center gap-1 bg-[#d1fae5] rounded-full border border-[#065f46]/10 shadow-sm whitespace-nowrap flex-shrink-0" 
                       >
                         <span className="material-symbols-outlined text-[12px]">alarm</span>
-                        {isThreadItem ? 'In: ' : 'Meeting in: '}{formatCountdown(appointment.date, appointment.time)}
+                        Meeting in: {formatCountdown(appointment.date, appointment.time)}
                       </div>
                     )}
                   </>
@@ -967,6 +969,7 @@ const HistoryCard: React.FC<HistoryCardProps> = ({
       </div>
       {deleteConfirmDialog}
       {archiveConfirmDialog}
+      {contextMenuModal}
     </div>
   );
 };

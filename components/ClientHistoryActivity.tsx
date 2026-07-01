@@ -80,7 +80,7 @@ const ClientHistoryActivity: React.FC<ClientHistoryActivityProps> = ({
           </button>
           <div className="flex-1">
             <h1 className="text-[16px] font-extrabold text-[#131b2e] font-display">
-              Archived History
+              Client Timeline
             </h1>
           </div>
         </header>
@@ -102,7 +102,7 @@ const ClientHistoryActivity: React.FC<ClientHistoryActivityProps> = ({
                 {contact.name}
               </h2>
               <p className="text-[12px] text-[#6b7a76] mt-0.5 font-normal font-sans">
-                Archived appointments list
+                Appointment lifecycle and history
               </p>
             </div>
           </div>
