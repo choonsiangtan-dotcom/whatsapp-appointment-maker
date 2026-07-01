@@ -100,7 +100,7 @@ const App: React.FC = () => {
     const container = document.getElementById('main-scroll-container');
     if (container) {
       container.scrollTop = 0;
-      if (currentStep === 3 && currentPage === 'schedule') {
+      if (currentPage === 'schedule') {
         container.style.overflowY = 'hidden';
         container.classList.add('flex', 'flex-col');
       } else {
@@ -737,122 +737,126 @@ const App: React.FC = () => {
             })}
           </div>
 
-          {/* 3-Step Slider Container */}
-          <div className="flex-1 w-full relative min-h-0 overflow-hidden flex flex-col">
+          <div className="flex-1 w-full relative min-h-0 overflow-hidden">
             <div 
-              className="flex w-[300%] h-full transition-transform duration-300 ease-in-out"
-              style={{ transform: `translateX(-${(currentStep - 1) * 33.333}%)` }}
+              className="absolute inset-0 flex w-[300%] h-full transition-transform duration-300 ease-in-out"
+              style={{ transform: `translateX(calc(-${currentStep - 1} * 100% / 3))` }}
             >
               {/* STEP 1: CONTACT SELECTION PAGE */}
-              <div className="w-1/3 flex-shrink-0 px-0 space-y-4">
-                <section className="space-y-3">
-                  <div className="flex items-center justify-between px-1">
-                    <h2 className="label-caps tracking-wider">Select Contact</h2>
-                    <span onClick={handleSeeAll} className="text-[#006b5f] text-[12px] font-bold cursor-pointer hover:underline">
-                      View All
-                    </span>
-                  </div>
-
-                  {/* Search and Action Row */}
-                  <div className="flex gap-2">
-                    <div className="relative flex-1">
-                      <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">
-                        search
+              <div className="w-1/3 flex-shrink-0 px-0 h-full flex flex-col justify-between">
+                <div 
+                  className="flex-1 flex flex-col min-h-0 overflow-y-auto no-scrollbar"
+                  style={{ paddingBottom: 'calc(76px + env(safe-area-inset-bottom))' }}
+                >
+                  <section className="space-y-3 pb-4">
+                    <div className="flex items-center justify-between px-1">
+                      <h2 className="label-caps tracking-wider">Select Contact</h2>
+                      <span onClick={handleSeeAll} className="text-[#006b5f] text-[12px] font-bold cursor-pointer hover:underline">
+                        View All
                       </span>
-                      <input
-                        type="text"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Search name or phone..."
-                        className="w-full h-10 pl-9 pr-3 bg-slate-50 dark:bg-slate-900/30 border border-slate-200/60 dark:border-slate-800/60 rounded-[10px] text-sm text-[#131b2e] dark:text-slate-100 focus:outline-none focus:border-[#006b5f]/50"
-                      />
                     </div>
-                    <button
-                      onClick={() => setIsManualAddOpen(true)}
-                      className="h-10 w-10 flex items-center justify-center bg-slate-50 dark:bg-slate-900/30 border border-slate-200/60 dark:border-slate-800/60 rounded-[10px] text-[#006b5f] hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                      title="Add Contact Manually"
-                    >
-                      <span className="material-symbols-outlined text-[20px]">person_add</span>
-                    </button>
-                    <button
-                      onClick={handleSeeAll}
-                      className="h-10 w-10 flex items-center justify-center bg-slate-50 dark:bg-slate-900/30 border border-slate-200/60 dark:border-slate-800/60 rounded-[10px] text-[#006b5f] hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                      title="Import Contacts"
-                    >
-                      <span className="material-symbols-outlined text-[20px]">import_contacts</span>
-                    </button>
-                  </div>
 
-                  {/* High Density Contact List */}
-                  <div className="space-y-2 max-h-[360px] overflow-y-auto pr-1">
-                    {(() => {
-                      const filteredRecent = contacts.filter(c => 
-                        c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                        c.phoneNumbers.some(p => p.includes(searchQuery))
-                      );
-                      
-                      if (filteredRecent.length > 0) {
-                        return filteredRecent.map((c) => {
-                          const isSelected = c.id === formData.contact.id;
-                          return (
-                            <div
-                              key={`${c.id}-${c.phoneNumbers[0] || ''}`}
-                              onClick={() => {
-                                handleSelectContact(c, c.phoneNumbers[0] || '');
-                              }}
-                              className={`flex items-center justify-between p-3 rounded-xl border transition-all cursor-pointer ${
-                                isSelected 
-                                  ? 'bg-teal-50/50 border-[#006b5f]/30 dark:bg-teal-950/20 dark:border-[#006b5f]/30' 
-                                  : 'bg-white border-slate-100 hover:border-slate-200 dark:bg-slate-900 dark:border-slate-800/50 hover:dark:border-slate-700'
-                              }`}
-                            >
-                              <div className="flex items-center gap-3">
-                                <img
-                                  src={c.avatar}
-                                  alt={c.name}
-                                  className="w-10 h-10 rounded-full object-cover bg-slate-100"
-                                  onError={(e) => {
-                                    (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(c.name)}&background=random`;
-                                  }}
-                                />
-                                <div>
-                                  <h4 className="font-semibold text-sm text-[#131b2e] dark:text-slate-100">{c.name}</h4>
-                                  <p className="text-[11px] text-slate-500 font-medium">{c.phoneNumbers[0] || 'No number'}</p>
+                    {/* Search and Action Row */}
+                    <div className="flex gap-2">
+                      <div className="relative flex-1">
+                        <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">
+                          search
+                        </span>
+                        <input
+                          type="text"
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          placeholder="Search name or phone..."
+                          className="w-full h-10 pl-9 pr-3 bg-slate-50 dark:bg-slate-900/30 border border-slate-200/60 dark:border-slate-800/60 rounded-[10px] text-sm text-[#131b2e] dark:text-slate-100 focus:outline-none focus:border-[#006b5f]/50"
+                        />
+                      </div>
+                      <button
+                        onClick={() => setIsManualAddOpen(true)}
+                        className="h-10 w-10 flex items-center justify-center bg-slate-50 dark:bg-slate-900/30 border border-slate-200/60 dark:border-slate-800/60 rounded-[10px] text-[#006b5f] hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                        title="Add Contact Manually"
+                      >
+                        <span className="material-symbols-outlined text-[20px]">person_add</span>
+                      </button>
+                      <button
+                        onClick={handleSeeAll}
+                        className="h-10 w-10 flex items-center justify-center bg-slate-50 dark:bg-slate-900/30 border border-slate-200/60 dark:border-slate-800/60 rounded-[10px] text-[#006b5f] hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                        title="Import Contacts"
+                      >
+                        <span className="material-symbols-outlined text-[20px]">import_contacts</span>
+                      </button>
+                    </div>
+
+                    {/* High Density Contact List */}
+                    <div className="space-y-2 max-h-[360px] overflow-y-auto pr-1">
+                      {(() => {
+                        const filteredRecent = contacts.filter(c => 
+                          c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          c.phoneNumbers.some(p => p.includes(searchQuery))
+                        );
+                        
+                        if (filteredRecent.length > 0) {
+                          return filteredRecent.map((c) => {
+                            const isSelected = c.id === formData.contact.id;
+                            return (
+                              <div
+                                key={`${c.id}-${c.phoneNumbers[0] || ''}`}
+                                onClick={() => {
+                                  handleSelectContact(c, c.phoneNumbers[0] || '');
+                                }}
+                                className={`flex items-center justify-between p-3 rounded-xl border transition-all cursor-pointer ${
+                                  isSelected 
+                                    ? 'bg-teal-50/50 border-[#006b5f]/30 dark:bg-teal-950/20 dark:border-[#006b5f]/30' 
+                                    : 'bg-white border-slate-100 hover:border-slate-200 dark:bg-slate-900 dark:border-slate-800/50 hover:dark:border-slate-700'
+                                }`}
+                              >
+                                <div className="flex items-center gap-3">
+                                  <img
+                                    src={c.avatar}
+                                    alt={c.name}
+                                    className="w-10 h-10 rounded-full object-cover bg-slate-100"
+                                    onError={(e) => {
+                                      (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(c.name)}&background=random`;
+                                    }}
+                                  />
+                                  <div>
+                                    <h4 className="font-semibold text-sm text-[#131b2e] dark:text-slate-100">{c.name}</h4>
+                                    <p className="text-[11px] text-slate-500 font-medium">{c.phoneNumbers[0] || 'No number'}</p>
+                                  </div>
                                 </div>
+                                <span className="material-symbols-outlined text-slate-400 text-[18px]">
+                                  chevron_right
+                                </span>
                               </div>
-                              <span className="material-symbols-outlined text-slate-400 text-[18px]">
-                                chevron_right
+                            );
+                          });
+                        } else {
+                          return (
+                            <div className="text-center py-8 bg-slate-50/50 dark:bg-slate-900/10 rounded-xl border border-dashed border-slate-200 dark:border-slate-800">
+                              <span className="material-symbols-outlined text-slate-400 text-[32px] block mb-1">
+                                search_off
                               </span>
+                              <p className="text-slate-500 text-sm mb-3">No matching contacts in recents</p>
+                              <div className="flex justify-center gap-2">
+                                <button
+                                  onClick={handleSeeAll}
+                                  className="px-3 py-1.5 text-xs font-bold bg-[#006b5f] text-white rounded-lg hover:bg-[#005c52] transition-colors"
+                                >
+                                  View Device Contacts
+                                </button>
+                                <button
+                                  onClick={() => setIsManualAddOpen(true)}
+                                  className="px-3 py-1.5 text-xs font-bold border border-slate-200 text-slate-600 dark:border-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                                >
+                                  Add Manually
+                                </button>
+                              </div>
                             </div>
                           );
-                        });
-                      } else {
-                        return (
-                          <div className="text-center py-8 bg-slate-50/50 dark:bg-slate-900/10 rounded-xl border border-dashed border-slate-200 dark:border-slate-800">
-                            <span className="material-symbols-outlined text-slate-400 text-[32px] block mb-1">
-                              search_off
-                            </span>
-                            <p className="text-slate-500 text-sm mb-3">No matching contacts in recents</p>
-                            <div className="flex justify-center gap-2">
-                              <button
-                                onClick={handleSeeAll}
-                                className="px-3 py-1.5 text-xs font-bold bg-[#006b5f] text-white rounded-lg hover:bg-[#005c52] transition-colors"
-                              >
-                                View Device Contacts
-                              </button>
-                              <button
-                                onClick={() => setIsManualAddOpen(true)}
-                                className="px-3 py-1.5 text-xs font-bold border border-slate-200 text-slate-600 dark:border-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                              >
-                                Add Manually
-                              </button>
-                            </div>
-                          </div>
-                        );
-                      }
-                    })()}
-                  </div>
-                </section>
+                        }
+                      })()}
+                    </div>
+                  </section>
+                </div>
               </div>
 
               {/* STEP 2: SCHEDULE CONFIGURATION PAGE */}
@@ -1073,7 +1077,10 @@ const App: React.FC = () => {
                 </div>
 
                 {/* Persistent Navigation Buttons */}
-                <div className="flex flex-col gap-2 pb-[76px] px-0 mt-auto flex-shrink-0">
+                <div 
+                  className="flex flex-col gap-2 px-0 mt-auto flex-shrink-0"
+                  style={{ paddingBottom: 'calc(76px + env(safe-area-inset-bottom))' }}
+                >
                   <button
                     type="button"
                     onClick={() => setCurrentStep(3)}
@@ -1305,7 +1312,10 @@ const App: React.FC = () => {
                 </div>
 
                 {/* 2. BUTTON ROW BLOCK */}
-                <div className="flex flex-col gap-2 pb-[76px] px-0 mt-auto flex-shrink-0">
+                <div 
+                  className="flex flex-col gap-2 px-0 mt-auto flex-shrink-0"
+                  style={{ paddingBottom: 'calc(76px + env(safe-area-inset-bottom))' }}
+                >
                   <button
                     onClick={handleSend}
                     className="w-full h-12 bg-[#006b5f] hover:bg-[#005c52] text-white rounded-[8px] font-bold text-[15px] flex items-center justify-center gap-2 active:scale-[0.98] transition-all font-display shadow-md shadow-[#006b5f]/15 flex-shrink-0"
