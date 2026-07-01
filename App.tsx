@@ -4,6 +4,7 @@ import ContactSelector from './components/ContactSelector';
 import InputField from './components/InputField';
 import { AppointmentData } from './types';
 import { Capacitor } from '@capacitor/core';
+import { App as CapApp } from '@capacitor/app';
 import { Contacts as CapacitorContacts } from '@capacitor-community/contacts';
 import ContactPickerModal from './components/ContactPickerModal';
 import { useAppLogic } from './hooks/useAppLogic';
@@ -170,16 +171,74 @@ const App: React.FC = () => {
     }
   };
 
+  const [todayDate, setTodayDate] = React.useState(() => new Date());
+
+  React.useEffect(() => {
+    // Update todayDate on mount
+    setTodayDate(new Date());
+
+    // Update todayDate when app resumes (onResume)
+    const listener = CapApp.addListener('appStateChange', ({ isActive }) => {
+      if (isActive) {
+        setTodayDate(new Date());
+      }
+    });
+
+    return () => {
+      listener.remove();
+    };
+  }, []);
+
+  // Snap scroll carousels to highlight selected date/time slots
+  React.useEffect(() => {
+    if (currentPage === 'schedule' && currentStep === 2 && formData.date) {
+      const timer = setTimeout(() => {
+        const selectedEl = document.getElementById(`date-slot-${formData.date}`);
+        if (selectedEl && dateDrag.ref.current) {
+          const container = dateDrag.ref.current;
+          const containerWidth = container.offsetWidth;
+          const elementLeft = selectedEl.offsetLeft;
+          const elementWidth = selectedEl.offsetWidth;
+          
+          container.scrollTo({
+            left: elementLeft - (containerWidth / 2) + (elementWidth / 2),
+            behavior: 'smooth'
+          });
+        }
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+  }, [currentPage, currentStep, formData.date, todayDate]);
+
+  React.useEffect(() => {
+    if (currentPage === 'schedule' && currentStep === 2 && formData.time) {
+      const timer = setTimeout(() => {
+        const selectedEl = document.getElementById(`time-slot-${formData.time}`);
+        if (selectedEl && timeDrag.ref.current) {
+          const container = timeDrag.ref.current;
+          const containerWidth = container.offsetWidth;
+          const elementLeft = selectedEl.offsetLeft;
+          const elementWidth = selectedEl.offsetWidth;
+          
+          container.scrollTo({
+            left: elementLeft - (containerWidth / 2) + (elementWidth / 2),
+            behavior: 'smooth'
+          });
+        }
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+  }, [currentPage, currentStep, formData.time, timePeriod]);
+
   const dateOptions = React.useMemo(() => {
     const days = [];
-    const today = new Date();
     for (let i = 0; i < 14; i++) {
-      const d = new Date(today);
-      d.setDate(today.getDate() + i);
+      const d = new Date(todayDate);
+      d.setDate(todayDate.getDate() + i);
       days.push(d);
     }
     return days;
-  }, []);
+  }, [todayDate]);
 
   const formattedDates = React.useMemo(() => {
     return dateOptions.map(date => {
@@ -939,6 +998,7 @@ const App: React.FC = () => {
                             return (
                               <div
                                 key={item.value}
+                                id={`date-slot-${item.value}`}
                                 onClick={(e) => dateDrag.handleItemClick(e, () => handleFieldChange('date', item.value))}
                                 style={{ width: `${itemWidth}px`, flexShrink: 0 }}
                                 className={`snap-start rounded-2xl flex flex-col justify-center items-center py-3 px-2 border transition-all duration-200 cursor-pointer ${
@@ -1041,6 +1101,7 @@ const App: React.FC = () => {
                           return (
                             <div
                               key={item.value}
+                              id={`time-slot-${item.value}`}
                               onClick={(e) => timeDrag.handleItemClick(e, () => handleFieldChange('time', item.value))}
                               onMouseDown={(e) => startLongPress(item, e)}
                               onMouseUp={cancelLongPress}

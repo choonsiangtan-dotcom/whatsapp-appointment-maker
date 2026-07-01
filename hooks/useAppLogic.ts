@@ -88,8 +88,26 @@ export function useAppLogic() {
 
     const selectedContact = contacts.find(c => c.id === savedContactId) || defaultContact;
     const now = new Date();
-    const dateStr = now.toISOString().split('T')[0];
-    const timeStr = now.toTimeString().split(' ')[0].slice(0, 5);
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const dateStr = `${year}-${month}-${day}`;
+
+    const slots = [
+      '08:00', '09:00', '10:00', '11:00',
+      '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'
+    ];
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+    let closestSlot = '08:00';
+    for (const slot of slots) {
+      const [slotH, slotM] = slot.split(':').map(Number);
+      if (slotH > currentHour || (slotH === currentHour && slotM >= currentMinute)) {
+        closestSlot = slot;
+        break;
+      }
+    }
+    const timeStr = closestSlot;
 
     const defaultReminderEnabled = localStorage.getItem('defaultAutomaticActivation') !== 'false';
     const defaultFollowUpTimer = localStorage.getItem('defaultFollowUpTimer') || '20s';
@@ -321,13 +339,48 @@ export function useAppLogic() {
       }
     };
   
+    const syncSystemDateTime = () => {
+      const savedRescheduleId = localStorage.getItem('reschedulingId');
+      if (!savedRescheduleId) {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const dateStr = `${year}-${month}-${day}`;
+
+        const slots = [
+          '08:00', '09:00', '10:00', '11:00',
+          '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'
+        ];
+        const currentHour = now.getHours();
+        const currentMinute = now.getMinutes();
+        
+        let closestSlot = '08:00';
+        for (const slot of slots) {
+          const [slotH, slotM] = slot.split(':').map(Number);
+          if (slotH > currentHour || (slotH === currentHour && slotM >= currentMinute)) {
+            closestSlot = slot;
+            break;
+          }
+        }
+
+        setFormData(prev => ({
+          ...prev,
+          date: dateStr,
+          time: closestSlot
+        }));
+      }
+    };
+
     // Start interval on mount
     startInterval();
+    syncSystemDateTime();
   
     // Listen for app state changes
     const listener = App.addListener('appStateChange', ({ isActive }) => {
       if (isActive) {
         startInterval();
+        syncSystemDateTime();
       } else {
         stopInterval();
       }

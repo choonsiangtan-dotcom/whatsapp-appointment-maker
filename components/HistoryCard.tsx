@@ -515,14 +515,14 @@ const HistoryCard: React.FC<HistoryCardProps> = ({
                       e.stopPropagation();
                       onRebook(appointment);
                     }}
-                    className={`h-10 bg-[#006b5f] text-white rounded-full font-bold text-[13px] flex items-center justify-center gap-1.5 hover:bg-[#005c52] active:scale-[0.98] transition-all font-sans min-w-0 px-3 ${
+                    className={`h-9 bg-[#006b5f] text-white rounded-full font-bold text-[12px] flex items-center justify-center gap-1 hover:bg-[#005c52] active:scale-[0.98] transition-all font-sans min-w-0 px-2.5 ${
                       appointment.status === 'CANCELLED' || appointment.status === 'COMPLETED' || isPast
                         ? 'w-full flex-1'
-                        : 'flex-1'
+                        : 'flex-1 w-1/2'
                     }`}
                   >
-                    <span className="material-symbols-outlined text-[16px] font-semibold">add</span>
-                    <span className="truncate">REBOOK</span>
+                    <span className="material-symbols-outlined text-[15px] font-semibold">add</span>
+                    <span className="whitespace-nowrap">REBOOK</span>
                   </button>
 
                   {/* Right Column Button: State-Dependent CTA */}
@@ -535,10 +535,10 @@ const HistoryCard: React.FC<HistoryCardProps> = ({
                             e.stopPropagation();
                             setShowCancelConfirm(true);
                           }}
-                          className="flex-1 h-10 bg-slate-100 dark:bg-slate-800/80 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-full font-bold text-[13px] flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all font-sans min-w-0 px-3"
+                          className="flex-1 w-1/2 h-9 bg-slate-100 dark:bg-slate-800/80 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-full font-bold text-[12px] flex items-center justify-center gap-1 active:scale-[0.98] transition-all font-sans min-w-0 px-2.5"
                         >
-                          <span className="material-symbols-outlined text-[16px] font-bold">close</span>
-                          <span className="truncate">CANCEL</span>
+                          <span className="material-symbols-outlined text-[15px] font-bold">close</span>
+                          <span className="whitespace-nowrap">CANCEL</span>
                         </button>
                       );
                     }
@@ -550,10 +550,10 @@ const HistoryCard: React.FC<HistoryCardProps> = ({
                             e.stopPropagation();
                             onUpdateStatus(appointment.id, 'CONFIRMED', true);
                           }}
-                          className="flex-1 h-10 bg-slate-100 dark:bg-slate-800/80 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-full font-bold text-[13px] flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all font-sans min-w-0 px-3"
+                          className="flex-1 w-1/2 h-9 bg-slate-100 dark:bg-slate-800/80 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-full font-bold text-[12px] flex items-center justify-center gap-1 active:scale-[0.98] transition-all font-sans min-w-0 px-2.5"
                         >
-                          <span className="material-symbols-outlined text-[16px] font-bold">check</span>
-                          <span className="truncate">COMPLETE</span>
+                          <span className="material-symbols-outlined text-[15px] font-bold">check</span>
+                          <span className="whitespace-nowrap">COMPLETE</span>
                         </button>
                       );
                     }
@@ -666,14 +666,14 @@ const HistoryCard: React.FC<HistoryCardProps> = ({
                       e.stopPropagation();
                       onRebook(appointment);
                     }}
-                    className={`h-10 bg-[#006b5f] text-white rounded-full font-bold text-[13px] flex items-center justify-center gap-1.5 hover:bg-[#005c52] active:scale-[0.98] transition-all font-sans min-w-0 px-3 ${
+                    className={`h-9 bg-[#006b5f] text-white rounded-full font-bold text-[11px] flex items-center justify-center gap-1 hover:bg-[#005c52] active:scale-[0.98] transition-all font-sans min-w-0 px-2 ${
                       appointment.status === 'CANCELLED' || appointment.status === 'COMPLETED' || isPast
                         ? 'w-full flex-1'
-                        : 'flex-1'
+                        : 'flex-1 w-1/2'
                     }`}
                   >
-                    <span className="material-symbols-outlined text-[16px] font-semibold">add</span>
-                    <span className="truncate">REBOOK</span>
+                    <span className="material-symbols-outlined text-[14px] font-semibold">add</span>
+                    <span className="whitespace-nowrap">REBOOK</span>
                   </button>
 
                   {/* Right Column Button: State-Dependent CTA */}
@@ -686,10 +686,10 @@ const HistoryCard: React.FC<HistoryCardProps> = ({
                             e.stopPropagation();
                             setShowCancelConfirm(true);
                           }}
-                          className="flex-1 h-10 bg-slate-100 dark:bg-slate-800/80 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-full font-bold text-[13px] flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all font-sans min-w-0 px-3"
+                          className="flex-1 w-1/2 h-9 bg-slate-100 dark:bg-slate-800/80 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-full font-bold text-[11px] flex items-center justify-center gap-1 active:scale-[0.98] transition-all font-sans min-w-0 px-2"
                         >
-                          <span className="material-symbols-outlined text-[16px] font-bold">close</span>
-                          <span className="truncate">CANCEL</span>
+                          <span className="material-symbols-outlined text-[14px] font-bold">close</span>
+                          <span className="whitespace-nowrap">CANCEL</span>
                         </button>
                       );
                     }
@@ -701,10 +701,10 @@ const HistoryCard: React.FC<HistoryCardProps> = ({
                             e.stopPropagation();
                             onUpdateStatus(appointment.id, 'CONFIRMED', true);
                           }}
-                          className="flex-1 h-10 bg-slate-100 dark:bg-slate-800/80 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-full font-bold text-[13px] flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all font-sans min-w-0 px-3"
+                          className="flex-1 w-1/2 h-9 bg-slate-100 dark:bg-slate-800/80 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-full font-bold text-[11px] flex items-center justify-center gap-1 active:scale-[0.98] transition-all font-sans min-w-0 px-2"
                         >
-                          <span className="material-symbols-outlined text-[16px] font-bold">check</span>
-                          <span className="truncate">COMPLETE</span>
+                          <span className="material-symbols-outlined text-[14px] font-bold">check</span>
+                          <span className="whitespace-nowrap">COMPLETE</span>
                         </button>
                       );
                     }
