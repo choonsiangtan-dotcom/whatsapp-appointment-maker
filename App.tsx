@@ -56,6 +56,7 @@ const App: React.FC = () => {
     history,
     updateAppointmentStatus,
     deleteAppointment,
+    archiveAppointment,
     deleteAppointmentsForClient,
     unarchiveAppointment,
     selectedFollowUp,
@@ -658,6 +659,7 @@ const App: React.FC = () => {
               onClose={() => setSelectedClientHistoryContact(null)}
               onUpdateStatus={updateAppointmentStatus}
               onDelete={deleteAppointment}
+              onArchive={archiveAppointment}
               onDeleteAll={() => deleteAppointmentsForClient(selectedClientHistoryContact.id)}
               onUnarchive={unarchiveAppointment}
               onFollowUp={handleFollowUp}
@@ -1344,6 +1346,7 @@ const App: React.FC = () => {
           history={history} 
           onUpdateStatus={updateAppointmentStatus} 
           onDelete={deleteAppointment} 
+          onArchive={archiveAppointment}
           onFollowUp={handleFollowUp}
           onReschedule={handleRescheduleWrapped}
           onReminder={handleReminder}

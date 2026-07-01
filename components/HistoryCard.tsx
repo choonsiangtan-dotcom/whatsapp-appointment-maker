@@ -5,6 +5,7 @@ interface HistoryCardProps {
   appointment: HistoricalAppointment;
   onUpdateStatus: (id: string, status: AppointmentStatus, forcePast?: boolean) => void;
   onDelete: (id: string) => void;
+  onArchive?: (id: string) => void;
   onUnarchive?: (id: string) => void;
   onFollowUp: (appointment: HistoricalAppointment) => void;
   onReschedule: (appointment: HistoricalAppointment) => void;
@@ -19,6 +20,7 @@ const HistoryCard: React.FC<HistoryCardProps> = ({
   appointment, 
   onUpdateStatus, 
   onDelete, 
+  onArchive,
   onUnarchive,
   onFollowUp, 
   onReschedule, 
@@ -32,6 +34,7 @@ const HistoryCard: React.FC<HistoryCardProps> = ({
   const [now, setNow] = useState(Date.now());
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showArchiveConfirm, setShowArchiveConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
@@ -180,16 +183,14 @@ const HistoryCard: React.FC<HistoryCardProps> = ({
     </div>
   );
 
-  const deleteDialog = showDeleteConfirm && (
+  const deleteConfirmDialog = showDeleteConfirm && (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[#131b2e]/60 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="bg-white rounded-[2rem] w-full max-w-sm p-6 shadow-2xl border border-slate-100 animate-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
         <h3 className="text-[17px] font-extrabold text-[#131b2e] mb-2 font-display">
-          {isCurrentlyArchived ? 'Delete Record?' : 'Archive Record?'}
+          Delete Record?
         </h3>
         <p className="text-[13px] text-slate-500 leading-relaxed font-sans mb-6 font-normal">
-          {isCurrentlyArchived 
-            ? 'Are you sure you want to permanently delete this specific appointment record? This action cannot be undone.'
-            : 'Are you sure you want to archive this specific appointment record? It will be moved to the client\'s archives.'}
+          Are you sure you want to permanently delete this appointment record? This action cannot be undone and will erase the history.
         </p>
         <div className="flex gap-3">
           <button
@@ -210,13 +211,45 @@ const HistoryCard: React.FC<HistoryCardProps> = ({
                 onDelete(appointment.id);
               }, 300);
             }}
-            className={`flex-1 py-3 rounded-full font-bold active:scale-[0.98] transition-all text-[13px] font-display ${
-              isCurrentlyArchived 
-                ? 'bg-rose-50 text-rose-600 hover:bg-rose-100' 
-                : 'bg-teal-50 text-teal-600 hover:bg-teal-100'
-            }`}
+            className="flex-1 py-3 rounded-full font-bold bg-[#f43f5e] hover:bg-rose-600 text-white active:scale-[0.98] transition-all text-[13px] font-display shadow-md shadow-[#f43f5e]/15"
           >
-            {isCurrentlyArchived ? 'Delete' : 'Archive'}
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  const archiveConfirmDialog = showArchiveConfirm && (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[#131b2e]/60 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-white rounded-[2rem] w-full max-w-sm p-6 shadow-2xl border border-slate-100 animate-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
+        <h3 className="text-[17px] font-extrabold text-[#131b2e] mb-2 font-display">
+          Archive Record?
+        </h3>
+        <p className="text-[13px] text-slate-500 leading-relaxed font-sans mb-6 font-normal">
+          Are you sure you want to archive this specific appointment record? It will be moved to the client's archives.
+        </p>
+        <div className="flex gap-3">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowArchiveConfirm(false);
+            }}
+            className="flex-1 py-3 rounded-full font-bold text-slate-500 hover:bg-slate-50 active:scale-98 transition-all text-[13px] font-display border border-slate-200"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowArchiveConfirm(false);
+              if (onArchive) {
+                onArchive(appointment.id);
+              }
+            }}
+            className="flex-1 py-3 rounded-full font-bold bg-teal-50 text-teal-600 hover:bg-teal-100 active:scale-[0.98] transition-all text-[13px] font-display"
+          >
+            Archive
           </button>
         </div>
       </div>
@@ -357,7 +390,34 @@ const HistoryCard: React.FC<HistoryCardProps> = ({
                   })()}
                 </div>
 
-                {/* Individual Delete Button */}
+                {isCurrentlyArchived && onUnarchive ? (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onUnarchive(appointment.id);
+                    }}
+                    className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 flex items-center justify-center hover:bg-slate-200 transition-colors active:scale-95 flex-shrink-0"
+                    aria-label="Unarchive Record"
+                    title="Unarchive"
+                  >
+                    <span className="material-symbols-outlined text-[20px]">unarchive</span>
+                  </button>
+                ) : !isCurrentlyArchived && onArchive ? (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowArchiveConfirm(true);
+                    }}
+                    className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 flex items-center justify-center hover:bg-slate-200 transition-colors active:scale-95 flex-shrink-0"
+                    aria-label="Archive Record"
+                    title="Archive"
+                  >
+                    <span className="material-symbols-outlined text-[20px]">archive</span>
+                  </button>
+                ) : null}
+
                 <button
                   type="button"
                   onClick={(e) => {
@@ -374,7 +434,8 @@ const HistoryCard: React.FC<HistoryCardProps> = ({
           </div>
         </div>
 
-        {deleteDialog}
+        {deleteConfirmDialog}
+        {archiveConfirmDialog}
         {cancelDialog}
       </>
     );
@@ -506,9 +567,9 @@ const HistoryCard: React.FC<HistoryCardProps> = ({
                   })()}
                 </div>
 
-                {/* Individual Delete / Unarchive Action */}
+                {/* Individual Delete / Unarchive / Archive Action */}
                 <div className="flex gap-1.5 flex-shrink-0">
-                  {isCurrentlyArchived && onUnarchive && (
+                  {isCurrentlyArchived && onUnarchive ? (
                     <button
                       type="button"
                       onClick={(e) => {
@@ -521,7 +582,20 @@ const HistoryCard: React.FC<HistoryCardProps> = ({
                     >
                       <span className="material-symbols-outlined text-[20px]">unarchive</span>
                     </button>
-                  )}
+                  ) : !isCurrentlyArchived && onArchive ? (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowArchiveConfirm(true);
+                      }}
+                      className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 flex items-center justify-center hover:bg-slate-200 transition-colors active:scale-95"
+                      aria-label="Archive Record"
+                      title="Archive"
+                    >
+                      <span className="material-symbols-outlined text-[20px]">archive</span>
+                    </button>
+                  ) : null}
                   <button
                     type="button"
                     onClick={(e) => {
@@ -538,7 +612,8 @@ const HistoryCard: React.FC<HistoryCardProps> = ({
             </div>
           </div>
         </div>
-        {deleteDialog}
+        {deleteConfirmDialog}
+        {archiveConfirmDialog}
         {cancelDialog}
       </>
     );
@@ -745,6 +820,32 @@ const HistoryCard: React.FC<HistoryCardProps> = ({
                   <span className="material-symbols-outlined text-[18px]">{isPast ? 'description' : 'edit_note'}</span>
                   {!isThreadItem && (isPast ? 'Notes' : 'Edit')}
                 </button>
+
+                {isCurrentlyArchived && onUnarchive ? (
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onUnarchive(appointment.id);
+                    }}
+                    aria-label="Unarchive"
+                    title="Unarchive"
+                    className={`text-[#006b5f] hover:brightness-110 transition-colors flex items-center justify-center hover:bg-teal-50 rounded-xl ${isThreadItem ? 'w-8 h-8' : 'w-12 h-12'}`}
+                  >
+                    <span className="material-symbols-outlined text-[18px]">unarchive</span>
+                  </button>
+                ) : !isCurrentlyArchived && onArchive ? (
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowArchiveConfirm(true);
+                    }}
+                    aria-label="Archive"
+                    title="Archive"
+                    className={`text-[#006b5f] hover:brightness-110 transition-colors flex items-center justify-center hover:bg-teal-50 rounded-xl ${isThreadItem ? 'w-8 h-8' : 'w-12 h-12'}`}
+                  >
+                    <span className="material-symbols-outlined text-[18px]">archive</span>
+                  </button>
+                ) : null}
                 
                 <button 
                   onClick={(e) => {
@@ -864,6 +965,8 @@ const HistoryCard: React.FC<HistoryCardProps> = ({
         </div>
 
       </div>
+      {deleteConfirmDialog}
+      {archiveConfirmDialog}
     </div>
   );
 };

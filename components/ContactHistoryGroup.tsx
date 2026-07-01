@@ -6,6 +6,7 @@ interface ContactHistoryGroupProps {
   appointments: HistoricalAppointment[];
   onUpdateStatus: (id: string, status: AppointmentStatus, forcePast?: boolean) => void;
   onDelete: (id: string) => void;
+  onArchive?: (id: string) => void;
   onFollowUp: (appointment: HistoricalAppointment) => void;
   onReschedule: (appointment: HistoricalAppointment) => void;
   onReminder: (appointment: HistoricalAppointment) => void;
@@ -18,6 +19,7 @@ const ContactHistoryGroup: React.FC<ContactHistoryGroupProps> = ({
   appointments, 
   onUpdateStatus, 
   onDelete, 
+  onArchive,
   onFollowUp, 
   onReschedule,
   onReminder,
@@ -223,6 +225,7 @@ const ContactHistoryGroup: React.FC<ContactHistoryGroupProps> = ({
                 appointment={appt} 
                 onUpdateStatus={onUpdateStatus}
                 onDelete={onDelete}
+                onArchive={onArchive}
                 onFollowUp={onFollowUp}
                 onReschedule={onReschedule}
                 onReminder={onReminder}

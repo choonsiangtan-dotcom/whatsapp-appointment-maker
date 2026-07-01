@@ -8,6 +8,7 @@ interface ClientHistoryActivityProps {
   onClose: () => void;
   onUpdateStatus: (id: string, status: AppointmentStatus, forcePast?: boolean) => void;
   onDelete: (id: string) => void;
+  onArchive?: (id: string) => void;
   onDeleteAll: () => void;
   onUnarchive: (id: string) => void;
   onFollowUp: (appointment: HistoricalAppointment) => void;
@@ -23,6 +24,7 @@ const ClientHistoryActivity: React.FC<ClientHistoryActivityProps> = ({
   onClose,
   onUpdateStatus,
   onDelete,
+  onArchive,
   onDeleteAll,
   onUnarchive,
   onFollowUp,
@@ -126,6 +128,7 @@ const ClientHistoryActivity: React.FC<ClientHistoryActivityProps> = ({
                 appointment={appt}
                 onUpdateStatus={onUpdateStatus}
                 onDelete={onDelete}
+                onArchive={onArchive}
                 onUnarchive={onUnarchive}
                 onFollowUp={onFollowUp}
                 onReschedule={onReschedule}

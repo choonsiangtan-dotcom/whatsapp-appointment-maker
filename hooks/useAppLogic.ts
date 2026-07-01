@@ -883,32 +883,15 @@ export function useAppLogic() {
   };
 
   const deleteAppointment = (id: string) => {
-    const now = Date.now();
-    const apptToUpdate = history.find(appt => appt.id === id);
-    if (!apptToUpdate) return;
+    const nextHistory = history.filter(appt => appt.id !== id);
+    setHistory(nextHistory);
+    localStorage.setItem('appointmentHistory', JSON.stringify(nextHistory));
+  };
 
-    let isAlreadyArchived = apptToUpdate.isArchived === true;
-    if (!isAlreadyArchived && apptToUpdate.isArchived !== false) {
-      try {
-        const [year, month, day] = apptToUpdate.date.split('-').map(Number);
-        const [hours, minutes] = apptToUpdate.time.split(':').map(Number);
-        const apptTime = new Date(year, month - 1, day, hours, minutes).getTime();
-        const passed = apptTime < now;
-        const isArchivableStatus = apptToUpdate.status === 'CONFIRMED' || apptToUpdate.status === 'NO-SHOW';
-        if (passed && isArchivableStatus) {
-          isAlreadyArchived = true;
-        }
-      } catch (e) {}
-    }
-
-    let nextHistory;
-    if (isAlreadyArchived) {
-      nextHistory = history.filter(appt => appt.id !== id);
-    } else {
-      nextHistory = history.map(appt => 
-        appt.id === id ? { ...appt, isArchived: true, updatedAt: Date.now() } : appt
-      );
-    }
+  const archiveAppointment = (id: string) => {
+    const nextHistory = history.map(appt => 
+      appt.id === id ? { ...appt, isArchived: true, updatedAt: Date.now() } : appt
+    );
     setHistory(nextHistory);
     localStorage.setItem('appointmentHistory', JSON.stringify(nextHistory));
   };
@@ -1144,6 +1127,7 @@ export function useAppLogic() {
     history,
     updateAppointmentStatus,
     deleteAppointment,
+    archiveAppointment,
     deleteAppointmentsForClient,
     unarchiveAppointment,
     selectedFollowUp,

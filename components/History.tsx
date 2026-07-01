@@ -8,6 +8,7 @@ interface HistoryProps {
   history: HistoricalAppointment[];
   onUpdateStatus: (id: string, status: AppointmentStatus, forcePast?: boolean) => void;
   onDelete: (id: string) => void;
+  onArchive?: (id: string) => void;
   onFollowUp: (appointment: HistoricalAppointment) => void;
   onReschedule: (appointment: HistoricalAppointment) => void;
   onReminder: (appointment: HistoricalAppointment) => void;
@@ -20,6 +21,7 @@ const History: React.FC<HistoryProps> = ({
   history, 
   onUpdateStatus, 
   onDelete, 
+  onArchive,
   onFollowUp, 
   onReschedule, 
   onReminder, 
@@ -112,6 +114,7 @@ const History: React.FC<HistoryProps> = ({
               appointments={group} 
               onUpdateStatus={onUpdateStatus}
               onDelete={onDelete}
+              onArchive={onArchive}
               onFollowUp={onFollowUp}
               onReschedule={onReschedule}
               onReminder={onReminder}
