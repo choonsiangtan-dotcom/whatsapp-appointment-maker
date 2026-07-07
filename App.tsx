@@ -784,6 +784,8 @@ const App: React.FC = () => {
             return [...filteredToday, ...futureAppts];
           })()}
           todayAppointmentsCount={0}
+          onUpdateStatus={updateAppointmentStatus}
+          onReschedule={handleReschedule}
         />
       ) : currentPage === 'schedule' ? (
         <div className="w-full flex-1 flex flex-col justify-between min-h-0 overflow-hidden">
