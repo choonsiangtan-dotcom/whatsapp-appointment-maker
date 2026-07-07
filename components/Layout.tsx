@@ -2,8 +2,8 @@ import React from 'react';
 
 interface LayoutProps {
   children: React.ReactNode;
-  currentPage: 'schedule' | 'history' | 'settings';
-  onPageChange: (page: 'schedule' | 'history' | 'settings') => void;
+  currentPage: 'home' | 'schedule' | 'history' | 'settings';
+  onPageChange: (page: 'home' | 'schedule' | 'history' | 'settings') => void;
   modals?: React.ReactNode;
 }
 
@@ -56,8 +56,21 @@ const Layout: React.FC<LayoutProps> = ({ children, currentPage, onPageChange, mo
         <nav className="absolute bottom-0 left-0 right-0 z-50 h-[64px] flex justify-around items-center px-4 bg-white/85 backdrop-blur-md border-t border-[#bacac5]/20 shadow-[0_-4px_12px_rgba(45,140,140,0.05)] rounded-t-2xl"
           style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
         >
+          {/* Home */}
+          <div 
+            id="nav-tab-home"
+            onClick={() => onPageChange('home')}
+            className={`flex flex-col items-center justify-center gap-0.5 px-3 py-1 rounded-xl transition-all cursor-pointer ${currentPage === 'home' ? 'bg-[#eaedff] text-[#006b5f]' : 'text-[#6b7a76] hover:text-[#006b5f]'}`}
+          >
+            <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: currentPage === 'home' ? "'FILL' 1" : "''" }}>
+              home
+            </span>
+            <span className="text-[10px] font-semibold font-display">Home</span>
+          </div>
+
           {/* Schedule */}
           <div 
+            id="nav-tab-schedule"
             onClick={() => onPageChange('schedule')}
             className={`flex flex-col items-center justify-center gap-0.5 px-3 py-1 rounded-xl transition-all cursor-pointer ${currentPage === 'schedule' ? 'bg-[#eaedff] text-[#006b5f]' : 'text-[#6b7a76] hover:text-[#006b5f]'}`}
           >
@@ -69,6 +82,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentPage, onPageChange, mo
 
           {/* History */}
           <div 
+            id="nav-tab-history"
             onClick={() => onPageChange('history')}
             className={`flex flex-col items-center justify-center gap-0.5 px-3 py-1 rounded-xl transition-all cursor-pointer ${currentPage === 'history' ? 'bg-[#eaedff] text-[#006b5f]' : 'text-[#6b7a76] hover:text-[#006b5f]'}`}
           >
@@ -80,6 +94,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentPage, onPageChange, mo
 
           {/* Settings */}
           <div 
+            id="nav-tab-settings"
             onClick={() => onPageChange('settings')}
             className={`flex flex-col items-center justify-center gap-0.5 px-3 py-1 rounded-xl transition-all cursor-pointer ${currentPage === 'settings' ? 'bg-[#eaedff] text-[#006b5f]' : 'text-[#6b7a76] hover:text-[#006b5f]'}`}
           >

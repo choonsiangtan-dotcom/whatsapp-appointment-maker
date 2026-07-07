@@ -167,7 +167,7 @@ export function useAppLogic() {
   const [isContactPickerOpen, setIsContactPickerOpen] = useState(false);
   const [externalContacts, setExternalContacts] = useState<Contact[]>([]);
   const [isFetchingContacts, setIsFetchingContacts] = useState(false);
-  const [currentPage, setCurrentPage] = useState<'schedule' | 'history' | 'settings'>('schedule');
+  const [currentPage, setCurrentPage] = useState<'home' | 'schedule' | 'history' | 'settings'>('home');
   const [selectedFollowUp, setSelectedFollowUp] = useState<HistoricalAppointment | null>(null);
   const [selectedReminder, setSelectedReminder] = useState<HistoricalAppointment | null>(null);
   const [selectedNotesAppt, setSelectedNotesAppt] = useState<HistoricalAppointment | null>(null);

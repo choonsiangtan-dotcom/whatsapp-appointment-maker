@@ -1,5 +1,6 @@
 import React from 'react';
 import Layout from './components/Layout';
+import Dashboard from './components/Dashboard';
 import ContactSelector from './components/ContactSelector';
 import InputField from './components/InputField';
 import { AppointmentData } from './types';
@@ -188,6 +189,12 @@ const App: React.FC = () => {
       listener.remove();
     };
   }, []);
+
+  React.useEffect(() => {
+    if (currentPage === 'home') {
+      setTodayDate(new Date());
+    }
+  }, [currentPage]);
 
   // Snap scroll carousels to highlight selected date/time slots
   React.useEffect(() => {
@@ -731,7 +738,54 @@ const App: React.FC = () => {
         </>
       }
     >
-      {currentPage === 'schedule' ? (
+      {currentPage === 'home' ? (
+        <Dashboard
+          appointments={(() => {
+            const todayStr = `${todayDate.getFullYear()}-${String(todayDate.getMonth() + 1).padStart(2, '0')}-${String(todayDate.getDate()).padStart(2, '0')}`;
+            const nowTime = todayDate.getTime();
+
+            const activeConfirmed = history.filter(appt => {
+              if (appt.status !== 'CONFIRMED' || appt.isArchived) return false;
+              return appt.date >= todayStr;
+            });
+
+            activeConfirmed.sort((a, b) => {
+              const aDate = a.date + 'T' + (a.time.includes(':') ? a.time : '00:00');
+              const bDate = b.date + 'T' + (b.time.includes(':') ? b.time : '00:00');
+              return aDate.localeCompare(bDate);
+            });
+
+            const todayAppts = activeConfirmed.filter(appt => appt.date === todayStr);
+            const futureAppts = activeConfirmed.filter(appt => appt.date > todayStr);
+
+            const todayWithPastStatus = todayAppts.map(appt => {
+              try {
+                const [year, month, day] = appt.date.split('-').map(Number);
+                const [hours, minutes] = appt.time.split(':').map(Number);
+                const startTime = new Date(year, month - 1, day, hours, minutes).getTime();
+                const endTime = startTime + 60 * 60 * 1000;
+                const isPast = endTime < nowTime;
+                return { appt, isPast };
+              } catch (e) {
+                return { appt, isPast: false };
+              }
+            });
+
+            const pastToday = todayWithPastStatus.filter(x => x.isPast);
+            let immediatePreviousAppt = null;
+            if (pastToday.length > 0) {
+              immediatePreviousAppt = pastToday[pastToday.length - 1].appt;
+            }
+
+            const filteredToday = todayWithPastStatus
+              .filter(x => !x.isPast || (immediatePreviousAppt && x.appt.id === immediatePreviousAppt.id))
+              .map(x => x.appt);
+
+            return [...filteredToday, ...futureAppts];
+          })()}
+          todayAppointmentsCount={0}
+        />
+      ) : currentPage === 'schedule' ? (
         <div className="w-full flex-1 flex flex-col justify-between min-h-0 overflow-hidden">
           {reschedulingId && (
             <div className="flex items-center justify-between bg-teal-50 border border-teal-200/50 rounded-xl p-3 text-[#006b5f] text-[13px] shadow-sm animate-pulse">
