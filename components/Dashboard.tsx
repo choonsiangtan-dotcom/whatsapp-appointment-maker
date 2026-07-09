@@ -18,12 +18,22 @@ const Dashboard: React.FC<DashboardProps> = ({
   const bubbleRowRef = React.useRef<HTMLDivElement>(null);
   const pagerRef = React.useRef<HTMLDivElement>(null);
   const touchStartIndexRef = React.useRef<number | null>(null);
+  const isProgrammaticScrollRef = React.useRef<boolean>(false);
+  const scrollTimeoutRef = React.useRef<number | null>(null);
   const [userHasSelected, setUserHasSelected] = React.useState(false);
   const [apptToCancel, setApptToCancel] = React.useState<HistoricalAppointment | null>(null);
 
   React.useEffect(() => {
     setUserHasSelected(false);
   }, [appointments]);
+
+  React.useEffect(() => {
+    return () => {
+      if (scrollTimeoutRef.current) {
+        window.clearTimeout(scrollTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // 1. Calculate closestIndex (closest appointment to the live system clock on boot)
   const closestIndex = React.useMemo(() => {
@@ -51,10 +61,12 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   // Set initial active index to closestIndex on initial mount
   React.useEffect(() => {
+    isProgrammaticScrollRef.current = true;
     setCurrentActiveIndex(closestIndex);
   }, [closestIndex]);
 
   const handleTeleportToToday = () => {
+    isProgrammaticScrollRef.current = true;
     setCurrentActiveIndex(closestIndex);
     setUserHasSelected(false);
   };
@@ -101,13 +113,16 @@ const Dashboard: React.FC<DashboardProps> = ({
   // 4. Scroll Horizontal Pager to currentActiveIndex
   React.useEffect(() => {
     if (pagerRef.current) {
-      const pager = pagerRef.current;
-      const targetScrollLeft = currentActiveIndex * pager.offsetWidth;
-      if (Math.abs(pager.scrollLeft - targetScrollLeft) > 5) {
-        pager.scrollTo({
-          left: targetScrollLeft,
-          behavior: 'smooth'
-        });
+      if (isProgrammaticScrollRef.current) {
+        const pager = pagerRef.current;
+        const targetScrollLeft = currentActiveIndex * pager.offsetWidth;
+        if (Math.abs(pager.scrollLeft - targetScrollLeft) > 5) {
+          pager.scrollTo({
+            left: targetScrollLeft,
+            behavior: 'smooth'
+          });
+        }
+        isProgrammaticScrollRef.current = false;
       }
     }
   }, [currentActiveIndex]);
@@ -115,21 +130,29 @@ const Dashboard: React.FC<DashboardProps> = ({
   // 4.5. Pager Scroll Listener to update active index on manual swipe (clamped to adjacent page)
   const handlePagerScroll = () => {
     if (pagerRef.current) {
-      const pager = pagerRef.current;
-      const width = pager.offsetWidth;
-      if (width === 0) return;
-      let index = Math.round(pager.scrollLeft / width);
-      
-      // Enforce rigid, single-page increment/decrement constraints
-      if (touchStartIndexRef.current !== null) {
-        const startIdx = touchStartIndexRef.current;
-        index = Math.max(startIdx - 1, Math.min(startIdx + 1, index));
+      if (scrollTimeoutRef.current) {
+        window.clearTimeout(scrollTimeoutRef.current);
       }
-      
-      if (index !== currentActiveIndex && index >= 0 && index < appointments.length) {
-        setCurrentActiveIndex(index);
-        setUserHasSelected(true);
-      }
+
+      scrollTimeoutRef.current = window.setTimeout(() => {
+        if (pagerRef.current) {
+          const pager = pagerRef.current;
+          const width = pager.offsetWidth;
+          if (width === 0) return;
+          let index = Math.round(pager.scrollLeft / width);
+          
+          // Enforce rigid, single-page increment/decrement constraints
+          if (touchStartIndexRef.current !== null) {
+            const startIdx = touchStartIndexRef.current;
+            index = Math.max(startIdx - 1, Math.min(startIdx + 1, index));
+          }
+          
+          if (index !== currentActiveIndex && index >= 0 && index < appointments.length) {
+            setCurrentActiveIndex(index);
+            setUserHasSelected(true);
+          }
+        }
+      }, 50); // 50ms settling debounce
     }
   };
 
@@ -211,6 +234,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 key={appt.id}
                 id={`bubble-node-${index}`}
                 onClick={() => {
+                  isProgrammaticScrollRef.current = true;
                   setCurrentActiveIndex(index);
                   setUserHasSelected(true);
                 }}
@@ -220,54 +244,33 @@ const Dashboard: React.FC<DashboardProps> = ({
                 style={{ width: '64px' }}
               >
                 {/* Bubble Circle */}
-                {isSelected ? (
+                <div 
+                  className={`rounded-full p-[3px] transition-all duration-300 ease-out border-2 ${
+                    isSelected 
+                      ? 'border-[#006b5f] bg-white dark:bg-slate-900' 
+                      : 'border-transparent bg-transparent'
+                  }`}
+                  style={{
+                    width: '56px',
+                    height: '56px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxSizing: 'border-box'
+                  }}
+                >
                   <div 
-                    className="rounded-full border-2 border-[#006b5f] bg-white dark:bg-slate-950 p-[3px] transition-all duration-300"
+                    className={`w-full h-full rounded-full transition-all duration-300 ease-out flex items-center justify-center ${
+                      isSelected 
+                        ? 'bg-[#006b5f] text-white border border-[#006b5f]' 
+                        : 'bg-white dark:bg-slate-950 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800'
+                    }`}
                     style={{
-                      width: '56px',
-                      height: '56px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      boxSizing: 'border-box'
-                    }}
-                  >
-                    <div 
-                      className="w-full h-full rounded-full bg-[#006b5f] text-white"
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        boxSizing: 'border-box'
-                      }}
-                    >
-                      <span
-                        style={{
-                          fontFamily: 'sans-serif',
-                          fontWeight: 'bold',
-                          fontSize: '12px',
-                          lineHeight: '1',
-                          transform: 'translateY(0.5px)', // typographical vertical centering correction
-                          display: 'inline-block'
-                        }}
-                      >
-                        {appt.time}
-                      </span>
-                    </div>
-                  </div>
-                ) : (
-                  <div 
-                    className="rounded-full bg-white dark:bg-slate-950 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 transition-all duration-300"
-                    style={{
-                      width: '56px',
-                      height: '56px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
                       boxSizing: 'border-box'
                     }}
                   >
                     <span
+                      className="transition-all duration-300 ease-out"
                       style={{
                         fontFamily: 'sans-serif',
                         fontWeight: 'bold',
@@ -280,7 +283,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                       {appt.time}
                     </span>
                   </div>
-                )}
+                </div>
 
                 {/* Sub-label client first name or NOW */}
                 <span 
